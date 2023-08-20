@@ -50,3 +50,13 @@ I invoked lc_shell using the following commands and Below is the screenshot show
 
 <img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f9c32b3af96086cb1823ea7b5a1d96ad524c6907/PD%23day0/lc_shell.png">
 </details>
+-------------------------------
+
+<details>
+ <summary> dc_shell </summary>
+
+Design Compiler is a widely used electronic design automation (EDA) tool developed by Synopsys. It's primarily used for logic synthesis in digital integrated circuit design. Logic synthesis involves transforming a high-level description of a digital circuit (usually written in hardware description languages like Verilog or VHDL) into a lower-level representation made up of gates, flip-flops, and other basic digital components.
+I invoked dc_shell using the following commands and Below is the screenshot showing sucessful launch:
+
+<img width="1085" alt="dc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/c1c917d6ea2259e11eb35c8210a5ba5d033efc98/PD%23day0/lc_shell1.png">
+</details>
