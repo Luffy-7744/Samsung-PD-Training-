@@ -25,5 +25,5 @@ GTKWave is an open-source waveform viewer and analyzer primarily used in digital
 
 I installed GTKwave using the following commands and Below is the screenshot showing sucessful launch:
 
-<img width="1085" alt="GTKwave" srcz="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/012a981015cee8c90ff3835ed3e9e20acd1debe9/PD%23day0/gtkwave.png">
+<img width="1085" alt="GTKwave" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/012a981015cee8c90ff3835ed3e9e20acd1debe9/PD%23day0/gtkwave.png">
 </details>
