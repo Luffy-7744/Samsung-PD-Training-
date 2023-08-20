@@ -67,3 +67,8 @@ I invoked pt_shell using the following commands and Below is the screenshot show
 
 <img width="1085" alt="pt_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a698767d9372140b08254434b15860f0db8169e2/PD%23day0/pt_shell.png">
 </details>
+
+
+
+## Day-1-Introduction to Verilog RTL Design and Synthesis
+<details>
