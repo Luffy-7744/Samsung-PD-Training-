@@ -16,7 +16,7 @@ I installed Yosys using the following commands and Below is the screenshot showi
 <img width="1085" alt="yosys" src="https://github.com/alwinshaju08/Alwin_iiitb_asic_class/assets/69166205/4048f403-62c7-4be1-9bc3-64d9d43e68ea">
 </details>
 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------
 
  <details>
  <summary> GTK Wave </summary>
@@ -25,5 +25,5 @@ GTKWave is an open-source waveform viewer and analyzer primarily used in digital
 
 I installed GTKwave using the following commands and Below is the screenshot showing sucessful launch:
 
-<img width="1085" alt="GTKwave" srcz="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d275cbbccf38ba46cc50718100add48407c38aa8/PD%23day0/gtkwave.png">
+<img width="1085" alt="GTKwave" srcz="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/012a981015cee8c90ff3835ed3e9e20acd1debe9/PD%23day0/gtkwave.png">
 </details>
