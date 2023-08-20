@@ -37,5 +37,16 @@ It appears that "icc2 compiler" might refer to an abbreviation of "Intel C++ Com
 
 I installed ICC2 using the following commands and Below is the screenshot showing sucessful launch:
 
-<img width="1085" alt="GTKwave" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b7aea8ac24074b02355ba3408d84098f825ac56a/PD%23day0/icc2.png">
+<img width="1085" alt="ICC2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b7aea8ac24074b02355ba3408d84098f825ac56a/PD%23day0/icc2.png">
+</details>
+
+------------------------------
+
+<details>
+ <summary> lc_shell </summary>
+
+LC_shell, also known as Design Compiler Graphical, is a part of the Synopsys suite of Electronic Design Automation (EDA) tools. It's used in the digital design flow for logic synthesis and optimization. Design Compiler Graphical is an advanced version of the original Design Compiler tool, providing additional features and a more user-friendly graphical interface.
+I invoked lc_shell using the following commands and Below is the screenshot showing sucessful launch:
+
+<img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b7aea8ac24074b02355ba3408d84098f825ac56a/PD%23day0/icc2.png">
 </details>
