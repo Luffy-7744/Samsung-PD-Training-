@@ -13,7 +13,7 @@ Yosys is an open-source framework for Verilog RTL synthesis. RTL stands for Regi
 
 I installed Yosys using the following commands and Below is the screenshot showing sucessful launch:
 
-<img width="1085" alt="yosys" src="https://github.com/alwinshaju08/Alwin_iiitb_asic_class/assets/69166205/4048f403-62c7-4be1-9bc3-64d9d43e68ea">
+<img width="1085" alt="yosys" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/15cd9fc2d5f7e147dbf66f4e86b6aa86651db3cd/PD%23day0/Yosys.png">
 </details>
 
 --------------------------------
