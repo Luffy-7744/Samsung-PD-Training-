@@ -3,7 +3,7 @@
 <details>
  <summary> Summary </summary>
 	
-I installed the needed tools.
+I installed the needed tools and attached the required screenshots:
 
 </details>	
 	
@@ -72,3 +72,9 @@ I invoked pt_shell using the following commands and Below is the screenshot show
 
 ## Day-1-Introduction to Verilog RTL Design and Synthesis
 <details>
+ <summary> Introduction to RTL-Design, Test-bench, Simulators </summary>
+-RTL Design : The RTL Design stands for Register Transfer Language. It sits between the high-level system specification and the lower-level gate-level implementation. This is a design abstraction which models the flow of digital signals between hardware registers, and the logical operations performed on those signals. RTL is preferred because it is easy to understand and implement compared to structural and behavioral models.
+-HDL : A hardware description language (HDL) enables a precise, formal description of an electronic circuit that allows for the automated analysis and simulation of an electronic circuit.
+-Simulator : Simulator is the tool used for checking adherence to the specification by simulating the design. iverilog is the tool used for RTL simulation. A simulator looks for change in the input signals and when no change in input, the output also doesn't change. It produces an output in the form of a .vcd file.
+-Design : Design is the actual verilog code or set of Verilog codeswhich has the intended functionality to meet the required specifications. Design may have one or more primary inputs or primary outputs.  RTL design is the behavioral representation of the required specification.
+
