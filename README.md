@@ -15,7 +15,6 @@ I installed Yosys using the following commands and Below is the screenshot showi
 
 <img width="1085" alt="yosys" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/15cd9fc2d5f7e147dbf66f4e86b6aa86651db3cd/PD%23day0/Yosys.png">
 </details>
-
 --------------------------------
 
  <details>
@@ -27,7 +26,6 @@ I installed GTKwave using the following commands and Below is the screenshot sho
 
 <img width="1085" alt="GTKwave" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/012a981015cee8c90ff3835ed3e9e20acd1debe9/PD%23day0/gtkwave.png">
 </details>
-
 --------------------------------
 
  <details>
@@ -39,7 +37,6 @@ I installed ICC2 using the following commands and Below is the screenshot showin
 
 <img width="1085" alt="ICC2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b7aea8ac24074b02355ba3408d84098f825ac56a/PD%23day0/icc2.png">
 </details>
-
 ------------------------------
 
 <details>
@@ -59,4 +56,14 @@ Design Compiler is a widely used electronic design automation (EDA) tool develop
 I invoked dc_shell using the following commands and Below is the screenshot showing sucessful launch:
 
 <img width="1085" alt="dc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/c1c917d6ea2259e11eb35c8210a5ba5d033efc98/PD%23day0/lc_shell1.png">
+</details>
+------------------------------
+
+<details>
+ <summary> pt_shell </summary>
+
+"PrimeTime" is a widely used Electronic Design Automation (EDA) tool developed by Synopsys. It is used for static timing analysis, which is a crucial step in the digital design flow to ensure that the design meets its timing requirements. The "PrimeTime Shell" is the user interface through which engineers interact with the PrimeTime tool to perform timing analysis and optimization.
+I invoked pt_shell using the following commands and Below is the screenshot showing sucessful launch:
+
+<img width="1085" alt="pt_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a698767d9372140b08254434b15860f0db8169e2/PD%23day0/pt_shell.png">
 </details>
