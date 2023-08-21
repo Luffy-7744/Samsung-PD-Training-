@@ -91,7 +91,7 @@ The syntax of the code is: iverilog <RTL_code> <Its_Testbench>
 RTL code and testbench for good_2:1_mux
 <img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/35b6b9038bf5a6c855c534a868c02bdfc149bfa3/PD%23Day1/rtl_code.PNG">
 </details>
-
+</details>
 
 <details>
  <summary> Introduction to Yosys </summary>
