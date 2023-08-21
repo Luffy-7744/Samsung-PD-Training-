@@ -109,21 +109,20 @@ Selection of the Cells: Based on timing constraints we need select the cell. Set
 <details>
  <summary> Lab work on Yosys </summary>
 We were given the overview of this tool and the basic files required to perform the experiment on 2:1 MUX.
-Procedure : First we need to read the liberty file (.lib) using the code
+Procedure : First we need to read the liberty file (.lib) using the code: read_liberty -lib <path of the .lib>
 
-read_liberty -lib <path of the .lib>
 
-Then we need read the RTL code
+Read the RTL code:
 
 read_verilog <RTL_Design_file>
 
-After this we need to perform synthesis
+For synthesis:
 
 synth -top <instance_name>
 
-generating netlist
+For Generating netlist:
 
 abc -liberty <.lib path>  --------<present_on_lib_folder>
 
-This Netlist can be viewed in the synthesized circuit form using the show command :
+This Netlist can be viewed in the synthesized circuit form which uses std. cell present in .lib using the show command :
 <img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/19c8df9a79de2fb33db16e1d9e3e8b95a55a64b8/PD%23Day1/Yosys_netlist.PNG">
