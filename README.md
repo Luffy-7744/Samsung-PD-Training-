@@ -126,3 +126,5 @@ abc -liberty <.lib path>  --------<present_on_lib_folder>
 
 This Netlist can be viewed in the synthesized circuit form which uses std. cell present in .lib using the show command :
 <img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/19c8df9a79de2fb33db16e1d9e3e8b95a55a64b8/PD%23Day1/Yosys_netlist.PNG">
+</details>
+</details>
