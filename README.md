@@ -106,3 +106,24 @@ RTL code and testbench for good_2:1_mux
 Transistors with higher W/L have lesser delay but consume more area and power while Transistors with less W/L has more delay and less area. Faster cells come with a cost of area and power.
 
 Selection of the Cells: Based on timing constraints we need select the cell. Setup supports faster cells in datapath while hold supports slower. We need to select suitable which can satisfy both constraints.
+<details>
+ <summary> Lab work on Yosys </summary>
+We were given the overview of this tool and the basic files required to perform the experiment on 2:1 MUX.
+Procedure : First we need to read the liberty file (.lib) using the code
+
+read_liberty -lib <path of the .lib>
+
+Then we need read the RTL code
+
+read_verilog <RTL_Design_file>
+
+After this we need to perform synthesis
+
+synth -top <instance_name>
+
+generating netlist
+
+abc -liberty <.lib path>  --------<present_on_lib_folder>
+
+This Netlist can be viewed in the synthesized circuit form using the show command :
+<img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/19c8df9a79de2fb33db16e1d9e3e8b95a55a64b8/PD%23Day1/Yosys_netlist.PNG">
