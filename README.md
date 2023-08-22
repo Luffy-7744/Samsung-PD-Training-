@@ -305,7 +305,6 @@ Its Yosys synthesised netlist:
 
 <details>
  <summary> Optimization Techniques </summary>
-
  The Optimization involves the reducing hardware in the design to improve area, power and speed. Two example where given:
  1. a*2
 Consider a case where 3 bit number is multiplied by 2 in this case we dont need any additional hardware and only needs connecting bits to the output and grounding the LSB bit,same is realized by yosys. When binary number is multiplied by 2^n then result will gave same number by appending zero in LSB by n times.
