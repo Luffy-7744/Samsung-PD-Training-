@@ -323,13 +323,16 @@ Multiplying a 3 bit number by 9, gives results as concatination of same number t
 a*[8+1]= {a,0,0,0} + a(3bit)={a,a}
 
 RTL code:
+
+```
 module mul8 (input [2:0] a, output [5:0] y);
 	assign y = a * 9; // assign y={a,a}
 endmodule
+```
 
 Yosys Synthesis result : 
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/323e37b40a9b040ec9f029d9378732b9acbb65b0/PD%23Day2/mult8_synth.png">
-
+</details>
     
 
 
