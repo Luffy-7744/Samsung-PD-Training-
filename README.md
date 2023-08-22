@@ -236,7 +236,9 @@ The synthesized circuit for a flattened netlist is shown in the below:
 
  The complexity of cobinational circuit increases the chance of glitch, hence FFs are used to avoid it and it stable output.
 
- Asynchronous Reset D Flop: Here the output signal goes low when the reset signal is high , irrespective of the clock's edge(+ve,-ve or dual edge ).
+ Asynchronous Reset D Flop: 
+ 
+ Here the output signal goes low when the reset signal is high , irrespective of the clock's edge(+ve,-ve or dual edge ).
  RTL Design code of positive edge trigerred asynchronous reset D FF:
  ```
 module dff_asyncres ( input clk ,  input async_reset , input d , output reg q );
@@ -254,7 +256,8 @@ Its gtkwave :<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Sam
 Its Yosys synthesised netlist:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7b832441e73dd5c5bc078425a1f34ee4dea508fd/PD%23Day2/asyn_rst_synth.png">
 
-Asynchronous set D Flop
+Asynchronous set D Flop:
+
 Here the output signal goes high when the reset signal is high , irrespective of the clock's edge(+ve,-ve or dual edge ).
  RTL Design code of positive edge trigerred asynchronous set D FF:
  ```
@@ -275,9 +278,11 @@ Its GTKwave :
 Its Yosys synthesised netlist:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7e6fa6fc208da635a0ef187a306d8c35f51fa7b8/PD%23Day2/async_sett_synth.png">
 
-Synchronous reset D Flop
+Synchronous reset D Flop :
+
 The reset depend on the clock edge. Here the output signal goes low whenever the reset signal is high and at the clock edge(positive or negative)
 RTL Design code of positive edge trigerred synchronous reset D FF:
+
 '''
 module dff_syncres ( input clk , input async_reset , input sync_reset , input d , output reg q );
 	always @ (posedge clk )
@@ -289,3 +294,10 @@ module dff_syncres ( input clk , input async_reset , input sync_reset , input d 
 	end
 endmodule
 '''
+
+Its GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1710b01447acaaf9d5dd46085c2de830b13d0052/PD%23Day2/sync_rst_gtk.png">
+
+Its Yosys synthesised netlist:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1710b01447acaaf9d5dd46085c2de830b13d0052/PD%23Day2/sync_rst_synth.png">
+
