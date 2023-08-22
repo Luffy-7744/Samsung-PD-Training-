@@ -209,4 +209,22 @@ input b;
  assign y = _2_;
 endmodule
 ```
-In the netlist it can observed that separate modules namely sub_module1 sub_module2 are created  i.e submodules are getting instanstiated not the std cells presnt in library.
+In the netlist it can observed that separate modules namely sub_module1 sub_module2 are created  i.e submodules are getting instanstiated not the std cells present in library.
+
+Flat synthesis : In Flat synthesis the hierarchies the flattened out and every submodule is created using std cells. We apply flat synthesis on the same design mentioned above. The command used to perform Flat synthesis from yosys are as follows :
+
+--- read_liberty -lib <path of the .lib>
+
+--- read_verilog <RTL_file>
+
+--- synth -top <instance_name>
+
+--- abc -liberty <.lib_path>
+
+--- flatten
+
+--- write_verilog -noattr <.v_File_name>
+The synthesized circuit for a flattened netlist is shown in the below: 
+
+<img width="1085" alt="lib" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/227e10459da8569b3bc7ac52f8bc2d389068a278/PD%23Day2/flatten_synth.PNG">
+
