@@ -133,7 +133,7 @@ This Netlist can be viewed in the synthesized circuit form which uses std. cell 
 ## Day-2-ntroduction to Timing libraries, Hierarchical vs flat synthesis, and flip flop coding
 
 <details>
- <summary> Introduction to Timing Library (.Lib) </summary>
+ <summary> Introduction to Timing Library File (.Lib) </summary>
 Liberty File(.lib) contains important info about the electrical behavior  of std cells used in IC design. Also, Liberty File(.lib) consists of ASCII representations of Timing, Area, and Power associated with the Standard cell. The Naming convention in the timing file follows technology node and PVT format (Process, Voltage, Temperature). For example, the standard library used in our case was sky130_fd_sc_hd_tt_025C_1v8, this name suggests that we are using 130 nm technology and the process is typical(tt), temperature is 25C, and 1v8 represents the 1.8V.
 Screenshot of a standard library file shown below: 
 <img width="1085" alt="lib" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/6e256528c8de9193640fb445f589071e23beeee5/PD%23Day2/lib_part1.PNG">
@@ -142,8 +142,12 @@ The Liberty File also consists of the technology used for standard cells as in t
 All the data i.e std cells delays, leakage power, capacitance is stored in form of LUTs. For each gate cell based on the number of inputs(N), there will be 2^N combinations, and for each combination leakage power, area, delay, and all related parameters are mentioned. For example, consider the below screenshot the gate mentioned in the screenshot consists of 4 inputs so there will be 16 combinations, and for all the combinations power, delay, value, and all the features are mentioned below.
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/6e256528c8de9193640fb445f589071e23beeee5/PD%23Day2/lib_part2.PNG">
 	
-The timing file consists of many different variations of the same gate cells. As we move toward faster cell (cell with higher drive strength) the area and power increases. In liberty file area, power, timing values are given for same cell of different drive strength and it also consist if the inform about leakage power of all the possible logic of different configration.
+The timing file consists of many different variations of the same gate cells. As we move toward faster cell (cell with higher drive strength) the area and power increases. In liberty file area, power, timing values are given for same cell of different drive strength and it also consist if the inform about leakage power of all the possible logic of different configration shown below.
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a69147a2bedd2c78636125b3b35b7996fa55659e/PD%23Day2/lib_part3.PNG">
 </details>
 
-
+<details>
+ <summary> Hierarchical vs Flat synthesis in Yosys </summary>
+Hierarchical synthesis : The basic flow of hierarchical design is simple. Dividing a design into multiple blocks (sometimes referred to as sub-chips, sub-blocks, modules, hierarchical blocks, etc.) which can also be user defined. Hierarchial design has blocks, subblocks in an hierarchy.
+In Yosys we have done synthesis of a multimodule combinational circuit which consists of two sub_modules one that of **AND** gate and other of **OR** gate. Below is the RTL Design code of multimodule.
+```
