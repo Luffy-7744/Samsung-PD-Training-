@@ -148,8 +148,8 @@ The timing file consists of many different variations of the same gate cells. As
 
 <details>
  <summary> Hierarchical vs Flat synthesis in Yosys </summary>
-Hierarchical synthesis : The basic flow of hierarchical design is simple. Dividing a design into multiple blocks (sometimes referred to as sub-chips, sub-blocks, modules, hierarchical blocks, etc.) which can also be user defined. Hierarchial design has blocks, subblocks in an hierarchy.
-In Yosys we have done synthesis of a multimodule combinational circuit which consists of two sub_modules one that of **AND** gate and other of **OR** gate. Below is the RTL Design code of multimodule.
+Hierarchical synthesis : The basic flow of hierarchical design is Dividing a design into multiple blocks (i.e. sub-chips, sub-blocks, modules, hierarchical blocks, etc.) which can also be user defined. Hierarchial design has blocks, subblocks in an hierarchy.
+In Yosys we have done synthesis of a multimodule combinational circuit which consists of two sub_modules one that of ** AND ** gate and other of ** OR ** gate. Below is the RTL Design code of multimodules is gvien below:
 	
 ```
 module sub_module2 (input a, input b, output y);
@@ -167,9 +167,9 @@ module multiple_modules (input a, input b, input c , output y);
         sub_module2 u2(.a(net1),.b(c),.y(y));  //y = net1|c ,ie y = a&b + c;
 endmodule
 ```
-When we perform synthesis in yosys it generates the following gate level netlist :
+We do synthesis in yosys it generates the following gate level netlist :
 <img width="1085" alt="lib" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7d2732dc1300198990edfb77ed38ef0cff0db911/PD%23Day2/hire_synth.PNG">
-The yosys considers the module hierarchy and does mapping according to the instantiation.The netlist code for hierarchical implementation of the multiple_modules.
+The yosys considers the module hierarchy and does mapping according to the instantiation i.e by using sub blocks.The netlist code for hierarchical implementation of the multiple_modules.
 ```
 module multiple_modules(a, b, c, y);
 	  input a;
@@ -207,4 +207,4 @@ input b;
  assign y = _2_;
 endmodule
 ```
-In the netlist we can observe that separate modules namely sub_module1 sub_module2 are getting created i.e submodules are getting instanstiated not the gate cells.
+In the netlist it can observed that separate modules namely sub_module1 sub_module2 are created  i.e submodules are getting instanstiated not the gate cells.
