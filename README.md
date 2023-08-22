@@ -150,4 +150,20 @@ The timing file consists of many different variations of the same gate cells. As
  <summary> Hierarchical vs Flat synthesis in Yosys </summary>
 Hierarchical synthesis : The basic flow of hierarchical design is simple. Dividing a design into multiple blocks (sometimes referred to as sub-chips, sub-blocks, modules, hierarchical blocks, etc.) which can also be user defined. Hierarchial design has blocks, subblocks in an hierarchy.
 In Yosys we have done synthesis of a multimodule combinational circuit which consists of two sub_modules one that of **AND** gate and other of **OR** gate. Below is the RTL Design code of multimodule.
+	
+```
+module sub_module2 (input a, input b, output y);
+        assign y = a | b;
+endmodule
+
+module sub_module1 (input a, input b, output y);
+        assign y = a&b;
+endmodule
+
+
+module multiple_modules (input a, input b, input c , output y);
+        wire net1;
+        sub_module1 u1(.a(a),.b(b),.y(net1));  //net1 = a&b
+        sub_module2 u2(.a(net1),.b(c),.y(y));  //y = net1|c ,ie y = a&b + c;
+endmodule
 ```
