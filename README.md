@@ -168,7 +168,9 @@ module multiple_modules (input a, input b, input c , output y);
 endmodule
 ```
 We do synthesis in yosys it generates the following gate level netlist :
+
 <img width="1085" alt="lib" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7d2732dc1300198990edfb77ed38ef0cff0db911/PD%23Day2/hire_synth.PNG">
+
 The yosys considers the module hierarchy and does mapping according to the instantiation i.e by using sub blocks.The netlist code for hierarchical implementation of the multiple_modules.
 ```
 module multiple_modules(a, b, c, y);
@@ -207,4 +209,4 @@ input b;
  assign y = _2_;
 endmodule
 ```
-In the netlist it can observed that separate modules namely sub_module1 sub_module2 are created  i.e submodules are getting instanstiated not the gate cells.
+In the netlist it can observed that separate modules namely sub_module1 sub_module2 are created  i.e submodules are getting instanstiated not the std cells presnt in library.
