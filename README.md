@@ -167,3 +167,44 @@ module multiple_modules (input a, input b, input c , output y);
         sub_module2 u2(.a(net1),.b(c),.y(y));  //y = net1|c ,ie y = a&b + c;
 endmodule
 ```
+When we perform synthesis in yosys it generates the following gate level netlist :
+<img width="1085" alt="lib" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7d2732dc1300198990edfb77ed38ef0cff0db911/PD%23Day2/hire_synth.PNG">
+The yosys considers the module hierarchy and does mapping according to the instantiation.The netlist code for hierarchical implementation of the multiple_modules.
+```
+module multiple_modules(a, b, c, y);
+	  input a;
+	 input b;
+	 input c;
+	  wire net1;
+	 output y;
+  sub_module1 u1 (.a(a),.b(b),.y(net1) );
+  sub_module2 u2 (.a(net1),.b(c),.y(y));
+endmodule
+
+module sub_module1(a, b, y);
+ wire _0_;
+ wire _1_;
+ wire _2_;
+ input a;
+ input b;
+ output y;
+ sky130_fd_sc_hd__and2_0 _3_ (.A(_1_),.B(_0_),.X(_2_));
+ assign _1_ = b;
+ assign _0_ = a;
+ assign y = _2_;
+endmodule
+
+module sub_module2(a, b, y);
+wire _0_;
+ wire _1_;
+ wire _2_;
+input a;
+input b;
+ output y;
+ sky130_fd_sc_hd__lpflow_inputiso1p_1 _3_ (.A(_1_),.SLEEP(_0_),.X(_2_) );
+ assign _1_ = b;
+ assign _0_ = a;
+ assign y = _2_;
+endmodule
+```
+In the netlist we can observe that separate modules namely sub_module1 sub_module2 are getting created i.e submodules are getting instanstiated not the gate cells.
