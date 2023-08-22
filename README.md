@@ -123,8 +123,20 @@ synth -top <instance_name>
 For Generating netlist:
 
 abc -liberty <.lib path>  --------<present_on_lib_folder>
-
 This Netlist can be viewed in the synthesized circuit form which uses std. cell present in .lib using the show command :
 <img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/19c8df9a79de2fb33db16e1d9e3e8b95a55a64b8/PD%23Day1/Yosys_netlist.PNG">
 </details>
 </details>
+
+
+
+## Day-2-ntroduction to Timing libraries, Hierarchical vs flat synthesis, and flip flop coding
+
+<details>
+ <summary> Introduction to Timing Library </summary>
+Liberty File(.lib) contains important info about the electrical behavior  of std cells used in IC design. Also, Liberty File(.lib) consists of ASCII representations of Timing, Area, and Power associated with the Standard cell. The Naming convention in the timing file follows technology node and PVT format (Process, Voltage, Temperature). For example, the standard library used in our case was sky130_fd_sc_hd_tt_025C_1v8, this name suggests that we are using 130 nm technology and the process is typical(tt), temperature is 25C, and 1v8 represents the voltage.
+Screenshot of a standard library file shown below: 
+<img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/6e256528c8de9193640fb445f589071e23beeee5/PD%23Day2/lib_part1.PNG">
+The Liberty File also consists of the technology used for standard cells as in the above example it is CMOS, it also specifies the delay model, unit of time, unit of voltage, unit of resistance, and many other units.
+All the data i.e std cells delays, leakage power, capacitance is stored in form of LUTs. For each gate cell based on the number of inputs(N), there will be 2^N combinations, and for each combination leakage power, area, delay, and all related parameters are mentioned. For example, consider the below screenshot the gate mentioned in the screenshot consists of 4 inputs so there will be 16 combinations, and for all the combinations power, delay, value, and all the features are mentioned in it.
+<img width="1085" alt="lc_shell" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/6e256528c8de9193640fb445f589071e23beeee5/PD%23Day2/lib_part2.PNG">
