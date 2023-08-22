@@ -282,8 +282,6 @@ Synchronous reset D Flop :
 
 The reset depend on the clock edge. Here the output signal goes low whenever the reset signal is high and at the clock edge(positive or negative)
 RTL Design code of positive edge trigerred synchronous reset D FF:
-
-
 ```module dff_syncres ( input clk , input async_reset , input sync_reset , input d , output reg q );
 	always @ (posedge clk )
 	begin
