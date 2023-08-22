@@ -309,9 +309,9 @@ Its Yosys synthesised netlist:
 Consider a case where 3 bit number is multiplied by 2 in this case we dont need any additional hardware and only needs connecting bits to the output and grounding the LSB bit,same is realized by yosys. When binary number is multiplied by 2^n then result will gave same number by appending zero in LSB by n times.
 RTL code:
 ```
-module mul2 (input [2:0] a, output [3:0] y);
+	module mul2 (input [2:0] a, output [3:0] y);
 	assign y = a * 2;
-endmodule
+	endmodule
 ```
 Yosys Synthesis result : 
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/323e37b40a9b040ec9f029d9378732b9acbb65b0/PD%23Day2/mult2_synth.png">
