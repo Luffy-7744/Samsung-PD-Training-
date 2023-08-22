@@ -300,4 +300,36 @@ Its GTKwave :
 
 Its Yosys synthesised netlist:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1710b01447acaaf9d5dd46085c2de830b13d0052/PD%23Day2/sync_rst_synth.png">
+</details>
+
+
+<details>
+ <summary> Optimization Techniques </summary>
+
+ The Optimization involves the reducing hardware in the design to improve area, power and speed. Two example where given:
+ 1. a*2
+Consider a case where 3 bit number is multiplied by 2 in this case we dont need any additional hardware and only needs connecting bits to the output and grounding the LSB bit,same is realized by yosys. When binary number is multiplied by 2^n then result will gave same number by appending zero in LSB by n times.
+RTL code:
+```
+module mul2 (input [2:0] a, output [3:0] y);
+	assign y = a * 2;
+endmodule
+```
+Yosys Synthesis result : 
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/323e37b40a9b040ec9f029d9378732b9acbb65b0/PD%23Day2/mult2_synth.png">
+
+ 2. a*9
+Multiplying a 3 bit number by 9, gives results as concatination of same number twice {a,a}.
+a*[8+1]= {a,0,0,0} + a(3bit)={a,a}
+
+RTL code:
+module mul8 (input [2:0] a, output [5:0] y);
+	assign y = a * 9; // assign y={a,a}
+endmodule
+
+Yosys Synthesis result : 
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/323e37b40a9b040ec9f029d9378732b9acbb65b0/PD%23Day2/mult8_synth.png">
+
+    
+
 
