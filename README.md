@@ -227,4 +227,30 @@ Flat synthesis : In Flat synthesis the hierarchies the flattened out and every s
 The synthesized circuit for a flattened netlist is shown in the below: 
 
 <img width="1085" alt="lib" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/227e10459da8569b3bc7ac52f8bc2d389068a278/PD%23Day2/flatten_synth.PNG">
+</details>
+
+<details>
+ <summary> Flip-flop Coding Styles </summary>
+
+ Flip-flops :A flip-flop is a sequential digital electronic circuit having two stable states that can be used to store one bit of binary data. Flip-flops are the fundamental building blocks of all memory devices.
+
+ The complexity of cobinational circuit increases the chance of glitch, hence FFs are used to avoid it and it stable output.
+
+ Asynchronous Reset D Flop: Here the output signal goes low when the reset signal is high , irrespective of the clock's edge(+ve,-ve or dual edge ).
+ RTL Design code of positive edge trigerred asynchronous reset D FF:
+ ```
+module dff_asyncres ( input clk ,  input async_reset , input d , output reg q );
+	always @ (posedge clk , posedge async_reset)
+	begin
+		if(async_reset)
+			q <= 1'b0;
+		else	
+			q <= d;
+	end
+endmodule
+```
+Its gtkwave :<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7b832441e73dd5c5bc078425a1f34ee4dea508fd/PD%23Day2/asyn_dff_gtk.png">
+
+Its Yosys synthesised netlist:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7b832441e73dd5c5bc078425a1f34ee4dea508fd/PD%23Day2/asyn_rst_synth.png">
 
