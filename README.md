@@ -254,3 +254,38 @@ Its gtkwave :<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Sam
 Its Yosys synthesised netlist:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7b832441e73dd5c5bc078425a1f34ee4dea508fd/PD%23Day2/asyn_rst_synth.png">
 
+Asynchronous set D Flop
+Here the output signal goes high when the reset signal is high , irrespective of the clock's edge(+ve,-ve or dual edge ).
+ RTL Design code of positive edge trigerred asynchronous set D FF:
+ ```
+module dff_async_set ( input clk ,  input async_set , input d , output reg q );
+	always @ (posedge clk , posedge async_set)
+	begin
+		if(async_set)
+			q <= 1'b1;
+		else
+			q <= d;
+	end
+endmodule
+```
+
+Its GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7e6fa6fc208da635a0ef187a306d8c35f51fa7b8/PD%23Day2/asyn_set_gtk.png">
+
+Its Yosys synthesised netlist:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7e6fa6fc208da635a0ef187a306d8c35f51fa7b8/PD%23Day2/async_sett_synth.png">
+
+Synchronous reset D Flop
+The reset depend on the clock edge. Here the output signal goes low whenever the reset signal is high and at the clock edge(positive or negative)
+RTL Design code of positive edge trigerred synchronous reset D FF:
+'''
+module dff_syncres ( input clk , input async_reset , input sync_reset , input d , output reg q );
+	always @ (posedge clk )
+	begin
+		if (sync_reset)
+			q <= 1'b0;
+		else	
+			q <= d;
+	end
+endmodule
+'''
