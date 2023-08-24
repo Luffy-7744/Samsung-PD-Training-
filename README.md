@@ -386,6 +386,32 @@ Generated nelist:
 *Example 5*
 Here there is multiple modules present so we will try to check whether those module are being used or not and we use flatten for submudules
 ```
+module sub_module1(input a , input b , output y);
+	 assign y = a & b;
+	endmodule
+
+	module sub_module2(input a , input b , output y);
+	 assign y = a^b;
+	endmodule
+
+	module multiple_module_opt(input a , input b , input c , input d , output y);
+	wire n1,n2,n3;
+	sub_module1 U1 (.a(a) , .b(1'b1) , .y(n1));
+	sub_module2 U2 (.a(n1), .b(1'b0) , .y(n2));
+	sub_module2 U3 (.a(b), .b(d) , .y(n3));
+
+	assign y = c | (b & n1); 
+	endmodule
+```
+yosys generated gui:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/multi_module_opt.png">   
+
+Generated nelist:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/multi_module_opt_netlist.png">  
+
+*Example 6*
+
+```
 module sub_module(input a , input b , output y);
 	assign y = a & b;
 endmodule
@@ -399,14 +425,10 @@ module multiple_module_opt2(input a , input b , input c , input d , output y);
 endmodule
 ```
 yosys generated gui:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/multi_module_opt.png">   
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/multi_module_opt2_synth.png">   
 
 Generated nelist:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/multi_module_opt_netlist.png">  
-
-*Example 6*
-
-```
-
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/multi_module_opt2_netlist.png">  
+</details>
 
 
