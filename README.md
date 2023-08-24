@@ -334,6 +334,41 @@ Yosys Synthesis result :
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/323e37b40a9b040ec9f029d9378732b9acbb65b0/PD%23Day2/mult8_synth.png">
 </details>
 
-    
+
+
+## Day-3- Combinational and sequential optmizations
+
+<details>
+ <summary> Combinational Optimization </summary>
+Optimising the combinational logic circuit is squeezing the logic to get the most optimized digital design so that the circuit finally is area and power efficient. This is achieved by the synthesis tool using various techniques and gives us the most optimized circuit.
+Command to optimize the circuit by yosys is yosys> opt_clean -purge
+We have done synthesis using yosys for few examples:
+
+*Example 1*
+```
+module opt_check (input a , input b , output y);
+	assign y = a?b:0;
+endmodule
+```
+yosys generated gui:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/opt_check_synth.png">
+
+*Example 2*
+```
+module opt_check2 (input a , input b , output y);
+	assign y = a?1:b;
+endmodule
+```
+yosys generated gui:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/opt_check2_synth.png">
+
+*Example 3*
+```
+module opt_check3 (input a , input b, input c , output y);
+	assign y = a?(c?b:0):0;
+endmodule
+```
+yosys generated gui:
+<img width="1085" alt="lib1" src="">   
 
 
