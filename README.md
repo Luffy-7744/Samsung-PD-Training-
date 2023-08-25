@@ -553,3 +553,55 @@ GTK Wave:
 Yosys generated gui:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/bc0648ea65f00f921b633d7c79e1c442241a9c28/PD%23Day3/dff_const4_synth.png">   
 
+*Example 5*
+```
+module dff_const5(input clk, input reset, output reg q);
+	reg q1;
+	always @(posedge clk, posedge reset)
+		begin
+			if(reset)
+			begin
+				q <= 1'b0;
+				q1 <= 1'b0;
+			end
+		else
+			begin
+				q1 <= 1'b1;
+				q <= q1;
+			end
+		end
+	endmodule
+```
+GTK Wave:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/26c2ba861dfaf28ca7e75d2913c070226c8a5285/PD%23Day3/dff_const5_gtk.png">   
+
+
+
+Yosys generated gui:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/26c2ba861dfaf28ca7e75d2913c070226c8a5285/PD%23Day3/dff_const5_synth.png"> 
+</details>
+
+
+<details>
+ <summary> Optimization Examples </summary>
+	
+*Example 1*
+```
+   module counter_opt (input clk , input reset , output q);
+   reg [2:0] count;
+   assign q = count[0];
+   always @(posedge clk ,posedge reset)
+   begin
+   	if(reset)
+   		count <= 3'b000;
+   	else
+   		count <= count + 1;
+   end
+   endmodule
+   ```
+   
+Yosys generated gui:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/26c2ba861dfaf28ca7e75d2913c070226c8a5285/PD%23Day3/counter_opt_synth.png"> 
+
+
+ 
