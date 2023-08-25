@@ -431,4 +431,7 @@ Generated nelist:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/multi_module_opt2_netlist.png">  
 </details>
 
+<details>
+ <summary> Sequential Optimization </summary>
 
+ 
