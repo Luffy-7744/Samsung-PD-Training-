@@ -636,5 +636,6 @@ Yosys generated gui:
  - Min delay Cost 
  - Max Power Cost
  - Max area Cost
+
 In optimization we seen few examples of sequential and combinational circuits based on different algorithms. 
 </details>
