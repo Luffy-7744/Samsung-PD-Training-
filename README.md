@@ -130,7 +130,7 @@ This Netlist can be viewed in the synthesized circuit form which uses std. cell 
 
 
 
-## Day-2-ntroduction to Timing libraries, Hierarchical vs flat synthesis, and flip flop coding
+## Day-2-Introduction to Timing libraries, Hierarchical vs flat synthesis, and flip flop coding
 
 <details>
  <summary> Introduction to Timing Library File (.Lib) </summary>
