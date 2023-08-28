@@ -640,3 +640,15 @@ In optimization we seen few examples of sequential and combinational circuits ba
 </details>
 
 ## Day-4- GLS,blocking vs non-blocking and Synthesis-Simulation mismatch
+
+<details>
+<summary> GLS Concepts And Flow Using Iverilog </summary>
+
+-- What is GLS- Gate Level Simulation?:
+GLS is generating the simulation output by running test bench with netlist file generated from synthesis as design under test. Netlist is logically same as RTL code, therefore, same test bench can be used for it.
+
+-- Why GLS?:
+We perform this to verify logical correctness of the design after synthesizing it. Also ensuring the timing of the design is met.
+
+Below picture gives an insight of the procedure. Here while using iverilog, we also include gate level verilog models to generate GLS simulation.
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d17cd858582bb157db097c5bdab07548794e008d/PD%23Day4/IMG_6766.png"> 
