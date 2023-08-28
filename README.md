@@ -483,11 +483,11 @@ Consider a case where asynchronous reset D Flip-flop is fed with d = 0(i.e GND) 
 
 *Example 1*
 ```
-module dff_const2(input clk, input reset, output reg q);
+module dff_const1(input clk, input reset, output reg q);
 	always @(posedge clk, posedge reset)
 	begin
 		if(reset)
-			q <= 1'b1;
+			q <= 1'b0;
 		else
 			q <= 1'b1;
 	end
@@ -514,10 +514,9 @@ module dff_const2(input clk, input reset, output reg q);
 endmodule
 ```
 
-
-
 Yosys generated gui:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/bc0648ea65f00f921b633d7c79e1c442241a9c28/PD%23Day3/dff_const2_synth.png">
+Irrespective of clock edge , output will always is 1. So buffer is  inffered.
 
 *Example 3*
 ```
