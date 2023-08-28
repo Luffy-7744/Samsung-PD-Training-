@@ -717,4 +717,35 @@ module bad_mux (input i0 , input i1 , input sel , output reg y);
 	end
 endmodule
 ```
+Gtkwave:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/90b875b162a2b4374c14537fc8a9b21f6d598dee/PD%23Day4/bad_mux_gtk.png">
 
+Yosys result: 
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ec9152185e79565ae1d1439d3b644e20bdb8cbd/PD%23Day4/ternary_synth.png">
+
+GLS Simulation:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/90b875b162a2b4374c14537fc8a9b21f6d598dee/PD%23Day4/bad_mux_result_gtk.png">
+
+Summary :Here first pic shows the netlist simulation which corrects the bad_mux design which was only changing waveform when sel was triggered while for a mux to work properly it should be sensitivity to all the input signals.
+
+*Example 3*
+```
+module blocking_caveat (input a , input b , input  c, output reg d); 
+reg x;
+always @ (*)
+	begin
+	d = x & c;
+	x = a | b;
+end
+endmodule
+```
+Gtkwave:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/90b875b162a2b4374c14537fc8a9b21f6d598dee/PD%23Day4/blocking_gtk.png">
+
+Yosys result: 
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/90b875b162a2b4374c14537fc8a9b21f6d598dee/PD%23Day4/blocking_synth.png">
+
+GLS Simulation:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/90b875b162a2b4374c14537fc8a9b21f6d598dee/PD%23Day4/blocking_result_gtk.png">
+
+Summary : Here this how the circuit should behave but this correct waveform is only obtained while doing netlist simulation. Here first pic show the netlist simulation which shows the proper working of the dut while the last pic shows the improper working of dut as we have used blocking statement here which causes synthesis simulation mismatch which is sorted out by GLS while providing netlist simulation.
