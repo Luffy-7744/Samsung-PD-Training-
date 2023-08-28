@@ -638,3 +638,5 @@ Yosys generated gui:
 
 In optimization we seen few examples of sequential and combinational circuits based on different algorithms. 
 </details>
+
+## Day-4- GLS,blocking vs non-blocking and Synthesis-Simulation mismatch
