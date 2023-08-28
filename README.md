@@ -655,7 +655,7 @@ Below picture gives an insight of the procedure. Here while using iverilog, we a
 
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d17cd858582bb157db097c5bdab07548794e008d/PD%23Day4/IMG_6766.png">
 Example :
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8d9343b03653b5480cb54ca9d97e32782986ba8c/PD%23Day4/IMG_6768.jpeg">
 
 *Synthesis Simulation Mismatch* 
 There are three main reasons for Synthesis Simulation Mismatch:
@@ -676,7 +676,7 @@ Blocking vs Non-Blocking Assignments:
 Blocking statements execute the statemetns in the order they are written inside the always block. Non-Blocking statements execute all the assignment parallelly inside a always block.
 This will give mismatch as sometimes, improper use of blocking statements can create latches. 
 Example
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8d9343b03653b5480cb54ca9d97e32782986ba8c/PD%23Day4/IMG_6769.jpeg">
 </details>
 
 <details>
