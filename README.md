@@ -624,7 +624,7 @@ Yosys generated gui:
    ```
    
 Yosys generated gui:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/26c2ba861dfaf28ca7e75d2913c070226c8a5285/PD%23Day3/counter_opt_synth.png"> 
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/26c2ba861dfaf28ca7e75d2913c070226c8a5285/PD%23Day3/counter_opt_synth.png">
 </details>
 
 <details>
@@ -637,11 +637,15 @@ Yosys generated gui:
  - Max area Cost
 
 In optimization we seen few examples of sequential and combinational circuits based on different algorithms. 
+</details>
+</details>
+</details>
+</details>
+
 
 ## Day-4- GLS,blocking vs non-blocking and Synthesis-Simulation mismatch
 
 <details>
-
 <summary> GLS Concepts And Flow Using Iverilog </summary>
 
 -- What is GLS- Gate Level Simulation?:
