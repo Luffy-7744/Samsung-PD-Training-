@@ -159,7 +159,7 @@ endmodule
 module sub_module1 (input a, input b, output y);
         assign y = a&b;
 endmodule
-
+```
 
 module multiple_modules (input a, input b, input c , output y);
         wire net1;
@@ -333,7 +333,6 @@ endmodule
 Yosys Synthesis result : 
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/323e37b40a9b040ec9f029d9378732b9acbb65b0/PD%23Day2/mult8_synth.png">
 </details>
-
 
 
 ## Day-3- Combinational and sequential optmizations
@@ -638,9 +637,7 @@ Yosys generated gui:
 
 In optimization we seen few examples of sequential and combinational circuits based on different algorithms. 
 </details>
-</details>
-</details>
-</details>
+
 
 
 ## Day-4- GLS,blocking vs non-blocking and Synthesis-Simulation mismatch
@@ -657,7 +654,8 @@ We perform this to verify logical correctness of the design after synthesizing i
 Below picture gives an insight of the procedure. Here while using iverilog, we also include gate level verilog models to generate GLS simulation.
 
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d17cd858582bb157db097c5bdab07548794e008d/PD%23Day4/IMG_6766.png">
-
+Example :
+<img width="1085" alt="lib1" src="">
 
 *Synthesis Simulation Mismatch* 
 There are three main reasons for Synthesis Simulation Mismatch:
@@ -667,4 +665,19 @@ There are three main reasons for Synthesis Simulation Mismatch:
    -- Non standard Verilog coding
 Missing sensitivity list in always block:
 Lets take example of mux having inputs as i0,i1 and sel and output as y.
-if in always block we but
+```
+always @(sel)                  always @(*)
+//It will infer a latch        // It will infer a mux.
+```
+If i0 and i1 changes will not be reflected in always block.
+To avoid the synthesis and simulation mismatch. It is very important to check the behaviour of the circuit first and then match it with the expected output seen in simulation and make sure there are no synthesis and simulation mismatches. This is why we use GLS.
+
+Blocking vs Non-Blocking Assignments:
+Blocking statements execute the statemetns in the order they are written inside the always block. Non-Blocking statements execute all the assignment parallelly inside a always block.
+This will give mismatch as sometimes, improper use of blocking statements can create latches. 
+Example
+<img width="1085" alt="lib1" src="">
+
+
+
+
