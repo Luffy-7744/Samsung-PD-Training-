@@ -677,7 +677,44 @@ Blocking statements execute the statemetns in the order they are written inside 
 This will give mismatch as sometimes, improper use of blocking statements can create latches. 
 Example
 <img width="1085" alt="lib1" src="">
+</details>
 
+<details>
+<summary> LABs </summary>
+	
+*Example 1*
+In this example there is no mismatch between the RTL Design simulated wave and Netlist simulated wave.
+```
+module ternary_operator_mux (input i0 , input i1 , input sel , output y);
+   assign y = sel?i1:i0;
+endmodule
+```
+Gtkwave:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ec9152185e79565ae1d1439d3b644e20bdb8cbd/PD%23Day4/ternary_gtk.png">
 
+Yosys result: 
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ec9152185e79565ae1d1439d3b644e20bdb8cbd/PD%23Day4/ternary_synth.png">
 
+GLS Simulation:
+I used the below commands to carry out GLS of ternary_operator_mux.v:
+```
+iverilog <path to verilog model: ../mylib/verilog_model/primitives.v> <path to sky130_fd_sc_hd__tt_025C_1v80.lib: ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib> <name netlist: ternary_operator_mux_net.v> <name testbench: tb_ternary_operator_mux.v>
+./a.out
+gtkwave tb_ternary_operator_mux.vdc
+```
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ec9152185e79565ae1d1439d3b644e20bdb8cbd/PD%23Day4/ternary_result_gtk.png">
+
+*Example 2*
+```
+module bad_mux (input i0 , input i1 , input sel , output reg y);
+	always @ (sel)
+	begin
+		if(sel)
+			y <= i1;
+		else 
+			y <= i0;
+	end
+endmodule
+```
 
