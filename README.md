@@ -739,6 +739,8 @@ always @ (*)
 end
 endmodule
 ```
+Hardware of Verilog code :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0a9b38a6aeaf932958f3f06b6435298cc0f233d8/PD%23Day4/IMG_6767.png">
 Gtkwave:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/90b875b162a2b4374c14537fc8a9b21f6d598dee/PD%23Day4/blocking_gtk.png">
 
