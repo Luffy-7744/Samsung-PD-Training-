@@ -352,6 +352,8 @@ endmodule
 ```
 yosys generated gui:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/opt_check_synth.png">
+In this verilog code represents the mux but as one of the input 0 , it infers an AND gate as shown in synthesis.
+
 
 *Example 2*
 ```
@@ -361,6 +363,7 @@ endmodule
 ```
 yosys generated gui:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/opt_check2_synth.png">
+In this verilog code represents the mux but as one of the input 1, it infers an AND gate as shown in synthesis.
 
 *Example 3*
 ```
@@ -370,6 +373,8 @@ endmodule
 ```
 yosys generated gui:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/opt_check3_synth.png">   
+In this verilog code represents the 2 mux but as two of the input 0, it infers an 3 i/p AND gate as shown in synthesis.
+
 
 *Example 4*
 ```
@@ -379,12 +384,25 @@ endmodule
 ```
 yosys generated gui:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/opt_check4_synth.png">   
+In yosys we can see b is never changed follows xnor of a and c inputs.
 
 Generated nelist:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d9c6f5e15302e6dc799ad643bcc537094b6c5da/PD%23Day3/opt_check4_netlist.png">   
+So, here input b is passed through buffer and a and c inputs is xnored followed by buffers in inputs and output.
 
 *Example 5*
 Here there is multiple modules present so we will try to check whether those module are being used or not and we use flatten for submudules
+read_liberty -lib <library_path>
+
+read_verilog <verilog_file>
+
+synth -top <module_name>
+
+opt_clean -purge
+
+abc -liberty <library_path>
+
+flatten
 ```
 module sub_module1(input a , input b , output y);
 	 assign y = a & b;
@@ -456,6 +474,12 @@ State Optimisation: This is optimisation of unused state. Using this technique w
 Cloning : It is an optimization technique that duplicates a cell to reduce the load on heavily loaded cell. This technique is usually preffered while performing PHYSICAL AWARE SYNTHESIS. Lets consider a flop A which is connected to flop B and flop C through a combination logic. If B and C are placed far from A in the flooerplan, there is a routing path delay. To avoid this, we connect A to two intermediate flops and then from these flops the output is sent to B and C thereby decreasing the delay. This process is called cloning since we are generating two new flops with same functionality as A.
 
 Retiming : Sequential circuits can be optimised by retiming. The combinational section of the circuitry is unaffected as it only rearranges the registers in the circuit. It is a powerful sequential optimization technique used to move registers across the combinational logic or to optimize the number of registers to improve performance via power-delay trade-off, without changing the input-output behavior of the circuit.
+
+Sequential Constant Propogation
+
+Consider a case where asynchronous reset D Flip-flop is fed with d = 0(i.e GND) always so the output will always be 0 irrespective of the timing or circuit.
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8af801e512e9a291e7cd6dd36255eddba1c168d0/PD%23Day3/image.jpg">   
+
 
 *Example 1*
 ```
@@ -602,6 +626,15 @@ Yosys generated gui:
    
 Yosys generated gui:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/26c2ba861dfaf28ca7e75d2913c070226c8a5285/PD%23Day3/counter_opt_synth.png"> 
+</details>
 
+<details>
+ <summary> Summary </summary>
 
- 
+ In Day 3 , It started with optimizing methodology, which involves the cost function. Cost funtion consist of following parts: 
+ - Max delay Cost 
+ - Min delay Cost 
+ - Max Power Cost
+ - Max area Cost
+In optimization we seen few examples of sequential and combinational circuits based on different algorithms. 
+</details>
