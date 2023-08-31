@@ -751,10 +751,13 @@ GLS Simulation:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/90b875b162a2b4374c14537fc8a9b21f6d598dee/PD%23Day4/blocking_result_gtk.png">
 
 Summary : Here this how the circuit should behave but this correct waveform is only obtained while doing netlist simulation. Here first pic show the netlist simulation which shows the proper working of the dut while the last pic shows the improper working of dut as we have used blocking statement here which causes synthesis simulation mismatch which is sorted out by GLS while providing netlist simulation.
-
+</details>
 
 ## Day-5-Design For Testabilty(DFT)
 
+<details>
+<summary> Introduction to DFT </summary>
+	
 **What is Design for Testability, and why we need it?**
 
 Today, semiconductors lie at the heart of ongoing advances across the electronics industry. The introduction of new technologies, has allowed the semiconductor industry to keep pace with increased performance-capacity demands from consumers. This has brightened the prospects for future industry growth.
@@ -766,29 +769,17 @@ Now, Question arrises what is controllability and observability in design.
 *Controllability*: Ability to establish aspecific signal value at each node in a circuit from setting values at the circuits inputs.
 *Observability*: Ability to determine the signal value at any node in circuit by controlling the circuits input and observing its output.
 
-
-
-
-Role of DFT
-Testing of Sequential Circuits
+**Role of DFT**
+Testing of Sequential Circuits :
 DFT offers a solution to the issue of testing sequential circuits. It’s kind of hard to test sequential circuits. Since there are clocks involved along with the flip-flops.
-
-Unlike combinational circuits, we can’t determine the output of sequential circuits by merely looking into the inputs. Sequential circuits consist of finite states by virtue of flip-flops. The output also depends upon the state of the machine. It is difficult to control and observe the internal flip-flops externally.
-
+Unlike combinational circuits, we can’t determine the output of sequential circuits by merely looking into the inputs. Sequential circuits consist of finite states. The output also depends upon the state of the machine. It is difficult to control and observe the internal flip-flops externally.
 Hence, the state machines cannot be tested unless they are initialized to a known value. And to initialize them, we need a specific set of features in addition to the typical circuitry. DFT enables us to add this functionality to a sequential circuit and thus allows us to test it.
 
 
-
-
-Can DFT permanently eliminate faults?
+**Can DFT permanently eliminate faults?**
 
 No, faults can arise even after the chip is in consumer’s hands. A chip may misbehave anytime if it is exposed to a very high temperature or humid environment or due to aging.
-
-Want a live explanation? If you have an unlocked processor, you can try to overclock your CPU using this tutorial. But would you do it? Please don’t!
-
-Overclocking is a method to increase the system frequency and voltage above the rated value.  An improperly configured overclocking can mess up with timing metrics and cause instability. Prolonged overclocking would overheat and stress out your system to shorten the lifespan of your computer. This may cause intermittent faults in the chip and random crashes in the future. Adding to this, it may void your warranty too. This example is just one high-level explanation of how a fault may occur in real life.
-
-The point is, you can even generate a fault on your own. A chip can’t ever be made resistant to faults; they are always bound to occur. So, what are we trying to achieve? Testing a device increases our confidence. By testing a chip, vendors try to minimize the possibility of future errors and failures.
+You can even generate a fault on your own. A chip can’t ever be made resistant to faults; they are always bound to occur. So, what are we trying to achieve? Testing a device increases our confidence. By testing a chip, vendors try to minimize the possibility of future errors and failures.
 To ensure the highest quality of chips, there is also an auxiliary process involved in the chip-design process called Verification.
 
 
