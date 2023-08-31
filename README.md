@@ -769,6 +769,122 @@ Now, Question arrises what is controllability and observability in design.
 
 
 
+Role of DFT
+Testing of Sequential Circuits
+DFT offers a solution to the issue of testing sequential circuits. It’s kind of hard to test sequential circuits. Since there are clocks involved along with the flip-flops.
 
+Unlike combinational circuits, we can’t determine the output of sequential circuits by merely looking into the inputs. Sequential circuits consist of finite states by virtue of flip-flops. The output also depends upon the state of the machine. It is difficult to control and observe the internal flip-flops externally.
+
+Hence, the state machines cannot be tested unless they are initialized to a known value. And to initialize them, we need a specific set of features in addition to the typical circuitry. DFT enables us to add this functionality to a sequential circuit and thus allows us to test it.
+
+
+
+
+Can DFT permanently eliminate faults?
+
+No, faults can arise even after the chip is in consumer’s hands. A chip may misbehave anytime if it is exposed to a very high temperature or humid environment or due to aging.
+
+Want a live explanation? If you have an unlocked processor, you can try to overclock your CPU using this tutorial. But would you do it? Please don’t!
+
+Overclocking is a method to increase the system frequency and voltage above the rated value.  An improperly configured overclocking can mess up with timing metrics and cause instability. Prolonged overclocking would overheat and stress out your system to shorten the lifespan of your computer. This may cause intermittent faults in the chip and random crashes in the future. Adding to this, it may void your warranty too. This example is just one high-level explanation of how a fault may occur in real life.
+
+The point is, you can even generate a fault on your own. A chip can’t ever be made resistant to faults; they are always bound to occur. So, what are we trying to achieve? Testing a device increases our confidence. By testing a chip, vendors try to minimize the possibility of future errors and failures.
+To ensure the highest quality of chips, there is also an auxiliary process involved in the chip-design process called Verification.
+
+
+
+Some Terminologies
+
+Here are a few terminologies which we will often use in this free Design for Testability course. Don’t fret if you can’t completely understand them yet, we will be covering them in-depth in this course.
+
+Testing: An experiment in which the system is put to work and its resulting response is analyzed to ascertain whether it behaved correctly.
+
+Diagnosis: Process for locating the cause of misbehavior in the circuit if it happened.
+
+Defect: Refers to a flaw in the actual hardware or electronic system.
+
+Fault: It is a model or representation of defect for analyzing in a computer program.
+
+Error: It is caused by a defect and happens when a fault in hardware causes line/ gate output to have a wrong value.
+
+Failure: This occurs when a defect causes misbehavior in the circuit or functionality of a system and cannot be reversed or recovered.
+
+Fault Coverage: Percentage of the total number of logical faults that can be tested using a given test set T.
+
+Defect Level: Refers to the fraction of shipped parts that are defective. Or, the proportion of the faulty chip in which fault isn’t detected and has been classified as good.
+where Y is the yield, means the fraction of the chips fabricated that are good.
+
+
+
+
+Levels of Testing
+Testing is carried out at various levels:
+
+Chip-level, when chips are manufactured.
+Board-level, when chips are integrated on the boards.
+System-level, when several boards are assembled together.
+There is an empirical rule of thumb that it is ten times more expensive to test a device as we move to the next higher level (chip → board → system). As we move to higher levels, more components are integrated, which makes the fault detection and localization much more difficult and expensive.
+
+
+
+
+
+Sources of Faults in ICs
+Here are a few possible sources of faults:
+
+In the fabrication process like missing contact windows, parasitic transistors, etc.
+Defects in the materials like cracks or imperfections in the substrate, surface impurities, etc.
+Aging caused by Dielectric breakdown, electron migration, etc.
+During packaging like Contact degradation, disconnection, etc.
+
+
+
+
+
+DFT Techniques
+DFT techniques are broadly classified into two types:
+
+Ad-hoc techniques
+These are a collection of techniques or set of rules (do’s and don’ts) in the chip design process learned from design experience to make design testability more comfortable to accomplish. Basically, these are the rules that have been gathered over time after experiencing various errors.
+
+
+Advantages
+Test vector generation is simplified
+Very easy to implement, no design rule or constraints and area overhead is very less.
+Drawbacks
+Are not always reusable, since each design has its specific requirements and testability problems.
+It doesn’t guarantee high testability levels regardless of the circuit.
+Not systematic enough to enable a uniform approach to testable circuit design.
+Examples
+Following are a few ad-hoc set of rules that designers generally follow:
+
+Large circuits should be partitioned into smaller sub-circuits to reduce test cost.
+Test access points must be inserted to enhance the controllability & observability of the circuit. This is done either by increasing the number of nodes or by multiplexing existing primary outputs for the internal nodes to be observed
+
+
+
+
+Structured techniques
+In this technique, extra logic and signals are added to the circuit to allow the test according to some predefined procedure.
+
+Advantage
+In contrast to Ad-hoc, structured DFT implies that the same design approach can always be used and assure good testability levels, regardless of the circuit function. This technique is the only solution to modern world DFT problems.
+Disadvantage
+There is, however, a price to pay, which usually consists of accepting that some design rules (rather a design style) are enforced and that additional silicon area and propagation delays are tolerated.
+Examples
+Following are a few examples of structured DFT which we will cover extensively in future lessons:
+
+
+Scan Path
+Partial Scan
+Level Sensitive Scan
+BIST
+Boundary Scan
+
+
+
+
+Summary (TL;DR)
+This was a short introduction to the concept of Design for Testability in VLSI. We also saw an overview of what it entails and what’s to come in this course. The key takeaway is just that there is a lot of room for error in the manufacturing of ICs. These errors can be costly in more ways than just financially. To reduce these errors significantly, a methodology known as DFT exists. This methodology adds a bunch of features to test the chips. To learn how that’s done, and everything it entails, keep up with the course!
 
 
