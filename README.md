@@ -753,25 +753,22 @@ GLS Simulation:
 Summary : Here this how the circuit should behave but this correct waveform is only obtained while doing netlist simulation. Here first pic show the netlist simulation which shows the proper working of the dut while the last pic shows the improper working of dut as we have used blocking statement here which causes synthesis simulation mismatch which is sorted out by GLS while providing netlist simulation.
 
 
-## Day-5-
+## Day-5-Design For Testabilty(DFT)
 
-What is Design for Testability, and why we need it?
-Problems with manufacturing ICs
-Today, semiconductors lie at the heart of ongoing advances across the electronics industry. The introduction of new technologies, especially nanometre technologies with 14 nm or smaller geometry, has allowed the semiconductor industry to keep pace with increased performance-capacity demands from consumers. This has brightened the prospects for future industry growth.
+**What is Design for Testability, and why we need it?**
 
-However, new technologies come with new challenges. Smaller die sizes increase the probability of some errors. Errors in ICs are highly undesirable. Here’s a list of some possible issues that arise while manufacturing chips.
-
-Density Issue: Fabrication processes have become quite complicated with the advent of deep-submicron design technologies. Design elements are coming closer and closer; they are becoming smaller and thinner. Billions of transistors are involved in present-day VLSI chips. So, the chances of two wires touching each other or a very thin wire breaking in between are high. These are a few sources of errors or faults. The point is, there can be many such errors that can creep in during the design and fabrication processes. So, with an increase in density, the probability of failure also becomes high.
-Software Issue: Moreover, apart from fabrication, there can even be errors in the translation process due to the bugs in CAD software tools used to design the chip.
-Application Issue: There are several critical applications, in which we can’t afford to have faults in the chip at any cost. For example, in medical or healthcare applications, a single fault in the equipment controllers may even risk the life of an individual. For rockets or space shuttles that run on cryogenic fuel, they may need their microcontroller or microprocessor to run on a broader temperature range. Hence the test conditions for these chips should be very application-specific and on an extreme level to prevent any future failures.
-Maintenance Issue: In case of any future failure, for repairing or maintenance, we need to identify the proper coordinates of fault. Since PCB sizes are also decreasing, multimeter testing isn’t a viable option anymore. Moreover, moving towards SoC (System on Chip) design, the modular design is losing its relevance, thereby making the maintenance process more expensive.
-Business Issue: If designed chips are found to be faulty, then it transforms into a substantial loss and penalty for the company. Later, we will discuss how detecting a fault earlier decreases the cost of doing business significantly.
-The possibility of faults may arise even after fabrication during the packaging process.
-
-
+Today, semiconductors lie at the heart of ongoing advances across the electronics industry. The introduction of new technologies, has allowed the semiconductor industry to keep pace with increased performance-capacity demands from consumers. This has brightened the prospects for future industry growth.
+However, new technologies come with new challenges. Smaller die sizes increase the probability of some errors. Errors in ICs are highly undesirable. 
 In simple words, Design for testability is a design technique that makes testing a chip possible and cost-effective by adding additional circuitry to the chip.
-
 Alternatively, Design-for-testability techniques improve the controllability and observability of internal nodes, so that embedded functions can be tested.
+
+Now, Question arrises what is controllability and observability in design.
+*Controllability*: Ability to establish aspecific signal value at each node in a circuit from setting values at the circuits inputs.
+*Observability*: Ability to determine the signal value at any node in circuit by controlling the circuits input and observing its output.
+
+
+
+
 
 
 
