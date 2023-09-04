@@ -807,6 +807,25 @@ where Y is the yield, means the fraction of the chips fabricated that are good.
 </details>
 
 
+## Day-6-Introduction to logic synthesis in DC
+
+<details>
+<summary> Introduction </summary>
+
+*Synthesis*
+-RTL to Gate level translation.
+-The design is converted inta gate and connections are made betn the gates.
+-INPUT to Synthesis 1. RTL 2. .lib
+
+*Contents of .lib*
+A typical Liberty file contains detailed information about the behaviour of standard cells, including :
+    -Timing Information : This includes delay, transition and capacitance values associated with the standard cells. Timing information specifies how the cells behave under different input conditions.
+    -Power Information : Liberty file also provides data on power consumption , including static power and dynamic power characteristics. This information is crucial for optimizing the power consumption in IC.
+    -Functional Behaviour : Descriptions of the logical functionality of standard cells, such as input and output pins and logical equations and any additional attributesthat define their operation.
+    -Operating Conditions : Liberty files may include information about different operating condition in terms of process , voltage and temperature under which all cells are characterized.
+    
+
+
 
 
 
