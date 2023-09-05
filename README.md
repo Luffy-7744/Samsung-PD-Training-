@@ -881,10 +881,110 @@ The DC compiler does not understand .lib , so the .lib is converted to .db forma
 <summary> Labs on DC Complier </summary>
 
  Invoking dc_shell. Then we echo target library and link_library which returns an imaginary pointer library namely your library, which needs to be set.
-
+```
  echo $target_library
  echo $link_library
-
+```
  
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f49dcd5024e5b30f51e644034e3152296993c1da/day5/dc_shell1.png">
 
+The RTL design code is 
+```
+module lab1_flop_with_en ( input res , input clk , input d , input en , output reg q);
+always @ (posedge clk , posedge res)
+begin
+	if(res)
+		q <= 1'b0;
+	else if(en)
+		q <= d;	
+end
+endmodule
+```
+Synthesis of this design code can be done using the following commands
+```
+read_verilog <path of design file>
+read_db <path of .db>
+write -f verilog -out <net_filename>
+```
+Below is the screenshot of the output window after compile This generates the netlist file but it consists of some seqgen library as shown in the figure and not the .db file even though we have read the .db file, This is beacuse we didn't set link and target library,
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b387b6d96107fc8d9f1917bbabf3c21c0007a378/day5/dc_shell2.png">
+
+To set the link_library and target_library we use the following commands:
+```
+set target_library <path of .db>
+set link_library { * path of the .db }
+link
+compile
+write -f verilog -out <net_filename>
+```
+The generated netlist
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b387b6d96107fc8d9f1917bbabf3c21c0007a378/day5/dc_shell3.png">
+
+*Labs on Design Vision*
+To launch Design Vision we need to enable c shell and then give design Vision:
+```
+csh
+design_vision
+```
+After launching the design_vison first we need to the net to .ddc which is read by Design_vision tool which can be done by using the below command
+```
+write -f ddc -out <filename_name>
+```
+Then we can start GUI and then read the .ddc file generated above. This ddc file contains all the information of the tool memory of that particular session. ddc is synopys proprietary format i.e it can be read only br synopsys tools.When the .db is read it automatically reads the linked .db file.
+If we have an RTL design that we want to synthesize and we have the Verilog code available, we would typically use read_verilog to start the synthesis process. However, if we have a DDC-formatted design from a previous run or from another tool in the Synopsys toolchain, we would use read_ddc to work with that design in Design Compiler's GUI or command-line environment.
+When we click lab1 and then schematic we get the schematic view of the Design show below:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b387b6d96107fc8d9f1917bbabf3c21c0007a378/day5/dc_shell_L2_1.png">
+
+*Lab on DC Setup*
+The .synopys_dc.setup file for the above example of mux and d flip flop is as follows :
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b387b6d96107fc8d9f1917bbabf3c21c0007a378/day5/dc_shell_L3_2_target_lib_setting.png">
+
+```
+set target_library /home/a.chinchani/DC_WORKSHOP/lib/sky130_fd_sc_hd_tt_025c_1v80.db
+set link_library {* $target_library }
+```
+</details>
+
+
+<details>
+<summary> Labs on TCL </summary>
+Tcl (Tool Command Language) is a scripting language used for automating tasks. In EDA, it's used to automate design processes. Here are loops in Tcl:
+1. While Loop:
+while is used for repeating a block of code as long as a condition is true.
+Example:
+```
+set i 0
+while {$i < 5} {
+    puts "Iteration $i"
+    incr i
+	}
+```
+
+2. For Loop:
+for is used for iterating over a range or a list.
+
+Example:
+```
+for {set i 0} {$i < 5} {incr i} {
+    puts "Iteration $i"
+}
+```
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b387b6d96107fc8d9f1917bbabf3c21c0007a378/day5/tcl_1.png">
+
+*Example*
+These codes can be written in tickle file
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b387b6d96107fc8d9f1917bbabf3c21c0007a378/day5/tcl_example_1.png">
+
+Result
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b387b6d96107fc8d9f1917bbabf3c21c0007a378/day5/tcl_example_1_result.png">
+
+</details>
+
+
+## Day-7-Introduction to logic synthesis in DC
+
+<details>
+<summary> Labs on DC Complier </summary>
