@@ -814,8 +814,10 @@ where Y is the yield, means the fraction of the chips fabricated that are good.
 
 *Synthesis*
 -RTL to Gate level translation.
+
 -The design is converted inta gate and connections are made betn the gates.
--INPUT to Synthesis 1. RTL 2. .lib
+
+-INPUT to Synthesis :     1. RTL      2. .lib
 
 *Contents of .lib*
 A typical Liberty file contains detailed information about the behaviour of standard cells, including :
@@ -825,7 +827,7 @@ A typical Liberty file contains detailed information about the behaviour of stan
     -Operating Conditions : Liberty files may include information about different operating condition in terms of process , voltage and temperature under which all cells are characterized.
     
 
-*Liberty files are essential for following reasons*:
+*Need of Liberty files*:
 
 Timing Analysis : EDA tools use Liberty files to perform static timing analysis, ensuring that the IC design meets specified timing constraints. This is critical for achieving desired performance targets.
 
@@ -838,15 +840,14 @@ Variability Handling : Variability in manufacturing processes can impact the beh
 
 
 *Constraints*
-
-In VLSI design, constraints are essential parameters and limitations that guide the development process to ensure that the resulting integrated circuits (ICs) meet specific performance, timing, and functionality requirements. These constraints play a crucial role in achieving a successful VLSI design.
+Constraints are the instructions that the designer apply during various step in VLSI chip implementation, such as logic synthesis, clock tree synthesis, Place and Route, and Static Timing Analysis. They define what the tools can or cannot do with the design or how the tool behaves. In VLSI design, constraints are essential parameters and limitations that guide the development process to ensure that the resulting integrated circuits (ICs) meet specific performance, timing, and functionality requirements. These constraints play a crucial role in achieving a successful VLSI design.
 
 </details>
 
 <details>
 <summary> DC Complier </summary>
 
-Design Compiler , often abbreviated as DC, is a high-level synthesis tool developed by Synopsys, a leading provider of EDA solutions. It plays a pivotal role in the process of designing complex integrated circuits (ICs) and is an integral part of modern VLSI design flows.
+Design Compiler ,  is a high-level synthesis tool developed by Synopsys, a leading provider of EDA solutions. It plays a pivotal role in the process of designing complex integrated circuits (ICs) and is an integral part of modern VLSI design flows.
 
 Important terms used
 
@@ -857,7 +858,7 @@ Important terms used
 - Design : RTL files which has the behavioral model of the design.
 
 ```
-Read STD Cell/tech.lib
+                Read STD Cell/tech.lib
 			 ↓
 		Read Design (Verilog and Design.lib)
 			 ↓
@@ -984,7 +985,99 @@ Result
 </details>
 
 
-## Day-7-Introduction to logic synthesis in DC
+## Day-7-Basic of STA
 
 <details>
-<summary> Labs on DC Complier </summary>
+<summary> Introduction to STA </summary>
+
+STA breaks down the design into time pathways before doing timing analysis. The following factors make up each time path:
+
+Startpoint: The beginning of a timing route in which data is launched by a clock edge or must be ready at a certain moment. Every startpoint must be a register clock pin or an input port.
+
+Combinational logic network: It includes elements with no internal state or memory. AND, OR, XOR, and inverter elements are allowed in combinational logic, but flip-flops, latches, registers, and RAM are not.
+
+Endpoint: When data is caught by a clock edge or when it needs to be provided at a specified moment, this is the end of a timing path. A register data input pin or an output port must be present at each endpoint.
+
+Static timing analysis calculates a maximum delay using the longest way and a minimum delay using the shortest path.
+
+A Setup time (Max Delay Constraint) refers to a design specification or requirement that imposes an upper limit on the delay a signal can experience while propagating through a specific path or circuit within an integrated circuit. Consider a example of 2 D flip flop connected with a combinational logic in between them.
+
+Tck >= Tcq + Tcomb + Tsu
+
+Hold time (Min Delay constraint) refers to a design specification or requirement that sets a minimum allowable delay for a signal to propagate through a specific path or circuit within an integrated circuit. This constraint is used to ensure that certain signals within the circuit do not propagate too quickly, which can lead to timing violations and potential operational issues.
+
+Thold < Tcq + Tcomb
+
+*Timing Arc*
+ A timing arc defines the propagation of signals through logic gates/nets and defines a timing relationship between two related pins. Timing arc is one of the components of a timing path. Static timing analysis works on the concept of timing paths. Each path starts from either primary input or a register and ends at a primary output or a register. In-between, the path traverses through what are known as timing arcs. We can define a timing arc as an indivisible path/constraint from one pin to another that tells EDA tool to consider the path/relationship between the pins. For instance, AND, NAND, NOT, full adder cell etc. gates have arcs from each input pin to each output pin.
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/4c967a1c4855c5b1a5a974bb47f6345591ae6ac3/PD%23Day7/download.png">
+ Consider a case of 2:1 Mux this has 3 timing arcs
+
+A -> Z
+
+B -> Z
+
+sel -> Z
+
+this implies that Z ooutput can change from either A,B or sel
+
+Sequential Cells Timing arcs
+
+For D flip flop it is Clock to Q delay timing arc and setup , hold time arcs.
+
+For Latches it is clock to Q delay timing arc , D to Q timing arcs ,setup hold time arcs.
+
+Timing paths in VLSI design are specific routes or signal paths within a digital circuit where the timing characteristics, including signal propagation delays, setup times, hold times, and clock-to-q delays, are analyzed to ensure the circuit's correct and reliable operation. These paths are crucial for timing analysis and play a central role in achieving the desired performance and functionality of the integrated circuit. Timing paths typically include a starting point (often a flip-flop or input pin), a set of logic gates and interconnections, and an ending point (another flip-flop or output pin).
+
+Start points of timing path
+
+Input ports
+Clock pins of regs
+End point of timing path
+
+Output ports
+D pin of D flip flop / D Latch
+Always the timing path start at one of the start point and ends at one of the end point
+
+Clock -> D (Reg 2 Reg)
+
+Clock -> Output port (I/O timing path)
+
+input port -> D (I/O timing path)
+
+input port -> Output port (These should not be present)
+Consider the circuit
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d4a75e99e5bcd37ea0a6bf4b47a92e336f231700/PD%23Day7/exa.png">
+In this Reg 2 Reg is constrained by clock , Reg to out is constrained by Output external delay and clock period , In 2 Reg is constrained by input external delay and clock period.
+
+In addition to this Input transition delaya are also constrained as signal transition are not ideal , As delay are function of input transition delay and load capacitance they both need to be constrain.
+</details>
+
+<details>
+<summary> Labs </summary>
+Timing File (.lib) consists of ASCII representations of Timing, Area, and Power associated with the Standard cell. The Naming convention in the timing file follows PVT format (Process, Voltage, Temperature). For example, the standard library used in our case was sky130_fd_sc_hd_tt_025C_1v8, this name suggests that we are using 130 nm technology and the process is typical, temperature is 25C, and 1.8 V represents the voltage.
+The common part of Lib file contains
+- Library name and technology name
+- Units (of time, power, voltage, current, resistance and capacitance)
+- Value of operating condition ( process, voltage and temperature) – Max, Min and Typical 
+
+<img width="1085" alt="lib1" src="">
+
+Based on operating conditions there are three different lib files for Max, Min and Typical corners. In the second part of Lib file, it contains cell-specific information for each cell. 
+
+Cell-specific information in Lib file is mainly
+- Cell name
+- Pin name
+- Area of cell
+- Leakage power in respect of input pins logic state
+Also It contains Pins details like
+- Pin name
+- Pin direction
+- Internal power
+- Capacitance
+- Raise capacitance
+- Fall Capacitance
+- Fanout load
+<img width="1085" alt="lib1" src="">
+
