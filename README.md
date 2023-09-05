@@ -1111,6 +1111,7 @@ Comparing 2 differnt flavour of and gates namely and2_0 and and2_1 , we see that
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f0cf73c96d30c52fd66281f4d82e1003696ea95b/PD%23Day7/Capture.PNG">
 
 Sequential flops have clock pin as true
+
 ```
 area : 38.787200000;
         cell_footprint : "sky130_fd_sc_hd__sdfbbn";
@@ -1151,7 +1152,7 @@ area : 38.787200000;
             direction : "input";
             fall_capacitance : 0.0016980000;
          
-'''
+```
 
 
 Unnateness of D flip flop positive edge triggered
