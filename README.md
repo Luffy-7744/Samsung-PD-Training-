@@ -1065,7 +1065,7 @@ The common part of Lib file contains
 - Units (of time, power, voltage, current, resistance and capacitance)
 - Value of operating condition ( process, voltage and temperature) – Max, Min and Typical 
 
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8204f51893df840de7100d1c433293e9edb1e96c/PD%23Day7/opening_lib.png">
 
 Based on operating conditions there are three different lib files for Max, Min and Typical corners. In the second part of Lib file, it contains cell-specific information for each cell. 
 
@@ -1082,14 +1082,14 @@ Also It contains Pins details like
 - Raise capacitance
 - Fall Capacitance
 - Fanout load
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8204f51893df840de7100d1c433293e9edb1e96c/PD%23Day7/opening_lib.png">
 
 A Look-Up Table (LUT) in a Liberty file is a component that defines the logical behavior and timing characteristics of a combinational logic cell within a digital library. Liberty files are used in the electronic design automation (EDA) industry to represent libraries of standard cells that can be used in VLSI (Very Large Scale Integration) design.
 
 index1 represents input transition , index2 represeents output load capacitance
 
 example of and2_1 gate index table
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8204f51893df840de7100d1c433293e9edb1e96c/PD%23Day7/and2_index.png">
 
 *Unateness*
 A function is said to be unate if the rise transition on the positive unate input variable causes the ouput to rise or no change and vice versa.
@@ -1104,19 +1104,95 @@ A clock signal is negative unate if a rising edge at the clock source can only
 A clock signal is not unate if the clock sense is ambiguous as a result of non-unate timing arcs in the clock path.
 
 And gate is an example of positive Unateness:
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8204f51893df840de7100d1c433293e9edb1e96c/PD%23Day7/and2_1_unnate.png">
 
 Comparing 2 differnt flavour of and gates namely and2_0 and and2_1 , we see that area of and2_1 > and2_0
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f0cf73c96d30c52fd66281f4d82e1003696ea95b/PD%23Day7/Capture.PNG">
 
 Sequential flops have clock pin as true
-<img width="1085" alt="lib1" src="">
+```
+area : 38.787200000;
+        cell_footprint : "sky130_fd_sc_hd__sdfbbn";
+        cell_leakage_power : 0.0153947700;
+        driver_waveform_fall : "ramp";
+        driver_waveform_rise : "ramp";
+        ff ("IQ","IQ_N") {
+            clear : "!RESET_B";
+            clear_preset_var1 : "H";
+            clear_preset_var2 : "L";
+            clocked_on : "!CLK_N";
+            next_state : "(D&!SCE) | (SCD&SCE)";
+            preset : "!SET_B";
+        }
+        pg_pin ("VGND") {
+            pg_type : "primary_ground";
+            related_bias_pin : "VPB";
+            voltage_name : "VGND";
+        }
+        pg_pin ("VNB") {
+            pg_type : "nwell";
+            physical_connection : "device_layer";
+            voltage_name : "VNB";
+        }
+        pg_pin ("VPB") {
+            pg_type : "pwell";
+            physical_connection : "device_layer";
+            voltage_name : "VPB";
+        }
+        pg_pin ("VPWR") {
+            pg_type : "primary_power";
+            related_bias_pin : "VNB";
+            voltage_name : "VPWR";
+        }
+        pin ("CLK_N") {
+            capacitance : 0.0017800000;
+            ** clock : "true";  ** -------------> Clock is true
+            direction : "input";
+            fall_capacitance : 0.0016980000;
+         
+'''
+
 
 Unnateness of D flip flop positive edge triggered
-<img width="1085" alt="lib1" src="">
+```
+                related_pin : "CLK_N";
+                rise_transition ("del_1_7_7") {
+                    index_1("0.0100000000, 0.0230506000, 0.0531329000, 0.1224740000, 0.2823110000, 0.6507430000, 1.5000000000");
+                    index_2("0.0005000000, 0.0013189500, 0.0034792400, 0.0091778800, 0.0242103000, 0.0638642000, 0.1684670000");
+                    values("0.0232978000, 0.0295765000, 0.0465064000, 0.0946410000, 0.2265447000, 0.5754117000, 1.5026856000", \
+                        "0.0234848000, 0.0296225000, 0.0464747000, 0.0944869000, 0.2264113000, 0.5750624000, 1.5045718000", \
+                        "0.0233643000, 0.0295607000, 0.0464747000, 0.0945168000, 0.2263061000, 0.5753233000, 1.5028371000", \
+                        "0.0235687000, 0.0297767000, 0.0466145000, 0.0944561000, 0.2259604000, 0.5746931000, 1.5046934000", \
+                        "0.0235661000, 0.0295917000, 0.0466156000, 0.0945248000, 0.2261588000, 0.5747037000, 1.5006447000", \
+                        "0.0236305000, 0.0297841000, 0.0466114000, 0.0943436000, 0.2264104000, 0.5749078000, 1.5007792000", \
+                        "0.0234834000, 0.0296178000, 0.0466203000, 0.0946091000, 0.2266867000, 0.5748321000, 1.5022009000");
+                }
+                timing_sense : "non_unate";
+                timing_type : "falling_edge";
+            }
+```
+
 
 Unateness of D latch positive edge triggered
-<img width="1085" alt="lib1" src="">
+```
+                related_pin : "GATE_N";
+                rise_transition ("del_1_7_7") {
+                    index_1("0.0100000000, 0.0230506000, 0.0531329000, 0.1224740000, 0.2823110000, 0.6507430000, 1.5000000000");
+                    index_2("0.0005000000, 0.0013104500, 0.0034345500, 0.0090016200, 0.0235923000, 0.0618331000, 0.1620580000");
+                    values("0.0290359000, 0.0360989000, 0.0537774000, 0.1023029000, 0.2327008000, 0.5800371000, 1.4992581000", \
+                        "0.0290669000, 0.0360541000, 0.0537217000, 0.1023566000, 0.2325888000, 0.5812102000, 1.5037938000", \
+                        "0.0289580000, 0.0359722000, 0.0537431000, 0.1023093000, 0.2327867000, 0.5797032000, 1.5054989000", \
+                        "0.0289144000, 0.0360224000, 0.0538419000, 0.1022993000, 0.2324767000, 0.5806629000, 1.5049062000", \
+                        "0.0289832000, 0.0360823000, 0.0537268000, 0.1023169000, 0.2327650000, 0.5794586000, 1.5054222000", \
+                        "0.0290149000, 0.0360945000, 0.0537585000, 0.1023309000, 0.2324873000, 0.5810031000, 1.4970503000", \
+                        "0.0289586000, 0.0360057000, 0.0538139000, 0.1022934000, 0.2326491000, 0.5787922000, 1.5045210000");
+                }
+                timing_sense : "non_unate";
+                timing_type : "falling_edge";
+            }
+```
+
+
 
 **lab on .lib in dc_compiler**
 
