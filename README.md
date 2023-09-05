@@ -951,9 +951,12 @@ set link_library {* $target_library }
 <details>
 <summary> Labs on TCL </summary>
 Tcl (Tool Command Language) is a scripting language used for automating tasks. In EDA, it's used to automate design processes. Here are loops in Tcl:
+	
 1. While Loop:
 while is used for repeating a block of code as long as a condition is true.
+
 Example:
+
 ```
 set i 0
 while {$i < 5} {
@@ -1081,3 +1084,50 @@ Also It contains Pins details like
 - Fanout load
 <img width="1085" alt="lib1" src="">
 
+A Look-Up Table (LUT) in a Liberty file is a component that defines the logical behavior and timing characteristics of a combinational logic cell within a digital library. Liberty files are used in the electronic design automation (EDA) industry to represent libraries of standard cells that can be used in VLSI (Very Large Scale Integration) design.
+
+index1 represents input transition , index2 represeents output load capacitance
+
+example of and2_1 gate index table
+<img width="1085" alt="lib1" src="">
+
+*Unateness*
+A function is said to be unate if the rise transition on the positive unate input variable causes the ouput to rise or no change and vice versa.
+
+Negative unateness means cell output logic is inverted version of input logic. eg. In inverter having input A and output Y, Y is -ve unate w.r.t A. Positive unate means cell output logic is same as that of input.
+These +ve ad -ve unateness are constraints defined in library file and are defined for output pin w.r.t some input pin.
+
+A clock signal is positive unate if a rising edge at the clock source can only cause a rising edge at the register clock pin, and a falling edge at the clock source can only cause a falling edge at the register clock pin.
+
+A clock signal is negative unate if a rising edge at the clock source can only cause a falling edge at the register clock pin, and a falling edge at the clock source can only cause a rising edge at the register clock pin. In other words, the clock signal is inverted.
+
+A clock signal is not unate if the clock sense is ambiguous as a result of non-unate timing arcs in the clock path.
+
+And gate is an example of positive Unateness:
+<img width="1085" alt="lib1" src="">
+
+Comparing 2 differnt flavour of and gates namely and2_0 and and2_1 , we see that area of and2_1 > and2_0
+<img width="1085" alt="lib1" src="">
+
+Sequential flops have clock pin as true
+<img width="1085" alt="lib1" src="">
+
+Unnateness of D flip flop positive edge triggered
+<img width="1085" alt="lib1" src="">
+
+Unateness of D latch positive edge triggered
+<img width="1085" alt="lib1" src="">
+
+**lab on .lib in dc_compiler**
+
+Ex 1 : To print all the sequential gates
+<img width="1085" alt="lib1" src="">
+
+Ex 2 : To Prints the library linked
+<img width="1085" alt="lib1" src="">
+
+Ex 3 : the list of cells from the collection
+<img width="1085" alt="lib1" src="">
+
+Ex 4: Prints the functionality of a particular cell
+<img width="1085" alt="lib1" src="">
