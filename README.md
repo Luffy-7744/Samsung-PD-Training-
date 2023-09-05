@@ -825,8 +825,51 @@ A typical Liberty file contains detailed information about the behaviour of stan
     -Operating Conditions : Liberty files may include information about different operating condition in terms of process , voltage and temperature under which all cells are characterized.
     
 
+*Liberty files are essential for following reasons*:
+
+Timing Analysis : EDA tools use Liberty files to perform static timing analysis, ensuring that the IC design meets specified timing constraints. This is critical for achieving desired performance targets.
+
+Power Optimization : Power consumption is a significant concern in modern IC design. Liberty files provide power data that allows designers to optimize power usage and meet energy efficiency goals.
+
+Design Closure : During the design process, designers use Liberty files to guide the synthesis, placement, and routing of standard cells. The data in these files helps achieve design closure by ensuring that the design meets performance, power, and area targets.
+
+Variability Handling : Variability in manufacturing processes can impact the behavior of standard cells. Liberty files may include data for different process corners to account for manufacturing variations.
 
 
 
+*Constraints*
 
+In VLSI design, constraints are essential parameters and limitations that guide the development process to ensure that the resulting integrated circuits (ICs) meet specific performance, timing, and functionality requirements. These constraints play a crucial role in achieving a successful VLSI design.
 
+</details>
+
+<details>
+<summary> DC Complier </summary>
+
+Design Compiler , often abbreviated as DC, is a high-level synthesis tool developed by Synopsys, a leading provider of EDA solutions. It plays a pivotal role in the process of designing complex integrated circuits (ICs) and is an integral part of modern VLSI design flows.
+
+Important terms used
+
+- Synopsys Design Constraints(SDC) : These are the design constraints which are supplied to DC to enable appropriate optimization suitable for achieving the best implementation.
+- .lib : Design Library which contains the Standard cells.
+- .db : Same as .lib but in a different format. DC understands libraries in .db format
+- .ddc : Synopsys propreitary format for storing the design information. DC can write out and read in DDC.
+- Design : RTL files which has the behavioral model of the design.
+
+''' 
+Read STD Cell/tech.lib
+			 ↓
+		Read Design (Verilog and Design.lib)
+			 ↓
+		Read SDC
+			 ↓
+		Link the Design
+			 ↓
+		Synthesize
+			 ↓
+		Generate Report and analyse QoR
+			 ↓
+		Write out the Netlist
+'''
+
+The DC compiler does not understand .lib , so the .lib is converted to .db format. lib format is for user reference.
