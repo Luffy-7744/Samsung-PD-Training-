@@ -873,3 +873,18 @@ Read STD Cell/tech.lib
 ```
 
 The DC compiler does not understand .lib , so the .lib is converted to .db format. lib format is for user reference.
+
+</details>
+
+
+<details>
+<summary> Labs on DC Complier </summary>
+
+ Invoking dc_shell. Then we echo target library and link_library which returns an imaginary pointer library namely your library, which needs to be set.
+
+ echo $target_library
+ echo $link_library
+
+ 
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f49dcd5024e5b30f51e644034e3152296993c1da/day5/dc_shell1.png">
+
