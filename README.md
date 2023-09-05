@@ -1073,7 +1073,8 @@ Cell-specific information in Lib file is mainly
 - Cell name
 - Pin name
 - Area of cell
-- Leakage power in respect of input pins logic state
+- Leakage power in respect of input pins logic state.
+
 Also It contains Pins details like
 - Pin name
 - Pin direction
