@@ -856,7 +856,7 @@ Important terms used
 - .ddc : Synopsys propreitary format for storing the design information. DC can write out and read in DDC.
 - Design : RTL files which has the behavioral model of the design.
 
-''' 
+```
 Read STD Cell/tech.lib
 			 ↓
 		Read Design (Verilog and Design.lib)
@@ -870,6 +870,6 @@ Read STD Cell/tech.lib
 		Generate Report and analyse QoR
 			 ↓
 		Write out the Netlist
-'''
+```
 
 The DC compiler does not understand .lib , so the .lib is converted to .db format. lib format is for user reference.
