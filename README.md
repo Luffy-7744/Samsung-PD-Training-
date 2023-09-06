@@ -1415,5 +1415,12 @@ Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sk
 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/Y 2 (A_N) | (B_N) | (!C) | (!D)
 ```
 Everywhere its showing its pin name and functionality.
+Similarly , We can do for other attributes like area, capacitance, clock etc.
+ To find the attributs :
+
+dc_shell> list_attributes -app > a
+
+dc_shell> sh gvim a &
+</details>
 
 
