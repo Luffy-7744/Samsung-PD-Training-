@@ -1288,3 +1288,132 @@ dc_shell> get_lib_attribute sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4
 Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y'. 
 (!A) | (!B) | (!C) | (!D)
 ```
+Ex 5: To find the output pin name and its functionality for multiple cells
+
+First make vim file by name my_script.tcl , then inside gvim file write :
+```
+set my_list [list sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4 \
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1 ]
+
+
+
+#For each cell in  the list, find the output pin name and its functionality
+
+
+foreach my_cell $my_list {
+foreach_in_collection my_lib_pin [get_lib_pins ${my_cell}/*] {
+set my_lib_pin_name [get_object_name $my_lib_pin];
+set a [get_lib_attribute $my_lib_pin_name direction];
+if {$a > 1} {
+set fn [get_lib_attribute $my_lib_pin_name function];
+echo $my_lib_pin_name $a $fn;
+}
+}
+
+}
+```
+Then Source the file 
+
+dc_shell> source my_script.tcl
+
+```
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1/A'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1/Y 2 (!A) | (!B) | (!C)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2/A'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2/Y 2 (!A) | (!B) | (!C)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4/A'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4/Y 2 (!A) | (!B) | (!C)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1/A_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1/Y 2 (A_N) | (!B) | (!C)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2/A_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2/Y 2 (A_N) | (!B) | (!C)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4/A_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4/Y 2 (A_N) | (!B) | (!C)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1/A'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1/D'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1/Y 2 (!A) | (!B) | (!C) | (!D)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/A'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/D'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y 2 (!A) | (!B) | (!C) | (!D)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4/A'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4/D'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4/Y 2 (!A) | (!B) | (!C) | (!D)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1/A_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1/D'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1/Y 2 (A_N) | (!B) | (!C) | (!D)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2/A_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2/D'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2/Y 2 (A_N) | (!B) | (!C) | (!D)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4/A_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4/B'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4/D'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4/Y 2 (A_N) | (!B) | (!C) | (!D)
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/A_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/B_N'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/C'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/D'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/Y'. 
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1/Y 2 (A_N) | (B_N) | (!C) | (!D)
+```
+Everywhere its showing its pin name and functionality.
+
+
