@@ -1199,13 +1199,92 @@ Unateness of D latch positive edge triggered
 **lab on .lib in dc_compiler**
 
 Ex 1 : To print all the sequential gates
-<img width="1085" alt="lib1" src="">
+```
+dc_shell> echo $target_library 
+DC_WORKSHOP/lib/sky130_fd_sc_hd__tt_025C_1v80.db
+dc_shell> get_lib_cells */* -filter "is_sequential == true"
+{sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfbbn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfbbn_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfbbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfrbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfrbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfrtn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfrtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfrtp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfrtp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfsbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfsbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfstp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfstp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfstp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfxbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfxbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfxtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfxtp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dfxtp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlclkp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlclkp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlclkp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrbn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrbn_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrtn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrtn_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrtn_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrtp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlrtp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlxbn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlxbn_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlxbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlxtn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlxtn_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlxtn_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlxtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__edfxbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__edfxtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_inputisolatch_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfbbn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfbbn_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfbbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfrbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfrbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfrtn_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfrtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfrtp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfrtp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfsbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfsbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfstp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfstp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfstp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfxbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfxbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfxtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfxtp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdfxtp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdlclkp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdlclkp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdlclkp_4 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sedfxbp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sedfxbp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sedfxtp_1 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sedfxtp_2 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sedfxtp_4}
+```
 
 Ex 2 : To Prints the library linked
-<img width="1085" alt="lib1" src="">
+```
+dc_shell> list_lib
+Logical Libraries:
+-------------------------------------------------------------------------
+Library		File			Path
+-------		----			----
+  sky130_fd_sc_hd__tt_025C_1v80 sky130_fd_sc_hd__tt_025C_1v80.db /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/lib
+1
+```
 
 Ex 3 : the list of cells from the collection
-<img width="1085" alt="lib1" src="">
+```
+dc_shell> foreach_in_collection my_lib_cell [get_lib_cells */*and*] {                                                                                                                                                                      set my_lib_cell_name [get_object_name $my_lib_cell];                                                                                                                                                               echo $my_lib_cell_name;                                                                                                                                                                                            }
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and2_0
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and2_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and2_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and2_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and2b_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and2b_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and2b_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and3_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and3_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and3_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and3b_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and3b_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and3b_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4b_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4b_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4b_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4bb_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4bb_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__and4bb_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2_8
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2b_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2b_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2b_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand3b_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4b_4
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_1
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_2
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4bb_4
+```
+
 
 Ex 4: Prints the functionality of a particular cell
-<img width="1085" alt="lib1" src="">
+```
+dc_shell> foreach_in_collection my_pins [get_lib_pins sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/*] {
+set my_pin_name [get_object_name $my_pins];
+set pin_dir [get_lib_attribute $my_pin_name direction];
+echo $my_pin_name $pin_dir;
+}
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/A'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/A 1
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/B'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/B 1
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/C'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/C 1
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/D'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/D 1
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y'. 
+sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y 2
+dc_shell> get_lib_attribute sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y function
+Performing get_lib_attribute on library object 'sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand4_2/Y'. 
+(!A) | (!B) | (!C) | (!D)
+```
