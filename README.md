@@ -1424,3 +1424,162 @@ dc_shell> sh gvim a &
 </details>
 
 
+
+
+## Day-8-Advanced Constraints
+
+<details>
+<summary> Clock Terminology </summary>
+
+
+We know that when the when the clock is constrained , Actually clock period gets constrained , which in turn limits the combinational delay i.e
+
+Tclk >= Tcq + Tcomb + Tst
+
+Tcomb <= Tclk - (Tcq + Tst)
+
+
+
+Clock Generator are a critical component of VLSI (Very Large Scale Integration) circuits, playing a fundamental role in synchronizing various components of an integrated circuit (IC). They provide clock signals that control the timing of digital operations within the IC. Clock generators are designed to produce clock signals with specific characteristics, such as frequency, duty cycle, and phase, to meet the requirements of the overall system.
+
+*Types of clock generators*
+
+    - Oscillators: These are widely used as clock generators. They generate continuous periodic signals without an external input. Common types include RC oscillators, LC oscillators, and crystal oscillators.
+
+    - Phase-Locked Loops (PLLs): PLLs are versatile clock generators that can generate clock signals with adjustable frequency and phase. They are often used for clock synchronization and multiplication.
+
+    - Delay-Locked Loops (DLLs): DLLs are used to align the phase of a clock signal with respect to another reference clock signal.
+
+    - Ring Oscillators: These are simple but effective oscillators often used for generating clock signals with relatively low frequencies.
+
+    - Crystal Oscillators: They are highly stable and accurate oscillators that use piezoelectric crystals to generate clock signals.
+
+
+Consider the above circuit in this the clock arrives at flop B at 100 ps and at flop A at 100 ps. From this it clear that clock doesnot arrive at same time for all flops. This difference in arrival of clock is called skew.
+
+    - Deterministic Clock Skew: Deterministic clock skew is predictable and results from known factors such as wire delays, signal routing, and clock distribution. It is typically caused by the physical characteristics of the circuit and can be analyzed and compensated for during the design phase. Techniques like clock tree synthesis and buffer insertion are used to mitigate deterministic skew.
+
+    - Random Clock Skew: Random clock skew, also known as process-induced skew, is caused by manufacturing process variations that affect the timing of signals. These variations can lead to slightly different propagation delays for clock signals across different parts of a chip. Random skew is not easily predictable and can vary from chip to chip, even within the same manufacturing batch. To address random skew, designers often use techniques like over-design and guard-banding to ensure that the circuit operates reliably under worst-case conditions.
+
+    - Global Clock Skew: Global clock skew refers to the difference in arrival times of a clock signal at various points across the entire chip. It affects all elements of the chip and can lead to synchronization issues between different clock domains. Managing global clock skew is a critical aspect of clock distribution in large and complex integrated circuits. Global skew can be reduced by careful clock tree synthesis and by minimizing the length of critical paths in the design.
+
+    - Local Clock Skew: Local clock skew is specific to a particular region or block within the chip. It can result from variations in the lengths of wires or traces that carry the clock signal to different parts of a block. Local skew is often easier to manage than global skew because it affects a smaller portion of the chip. Techniques like buffer insertion and clock gating can be used to mitigate local clock skew.
+
+Positive and Negative Skew: Clock skew can be further categorized into positive skew and negative skew based on whether clock signals arrive later or earlier than the ideal clock edge, respectively.
+
+        - Positive Skew: Positive skew occurs when clock signals arrive at different destinations later than the ideal clock edge. It can lead to setup time violations.
+        - Negative Skew: Negative skew occurs when clock signals arrive earlier than the ideal clock edge at different destinations. Negative skew can result in hold time violations.
+
+Clock Jitter is a timing variation or uncertainty in the period or phase of a clock signal. It represents the deviation of the actual clock signal edges from their ideal, regularly spaced positions. Clock jitter can occur due to various factors and can have significant implications for the performance and reliability of digital systems.
+
+Clock latency refers to the time delay or propagation delay that a clock signal experiences as it travels from its source to various points within an integrated circuit (IC) or digital system. It represents the time it takes for the clock signal to propagate through various components, interconnects, and buffers before reaching its destination.
+
+Source latency: The source latency of a clock, also known as clock source latency, refers to the delay or latency introduced by the clock generation circuitry at its source before the clock signal is distributed to other parts of the integrated circuit (IC) or digital system.
+
+Network latency : Network latency in the context of a clock typically refers to the delay or time delay introduced when transmitting a clock signal across a network or communication medium.
+
+Clock Modelling
+
+We should model the clock for:
+
+    Period
+    Source latency
+    Clock skew
+    Clock Network
+    Clock Network latency
+</details>
+
+
+<details>
+<summary> Labs on Advanced Constrains </summary>
+
+**1. Checking the target and link Library**
+```
+dc_shell> echo $target_library 
+DC_WORKSHOP/lib/sky130_fd_sc_hd__tt_025C_1v80.db
+
+dc_shell> echo $link_library 
+*$target_library
+```
+**2. Reading and linking verilog file**
+```
+dc_shell> read_verilog verilog_files/lab8_circuit.v
+Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/gtech.db'
+Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/standard.sldb'
+  Loading link library 'gtech'
+Loading verilog file '/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/lab8_circuit.v'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Warning: Can't read link_library file '*$target_library'. (UID-3)
+Compiling source file /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/lab8_circuit.v
+
+Inferred memory devices in process
+	in routine lab8_circuit line 4 in file
+		'/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/lab8_circuit.v'.
+===============================================================================
+|    Register Name    |   Type    | Width | Bus | MB | AR | AS | SR | SS | ST |
+===============================================================================
+|      REGA_reg       | Flip-flop |   1   |  N  | N  | Y  | N  | N  | N  | N  |
+|      REGC_reg       | Flip-flop |   1   |  N  | N  | Y  | N  | N  | N  | N  |
+|      REGB_reg       | Flip-flop |   1   |  N  | N  | Y  | N  | N  | N  | N  |
+===============================================================================
+Presto compilation completed successfully.
+Current design is now '/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/lab8_circuit.db:lab8_circuit'
+Loaded 1 design.
+Current design is 'lab8_circuit'.
+lab8_circuit
+
+
+dc_shell> link
+
+  Linking design 'lab8_circuit'
+  Using the following designs and libraries:
+  --------------------------------------------------------------------------
+  lab8_circuit                /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/lab8_circuit.db
+  sky130_fd_sc_hd__tt_025C_1v80 (library) /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/lib/sky130_fd_sc_hd__tt_025C_1v80.db
+
+1
+
+
+dc_shell> compile_ultra 
+Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/dw_foundation.sldb'
+Warning: DesignWare synthetic library dw_foundation.sldb is added to the synthetic_library in the current command. (UISN-40)
+Information: Performing power optimization. (PWR-850)
+Analyzing: "/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/lib/sky130_fd_sc_hd__tt_025C_1v80.db"
+Library analysis succeeded.
+Information: Evaluating DesignWare library utilization. (UISN-27)
+
+============================================================================
+| DesignWare Building Block Library  |         Version         | Available |
+============================================================================
+| Basic DW Building Blocks           | T-2022.03-DWBB_202203.4 |     *     |
+| Licensed DW Building Blocks        | T-2022.03-DWBB_202203.4 |     *     |
+============================================================================
+
+====================================================================================================
+| Flow Information                                                                                 |
+----------------------------------------------------------------------------------------------------
+| Flow         | Design Compiler WLM                                                               |
+| Comand Line  | compile_ultra                                                                     |
+====================================================================================================
+| Design Information                                      | Value                                  |
+====================================================================================================
+| Number of Scenarios                                     | 0                                      |
+| Leaf Cell Count                                         | 8                                      |
+| Number of User Hierarchies                              | 0                                      |
+| Sequential Cell Count                                   | 3                                      |
+| Macro Count                                             | 0                                      |
+| Number of Power Domains                                 | 0                                      |
+| Number of Path Groups                                   | 1                                      |
+| Number of VT Class                                      | 0                                      |
+| Number of Clocks                                        | 0                                      |
+| Number of Dont Touch Cells                              | 0                                      |
+| Number of Dont Touch Nets                               | 0                                      |
+| Number of Size Only Cells                               | 0                                      |
+| Design with UPF Data                                    | false                                  |
+====================================================================================================
+```
+**3. Listing ports in design**
+
+
