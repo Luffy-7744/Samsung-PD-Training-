@@ -1580,6 +1580,67 @@ Information: Evaluating DesignWare library utilization. (UISN-27)
 | Design with UPF Data                                    | false                                  |
 ====================================================================================================
 ```
+
 **3. Listing ports in design**
 
+```
+dc_shell> get_ports 
+{rst clk IN_A IN_B OUT_Y out_clk}
+# returns all the ports present in the design
 
+
+dc_shell> foreach_in_collection my_port [get_ports *] {
+set my_port_name [get_object_name $my_port];
+echo $my_port_name;
+}
+rst
+clk
+IN_A
+IN_B
+OUT_Y
+out_clk
+
+#Listing port with direction
+
+dc_shell> foreach_in_collection my_port [get_ports *] {                                                                                                                                                                                                                    set my_port_name [get_object_name $my_port];
+                 set dir [get_attribute [get_ports $my_port_name] direction];
+                 echo $my_port_name $dir;
+                 }                                                                                                                                                                                               
+rst in
+clk in
+IN_A in
+IN_B in
+OUT_Y out
+out_clk out
+```
+**4. Listing Cells in design**
+
+```
+dc_shell> get_cells *
+ {REGA_reg REGB_reg REGC_reg U9 U10 U11 U12 U13 U14}
+
+By default system gives hierarchical cells:
+dc_shell> get_cells * -hier -filter "is_hierarchical == false"
+{REGA_reg REGB_reg REGC_reg U9 U10 U11 U12 U13 U14}
+
+
+For listing Reference cells :
+
+dc_shell> foreach_in_collection my_cell [get_cells * -hier] {
+ set my_cell_name [get_object_name $my_cell];
+ set rname [get_attribute [get_cells $my_cell_name] ref_name];
+echo $my_cell_name $rname;
+}
+
+REGA_reg sky130_fd_sc_hd__dfrtp_1
+REGB_reg sky130_fd_sc_hd__dfrtp_1
+REGC_reg sky130_fd_sc_hd__dfrtp_1
+U9 sky130_fd_sc_hd__clkinv_1
+U10 sky130_fd_sc_hd__clkinv_1
+U11 sky130_fd_sc_hd__nor2_1
+U12 sky130_fd_sc_hd__a21oi_1
+U13 sky130_fd_sc_hd__clkinv_1
+U14 sky130_fd_sc_hd__nand2_1
+
+```
+Now we convert our design 
