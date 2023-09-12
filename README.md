@@ -1663,7 +1663,500 @@ U11/Y out
 U13/A in
 U12/B1 in
 ```
+**4. Getting Pin of Design**
+
+```
+dc_shell> get_pin *
+{REGA_reg/D REGA_reg/CLK REGA_reg/RESET_B REGA_reg/Q REGB_reg/D REGB_reg/CLK REGB_reg/RESET_B REGB_reg/Q REGC_reg/D REGC_reg/CLK REGC_reg/RESET_B REGC_reg/Q U9/A U9/Y U10/A U10/Y U11/A U11/B U11/Y U12/A1 U12/A2 U12/B1 U12/Y U13/A U13/Y U14/A U14/B U14/Y}
+
+Listing it vertically:
+dc_shell> foreach_in_collection my_pin [get_pins *] {
+set pin_name [get_object_name $my_pin];
+echo $pin_name;
+}
+REGA_reg/D
+REGA_reg/CLK
+REGA_reg/RESET_B
+REGA_reg/Q
+REGB_reg/D
+REGB_reg/CLK
+REGB_reg/RESET_B
+REGB_reg/Q
+REGC_reg/D
+REGC_reg/CLK
+REGC_reg/RESET_B
+REGC_reg/Q
+U9/A
+U9/Y
+U10/A
+U10/Y
+U11/A
+U11/B
+U11/Y
+U12/A1
+U12/A2
+U12/B1
+U12/Y
+U13/A
+U13/Y
+U14/A
+U14/B
+U14/Y
+```
+If pin is input pin  the list it:
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/860ccf555961c8b9e9918c7606f4e155da4ba6b3/PD%23day8/querry_tcl.png">
+
+After Sourcing tcl file we get this result:
+```
+dc_shell> source  querry.tcl 
+REGA_reg/CLK
+REGB_reg/CLK
+REGC_reg/CLK
+```
+**5. Creating Clock**
+
+```
+dc_shell> create_clock -name MYCLK -per 10 [get_ports clk]
+1
+dc_shell> get_clocks *
+{MYCLK}
+
+## Reporting Clock
+dc_shell> report_clock *
+Information: Updating graph... (UID-83)
+ 
+****************************************
+Report : clocks
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 15:12:44 2023
+****************************************
+
+Attributes:
+    d - dont_touch_network
+    f - fix_hold
+    p - propagated_clock
+    G - generated_clock
+    g - lib_generated_clock
+
+Clock          Period   Waveform            Attrs     Sources
+--------------------------------------------------------------------------------
+MYCLK           10.00   {0 5}                         {clk}
+--------------------------------------------------------------------------------
+1
+
+dc_shell> get_attribute [get_ports out_clk] clocks --------> It tells what are clocks reaching the pin.
+{MYCLK}                       
+dc_shell> get_attribute [get_ports out_clk] clock ---------> It tells is the pin meant to be a clock pin or not.
+Warning: Attribute 'clock' does not exist on port 'out_clk'. (UID-101)
+```
+Creating different types of clock :
+```
+dc_shell> create_clock -name MYCLK -per 10 [get_ports clk] -wave {5 10} -----> Clock with rising edge at 5 and falling edge at 10. 50% duty cucle.
+dc_shell> create_clock -name MYCLK -per 10 [get_ports clk] -wave {0 2.5} -----> Clock with rising edge at 0 and falling edge at 2.5. 25% duty cycle.
+dc_shell> create_clock -name MYCLK -per 10 [get_ports clk] -wave {15 20} ----> rising edge at 15, before 15ns no clock.
+```
+To remove clock :
+
+dc_shell> remove_clock <clock_name>
 
 
+**6. Report_timing**
+
+In report timing it says (Path is unconstrained) because clock is not present.
+So, we create a clock first...
+```
+dc_shell> create_clock -name MYCLK -per 10 [get_ports clk]
+1
 
 
+dc_shell> report_timing -to REGC_reg/D
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 15:54:55 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: REGB_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Endpoint: REGC_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  REGB_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00       0.00 r
+  REGB_reg/Q (sky130_fd_sc_hd__dfrtp_1)                   0.29       0.29 r
+  U14/Y (sky130_fd_sc_hd__nand2_1)                        0.04       0.34 f
+  REGC_reg/D (sky130_fd_sc_hd__dfrtp_1)                   0.00       0.34 f
+  data arrival time                                                  0.34
+
+  clock MYCLK (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  REGC_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00      10.00 r
+  library setup time                                     -0.12       9.88
+  data required time                                                 9.88
+  --------------------------------------------------------------------------
+  data required time                                                 9.88
+  data arrival time                                                 -0.34
+  --------------------------------------------------------------------------
+  slack (MET)                                                        9.55
+```
+This report timing will show the arival time and required time with slack. It will not show uncertanity , input and output external delay, latency because we have not modeled it yet.
+
+```
+dc_shell> set_clock_latency -source 2 [get_clocks MYCLK]
+1
+dc_shell> set_clock_latency 1 [get_clocks MYCLK]
+1
+dc_shell> set_clock_uncertainty -setup 0.5 [get_clocks MYCLK]
+1
+dc_shell> set_clock_uncertainty -hold 0.5 [get_clocks MYCLK]
+1
+```
+
+FOR  SETUP :
+```
+dc_shell> report_timing -to REGC_reg/D 
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 16:02:40 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: REGB_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Endpoint: REGC_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00            ------------> changed from 0 to 3 clock network latency =source latency + nwetwork latency = 2 + 1=3
+  REGB_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00       3.00 r
+  REGB_reg/Q (sky130_fd_sc_hd__dfrtp_1)                   0.29       3.29 r
+  U14/Y (sky130_fd_sc_hd__nand2_1)                        0.04       3.34 f
+  REGC_reg/D (sky130_fd_sc_hd__dfrtp_1)                   0.00       3.34 f
+  data arrival time                                                  3.34
+
+  clock MYCLK (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             3.00      13.00            -----------> changed from 0 to 3 clock network latency =source latency + nwetwork latency = 2 + 1=3
+  clock uncertainty                                      -0.50      12.50            -----------> Uncertanity is subtracted
+  REGC_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00      12.50 r
+  library setup time                                     -0.12      12.38
+  data required time                                                12.38
+  --------------------------------------------------------------------------
+  data required time                                                12.38
+  data arrival time                                                 -3.34
+  --------------------------------------------------------------------------
+  slack (MET)                                                        9.05        --------------------> slack went down from 9.55 to 9.05
+```
+
+
+FOR HOLD 
+
+```
+dc_shell> report_timing -to REGC_reg/D -delay_type min
+ 
+****************************************
+Report : timing
+        -path full
+        -delay min
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 16:09:25 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: REGA_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Endpoint: REGC_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  REGA_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00       3.00 r
+  REGA_reg/Q (sky130_fd_sc_hd__dfrtp_1)                   0.29       3.29 r
+  U14/Y (sky130_fd_sc_hd__nand2_1)                        0.04       3.33 f
+  REGC_reg/D (sky130_fd_sc_hd__dfrtp_1)                   0.00       3.33 f
+  data arrival time                                                  3.33
+
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  clock uncertainty                                       0.50       3.50     ---------> Uncertainity is added
+  REGC_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00       3.50 r
+  library hold time                                      -0.05       3.45
+  data required time                                                 3.45
+  --------------------------------------------------------------------------
+  data required time                                                 3.45
+  data arrival time                                                 -3.33
+  --------------------------------------------------------------------------
+  slack (VIOLATED)                                                  -0.12
+```
+**8. Modeling IO delays**
+
+
+When we do *report_timing -from IN_A* we get path is unconstrained. We set IO Constrains :
+```
+dc_shell> set_input_delay -max 5 -clock [get_clocks MYCLK] [get_ports IN_A]
+1
+dc_shell> set_input_delay -max 5 -clock [get_clocks MYCLK] [get_ports IN_B]
+1
+dc_shell> set_input_delay -min 1 -clock [get_clocks MYCLK] [get_ports IN_B]
+1
+dc_shell> set_input_delay -min 1 -clock [get_clocks MYCLK] [get_ports IN_A]
+1
+dc_shell> set_input_transition -max 0.3 [get_ports IN_A]
+1
+dc_shell> set_input_transition -max 0.3 [get_ports IN_B]
+1
+dc_shell> set_input_transition -min 0.1 [get_ports IN_B]
+1
+dc_shell> set_input_transition -min 0.1 [get_ports IN_A]
+1
+```
+
+We get report_timing as :
+
+FOR SETUP :
+
+```
+dc_shell> report_timing -from IN_A -trans -net -cap -nosplit 
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -nets
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 16:20:38 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGA_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                       Fanout       Cap     Trans      Incr       Path
+  ----------------------------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                                     0.00       0.00
+  clock network delay (ideal)                                                 3.00       3.00
+  input external delay                                                        5.00       8.00 f
+  IN_A (in)                                                         0.30      0.00       8.00 f
+  IN_A (net)                                    2         0.00                0.00       8.00 f
+  U11/Y (sky130_fd_sc_hd__nor2_1)                                   0.16      0.22       8.22 r
+  n5 (net)                                      2         0.01                0.00       8.22 r
+  U13/Y (sky130_fd_sc_hd__clkinv_1)                                 0.05      0.07       8.29 f
+  N0 (net)                                      1         0.00                0.00       8.29 f
+  REGA_reg/D (sky130_fd_sc_hd__dfrtp_1)                             0.05      0.00       8.29 f
+  data arrival time                                                                      8.29
+
+  clock MYCLK (rise edge)                                                    10.00      10.00
+  clock network delay (ideal)                                                 3.00      13.00
+  clock uncertainty                                                          -0.50      12.50
+  REGA_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                                     0.00      12.50 r
+  library setup time                                                         -0.13      12.37
+  data required time                                                                    12.37
+  ----------------------------------------------------------------------------------------------
+  data required time                                                                    12.37
+  data arrival time                                                                     -8.29
+  ----------------------------------------------------------------------------------------------
+                                                                                         4.08   ----------------> Setup slack is reduced due input trans.
+
+```
+
+FOR HOLD : 
+```
+dc_shell> report_timing -from IN_A -trans -net -cap -nosplit -delay_type min
+ 
+****************************************
+Report : timing
+        -path full
+        -delay min
+        -nets
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 16:25:15 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGB_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: min
+
+  Point                                       Fanout       Cap     Trans      Incr       Path
+  ----------------------------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                                     0.00       0.00
+  clock network delay (ideal)                                                 3.00       3.00
+  input external delay                                                        1.00       4.00 r
+  IN_A (in)                                                         0.10      0.00       4.00 r
+  IN_A (net)                                    2         0.00                0.00       4.00 r
+  U12/Y (sky130_fd_sc_hd__a21oi_1)                                  0.04      0.07       4.07 f
+  N1 (net)                                      1         0.00                0.00       4.07 f
+  REGB_reg/D (sky130_fd_sc_hd__dfrtp_1)                             0.04      0.00       4.07 f
+  data arrival time                                                                      4.07
+
+  clock MYCLK (rise edge)                                                     0.00       0.00
+  clock network delay (ideal)                                                 3.00       3.00
+  clock uncertainty                                                           0.50       3.50
+  REGB_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                                     0.00       3.50 r
+  library hold time                                                          -0.05       3.45
+  data required time                                                                     3.45
+  ----------------------------------------------------------------------------------------------
+  data required time                                                                     3.45
+  data arrival time                                                                     -4.07
+  ----------------------------------------------------------------------------------------------
+  slack (MET)                                                                            0.62
+
+```
+Setting Output Delay 
+
+```
+dc_shell> set_output_delay -max 5 -clock [get_clock MYCLK] [get_ports OUT_Y]
+1
+dc_shell> set_output_delay -min 1 -clock [get_clock MYCLK] [get_ports OUT_Y]
+1
+```
+Report timing :
+
+```
+dc_shell> report_timing -to OUT_Y -cap -trans -nosplit
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 16:30:24 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: REGC_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Endpoint: OUT_Y (output port clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                          Cap     Trans      Incr       Path
+  ------------------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                           0.00       0.00
+  clock network delay (ideal)                                       3.00       3.00
+  REGC_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00      0.00       3.00 r
+  REGC_reg/Q (sky130_fd_sc_hd__dfrtp_1)         0.00      0.04      0.34       3.34 f
+  U10/Y (sky130_fd_sc_hd__clkinv_1)             0.00      0.01      0.03       3.36 r
+  OUT_Y (out)                                             0.01      0.00       3.36 r
+  data arrival time                                                            3.36
+
+  clock MYCLK (rise edge)                                          10.00      10.00
+  clock network delay (ideal)                                       3.00      13.00
+  clock uncertainty                                                -0.50      12.50
+  output external delay                                            -5.00       7.50
+  data required time                                                           7.50
+  ------------------------------------------------------------------------------------
+  data required time                                                           7.50
+  data arrival time                                                           -3.36
+  ------------------------------------------------------------------------------------
+  slack (MET)                                                                  4.14
+```
+
+After setting load
+```
+dc_shell> set_load -max 0.4 [get_ports OUT_Y]
+1
+dc_shell> set_load -min 0.1 [get_ports OUT_Y]
+1
+```
+
+Report Timing
+
+```
+dc_shell> report_timing -to OUT_Y -cap -trans -nosplit
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 16:33:26 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: REGC_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Endpoint: OUT_Y (output port clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                          Cap     Trans      Incr       Path
+  ------------------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                           0.00       0.00
+  clock network delay (ideal)                                       3.00       3.00
+  REGC_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00      0.00       3.00 r
+  REGC_reg/Q (sky130_fd_sc_hd__dfrtp_1)         0.00      0.05      0.30       3.30 r
+  U10/Y (sky130_fd_sc_hd__clkinv_1)             0.40      3.07      2.32       5.62 f
+  OUT_Y (out)                                             3.07      0.00       5.62 f
+  data arrival time                                                            5.62
+
+  clock MYCLK (rise edge)                                          10.00      10.00
+  clock network delay (ideal)                                       3.00      13.00
+  clock uncertainty                                                -0.50      12.50
+  output external delay                                            -5.00       7.50
+  data required time                                                           7.50
+  ------------------------------------------------------------------------------------
+  data required time                                                           7.50
+  data arrival time                                                           -5.62
+  ------------------------------------------------------------------------------------
+  slack (MET)                                                                  1.88
+
+```
+
+Due to increase in load from 0 to 0.4 the transition time icreased, due to which we have more delay. Slack is also reduced. 
