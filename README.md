@@ -2160,3 +2160,131 @@ Wire Load Model Mode: top
 ```
 
 Due to increase in load from 0 to 0.4 the transition time icreased, due to which we have more delay. Slack is also reduced. 
+
+Example: lab8_circuit_modified
+
+```ruby
+module lab8 circuit (input rst, input clk , input IN_A , input IN_B , output OUT_Y , output out_clk output reg out_div_clk)
+reg REGA, REGB , REGC ;
+always @ (posedge clk , posedge rst )
+begin
+	if(rst)
+	begin
+		REGA <= 1'b0 ;
+		REGB <= 1'b0 ;
+		REGC <= 1'b0 ;
+		out_div_clk <= 1'b0 ;
+	end
+	else
+	begin
+		REGA= IN_A | IN_B;
+		REGB<- IN_A ^ IN_B;
+		REGC <= !(REGA & REGB) ;
+		out_div_clk <= ~out_div_clk
+	end
+end
+
+assign OUT_Y = ~REGC ;
+
+assign out_clk = clk;
+
+endmodule
+```
+
+Loading the new design and Instead of writting constraints everytime we can create a .tcl program and then source it:
+
+```
+create_clock -name MYCLK -per 10 [get_ports clk];
+set_clock_latency -source 2 [get_clocks MYCLK];
+set_clock_latency 1 [get_clocks MYCLK];
+set_clock_uncertainty -setup 0.5 [get_clocks MYCLK];
+set_clock_uncertainty -hold 0.1 [get_clocks MYCLK];
+set_input_delay -max 4 -clock [get_clocks MYCLK] [get_ports IN_A];
+set_input_delay -max 4 -clock [get_clocks MYCLK] [get_ports IN_B];
+set_input_delay -min 1 -clock [get_clocks MYCLK] [get_ports IN_A];
+set_input_delay -min 1 -clock [get_clocks MYCLK] [get_ports IN_B];
+set_input_transition -max 0.4 [get_ports IN_A];
+set_input_transition -max 0.4 [get_ports IN_B];
+set_input_transition -min 0.1 [get_ports IN_A];
+set_input_transition -min 0.1 [get_ports IN_B];
+create_generated_clock -name MYGEN_CLK -master MYCLK -source [get_ports clk] -div 1 [get_ports out_clk];
+create_generated_clock -name MYGEN_DIV_CLK -master MYCLK -source [get_ports clk] -div 2 [get_ports out_div_clk]; 
+set_output_delay -max 4 -clock [get_clocks MYGEN_CLK] [get_ports OUT_Y];
+set_output_delay -min 1 -clock [get_clocks MYGEN_CLK] [get_ports OUT_Y];
+set_load -max 0.4 [get_ports OUT_Y];
+set_load -min 0.1 [get_ports OUT_Y];
+```
+
+When we give 
+- set_input_delay -max 3 -clock <clock_name> [<definition_point>]
+
+Here -max 3 implies that the data arrives 3 ns late compared to clock
+
+- set_input_delay -max -3 -clock <clock_name> [<definition_point>]
+
+Here the data is arriving 3 ns before the rising edge which helps in setup time
+
+so negative max relaxes the path in case of setup
+
+Positive max tightens the path in case of setup
+
+In case of hold it is the opposite case negative min tightens the path and positive min relaxes the path.
+
+- Now consider the case where two inputs In_C and In_D are given to combinational logic and it should be constraint , This design is independent of the original design.
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/5c1edee411118736dbf4a546d4d22ba9228f9b2b/PD%23day8/266766737-a595756f-21f0-4518-85bb-351eb3959551.png">
+
+This can be done by using max_latency or using the virtual lab:
+set_max_latency -from [<source_port_name>] -to [<destination_port_name>]
+
+**10. Creating Virtual Clock 
+
+create_clock -name <virtual_clock_name> -period
+
+set_input_delay -max -clock <clock_name> -clock_fall -add [<destination_point>]
+
+Here the -add is signify that we are appending this to already constrained path.
+
+In cases where there are multiple load attached to a net , Transition delay can get further delayed depending on loading strain.
+
+In such cases set_driving_cell is more recommanded.
+
+NOTE
+
+set_input_transition => It is used mainly for top level primary Input/output .
+set_driving_cell => It is used for intrernal path.
+Command for set_driving_cell is
+
+set_driving_cell -lib_cell <lib_cell_ref_name> [all_inputs]
+
+Labs on set_max_latency virtual_clocks
+When we do report_timing -to OUT_Z , we get unconstrained path.
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/44610624eb8cde3640d1149e987b3da763773c56/PD%23day8/lab7_unconstrained.png">
+
+Again when we compile the design is optimized and timing is met
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/dcdb2830c74f21a06eecb67b3da1c14e0d7bd75a/PD%23day8/Capture.PNG">
+
+Viewing the design in Design_vision:
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1d926069f6fa03e8c15215a19e20a05c8173374e/PD%23day8/schematic.PNG">
+
+*Lab on virtual clock*
+Virtual CLock is a clock created without a definition point.
+
+Creating virtual clock and constraining it.
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7439f41278c95901be375d47a7bc8db6f2b6aaae/PD%23day8/lab8_commandvirt.png">
+
+when we give report_timing -to OUT_Z -sig 4 , we get the path is violated.
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f2ab4084911082033a768d6d40d0687e57972dc7/PD%23day8/lab8_violated.png">
+
+When we again compile the design is optimized and slack is met :
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1006f838a8df15ce08bdbcd8a678c7b60a3d05a5/PD%23day8/lab8_met.png">
+
+</details>
+
+
+
