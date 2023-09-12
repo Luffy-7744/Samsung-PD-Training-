@@ -1596,7 +1596,8 @@ echo $my_port_name;
 rst
 clk
 IN_A
-IN_B
+IN_Blmstat -c 27020@srilc01 -f Design-Compiler
+
 OUT_Y
 out_clk
 
@@ -1643,4 +1644,26 @@ U13 sky130_fd_sc_hd__clkinv_1
 U14 sky130_fd_sc_hd__nand2_1
 
 ```
-Now we convert our design 
+Now we convert our design into ddc
+
+dc_shell> write -f ddc -out verilog_files/lab8_circuit.ddc
+
+Then open design_vision gui in another tab read ddc file of lab8.
+The schematic of lab8_circuit.ddc as gvien below:
+
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/cf5b0991e603accfcdcd5af37e353c6526456714/PD%23day8/lab8_schematic.png">
+
+```
+design_vision> foreach_in_collection my_pin [all_connected n5] {
+set pin_name [get_object_name $my_pin];
+set dir [get_attribute [get_pins $pin_name] direction];
+echo $pin_name $dir;
+}
+U11/Y out
+U13/A in
+U12/B1 in
+```
+
+
+
+
