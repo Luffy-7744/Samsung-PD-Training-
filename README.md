@@ -2161,6 +2161,101 @@ Wire Load Model Mode: top
 
 Due to increase in load from 0 to 0.4 the transition time icreased, due to which we have more delay. Slack is also reduced. 
 
+
+**9. Creating Generated Clock**
+```
+dc_shell> create_generated_clock -name MYGEN_CLK -master MYCLK -source [get_ports clk] -div 1 [get_ports out_clk]
+1
+
+dc_shell> report_clocks *
+ 
+****************************************
+Report : clocks
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 16:47:01 2023
+****************************************
+
+Attributes:
+    d - dont_touch_network
+    f - fix_hold
+    p - propagated_clock
+    G - generated_clock
+    g - lib_generated_clock
+
+Clock          Period   Waveform            Attrs     Sources
+--------------------------------------------------------------------------------
+MYCLK           10.00   {0 5}                         {clk}
+MYGEN_CLK       10.00   {0 5}               G         {out_clk}
+--------------------------------------------------------------------------------
+
+Generated     Master         Generated      Master         Waveform
+Clock         Source         Source         Clock          Modification
+--------------------------------------------------------------------------------
+MYGEN_CLK     clk            {out_clk}      MYCLK          divide_by(1)
+--------------------------------------------------------------------------------
+```
+As you can see my generated clock is created.
+
+Now , if we do report_timing -to OUT_Y , it will show timing wrt MYCLK. But, we want report MYGEN_CLK.
+```
+dc_shell> set_clock_latency -max 5 [get_clocks MYGEN_CLK]
+1
+dc_shell> set_clock_latency -max 1 [get_clocks MYGEN_CLK]
+1
+dc_shell> set_output_delay -max 5 [get_ports OUT_Y] -clock [get_clocks MYGEN_CLK]
+1
+dc_shell> set_output_delay -min 1 [get_ports OUT_Y] -clock [get_clocks MYGEN_CLK]
+1
+```
+Report Timing :
+```
+dc_shell> report_timing -to OUT_Y
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 12 17:03:59 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: REGC_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Endpoint: OUT_Y (output port clocked by MYGEN_CLK)
+  Path Group: MYGEN_CLK                        -----------------------> Generated Clock is used
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  REGC_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00       3.00 r
+  REGC_reg/Q (sky130_fd_sc_hd__dfrtp_1)                   0.30       3.30 r
+  U10/Y (sky130_fd_sc_hd__clkinv_1)                       2.32       5.62 f
+  OUT_Y (out)                                             0.00       5.62 f
+  data arrival time                                                  5.62
+
+  clock MYGEN_CLK (rise edge)                            10.00      10.00
+  clock network delay (ideal)                             1.00      11.00
+  output external delay                                  -5.00       6.00
+  data required time                                                 6.00
+  --------------------------------------------------------------------------
+  data required time                                                 6.00
+  data arrival time                                                 -5.62
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.38
+
+
+```
+
+
+
 Example: lab8_circuit_modified
 
 ```ruby
