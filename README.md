@@ -1746,7 +1746,7 @@ MYCLK           10.00   {0 5}                         {clk}
 --------------------------------------------------------------------------------
 1
 
-dc_shell> get_attribute [get_ports out_clk] clocks --------> It tells what are clocks reaching the pin.
+dc_shell> get_attribute [get_ports out_Optimizationsclk] clocks --------> It tells what are clocks reaching the pin.
 {MYCLK}                       
 dc_shell> get_attribute [get_ports out_clk] clock ---------> It tells is the pin meant to be a clock pin or not.
 Warning: Attribute 'clock' does not exist on port 'out_clk'. (UID-101)
@@ -2380,6 +2380,489 @@ When we again compile the design is optimized and slack is met :
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/1006f838a8df15ce08bdbcd8a678c7b60a3d05a5/PD%23day8/lab8_met.png">
 
 </details>
+
+## Day-9-Optimizations
+
+<details>
+<summary> Introduction to Combinational and Sequential Optimization </summary>
+
+Optimization in VLSI design is a crucial aspect of creating efficient and high-performance integrated circuits (ICs). VLSI optimization involves improving various aspects of IC design, such as power consumption, area utilization, timing, and manufacturability.
+
+The goals of optimization :
+
+- Cost based Optimization
+     Optimization till cost is met
+     Over optimization of one goal can harm other goals.
+
+
+- Performance Optimization:
+
+    Speed: Improve the operational speed of the IC by minimizing delays, optimizing critical paths, and ensuring that the design meets specified timing requirements.
+    Throughput: Enhance the overall system throughput by optimizing data flow and minimizing bottlenecks in the circuit.
+
+- Power Optimization:
+
+    Dynamic Power: Minimize dynamic power consumption to extend battery life in portable devices and reduce power dissipation in data centers.
+    Static Power: Reduce static power (leakage power) to lower overall power consumption when the IC is in standby or idle mode.
+
+- Goals for Synthesis
+
+    > Meet Timing
+    > Meet Area
+    > Meet power
+    > Meet Quality
+
+    
+*Combination logic Optimisation*
+
+Combinational Logic Optimization squeeze the logic to get most optimized design in terms of area and power. There are various techniques for optimizing the circuit
+
+    constant propagation(Direct propagation)
+    Boolean Logic Optimization(K-Means ,QUine Mckluskey)
+
+*Sequential Optimization*
+
+Basic Sequential Optimization
+
+    Sequential Constant propagation
+    Retiming
+    Unused Flop Removal
+    Clock Gating
+
+Advanced
+
+    State Optimization
+    Sequential logic cloning
+
+*Optimization of Unloaded Outputs*
+
+Optimizing unloaded outputs typically involves reduction of power consumption , area, delay for unused or idle pins . It refers to flip-flops whose outputs are not connected to any subsequent logic gates or do not affect the functionality of the overall circuit. so these flip flops can be removed thus retaining the function and reducing the area , power of the design.
+
+*Controlling sequential optimization*
+
+    compile_seqmap_propagate_constants ----> If this variable is not set to true, the sequential constant propagating circuits are retained in circuit and not optimized.
+    compile_delete_unloaded_sequential_cells ----> If the variable is not set to true, it doesn't remove the counter cells as discussed, it retains all counters in the circuit.
+    compile_register_replication ----> If the variable is set to true, this replicates the registers in cloning optimization so that timing is met.
+</details>
+
+
+
+<details>
+<summary> Labs on Combinational and Sequential Optimization </summary>
+	
+**EX 1: opt_check**
+
+The RTL code of the opt_check is as follows:
+
+```ruby
+module opt_check (input a , input b , input c , output y1, output y2);
+wire a1;
+assign y1 = a?b:0;
+assign y2 = ~((a1 & b) | c);
+assign a1 = 1'b0;
+endmodule
+```
+The report after linking the compiling the above design is as follows:
+```
+dc_shell> read_verilog verilog_files/opt_check.v
+dc_shell> link
+dc_shell> compile
+dc_shell> write -f ddc -out verilog_files/opt_check.ddc
+
+open design_vision
+design_vision> read_ddc verilog_files/opt_check.ddc
+```
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/51c8857814ba1688bf1c1368a1190ddf49b33dca/PD%23day9/opt_check_schematic.png">
+
+**EX 2: opt_check2**
+
+The RTL code of the opt_check is as follows:
+
+```ruby
+module opt_check2 (input a , input b , output y);
+assign y = a?1:b;
+endmodule
+```
+The report after linking the compiling the above design is as follows:
+```
+dc_shell> read_verilog verilog_files/opt_check2.v
+dc_shell> link
+dc_shell> compile
+dc_shell> write -f ddc -out verilog_files/opt_check2.ddc
+
+open design_vision
+design_vision> read_ddc verilog_files/opt_check2.ddc
+```
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f2cc84d716bbbfbe49819f72b603867954595e63/PD%23day9/opt_check2_schematic.png">
+
+
+**EX 3: opt_check3**
+
+The RTL code of the opt_check is as follows:
+
+```ruby
+module opt_check3 (input a , input b, input c , output y);
+assign y = a?(c?b:0):0;
+endmodule
+```
+The report after linking the compiling the above design is as follows:
+```
+dc_shell> read_verilog verilog_files/opt_check3.v
+dc_shell> link
+dc_shell> compile
+dc_shell> write -f ddc -out verilog_files/opt_check3.ddc
+
+open design_vision
+design_vision> read_ddc verilog_files/opt_check3.ddc
+```
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f2cc84d716bbbfbe49819f72b603867954595e63/PD%23day9/opt_check3.png">
+
+**EX 4: opt_check4**
+
+The RTL code of the opt_check is as follows:
+
+```ruby
+module opt_check4 (input a , input b , input c , output y);
+assign y = a?(b?(a & c ):c):(!c);
+endmodule
+```
+The report after linking the compiling the above design is as follows:
+```
+dc_shell> read_verilog verilog_files/opt_check4.v
+dc_shell> link
+dc_shell> compile
+dc_shell> write -f ddc -out verilog_files/opt_check4.ddc
+
+open design_vision
+design_vision> read_ddc verilog_files/opt_check4.ddc
+```
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f2cc84d716bbbfbe49819f72b603867954595e63/PD%23day9/opt_check4_schem.png">
+
+Then set_max_delay as 0.06 and do report_timing:
+```
+design_vision> set_max_delay 0.06 -from [all_inputs] -to [get_ports y]
+1
+
+
+design_vision> report_timing -sig 4
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : opt_check4
+Version: T-2022.03-SP5-1
+Date   : Thu Sep 14 12:14:43 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: a (input port)
+  Endpoint: y (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  input external delay                   0.0000     0.0000 f
+  a (in)                                 0.0000     0.0000 f
+  U2/Y (sky130_fd_sc_hd__xnor2_1)        0.0830     0.0830 f
+  y (out)                                0.0000     0.0830 f
+  data arrival time                                 0.0830
+
+  max_delay                              0.0600     0.0600
+  output external delay                  0.0000     0.0600
+  data required time                                0.0600
+  -----------------------------------------------------------
+  data required time                                0.0600
+  data arrival time                                -0.0830
+  -----------------------------------------------------------
+  slack (VIOLATED)                                 -0.0230
+
+```
+Then we do compile ulta to optimize the timing specs:
+
+```
+design_vision> compile_ultra
+
+design_vision> report_timing
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : opt_check4
+Version: T-2022.03-SP5-1
+Date   : Thu Sep 14 12:18:00 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: a (input port)
+  Endpoint: y (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  input external delay                     0.00       0.00 f
+  a (in)                                   0.00       0.00 f
+  U3/Y (sky130_fd_sc_hd__xnor2_1)          0.08       0.08 f
+  y (out)                                  0.00       0.08 f
+  data arrival time                                   0.08
+
+  max_delay                                0.06       0.06
+  output external delay                    0.00       0.06
+  data required time                                  0.06
+  -----------------------------------------------------------
+  data required time                                  0.06
+  data arrival time                                  -0.08
+  -----------------------------------------------------------
+  slack (VIOLATED)                                   -0.02
+
+```
+After report timing it gives same result, Hence further optimization not possbile.
+
+
+
+**EX 2: Resource_sharing_mult_check**
+
+RTL code:
+```ruby
+module resource_sharing_mult_check (input [3:0] a , input [3:0] b, input [3:0] c , input [3:0] d, output [7:0] y  , input sel);
+	assign y = sel ? (a*b) : (c*d);
+
+endmodule
+```
+Commands:
+
+```
+design_vision> read_verilog verilog_files/resource_sharing_mult_check.v 
+design_vision> design_vision> link
+design_vision> compile_ultra 
+```
+Report Area:
+```
+design_vision> report_area 
+ 
+****************************************
+Report : area
+Design : resource_sharing_mult_check
+Version: T-2022.03-SP5-1
+Date   : Thu Sep 14 12:25:46 2023
+****************************************
+
+Information: Updating design information... (UID-85)
+Library(s) Used:
+
+    sky130_fd_sc_hd__tt_025C_1v80 (File: /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/lib/sky130_fd_sc_hd__tt_025C_1v80.db)
+
+Number of ports:                           25
+Number of nets:                            66
+Number of cells:                           37
+Number of combinational cells:             37
+Number of sequential cells:                 0
+Number of macros/black boxes:               0
+Number of buf/inv:                          1
+Number of references:                       5
+
+Combinational area:                334.070391
+Buf/Inv area:                        3.753600
+Noncombinational area:               0.000000
+Macro/Black Box area:                0.000000
+Net Interconnect area:      undefined  (No wire load specified)
+
+Total cell area:                   334.070391
+Total area:                 undefined
+1
+```
+Report Timing :
+```
+design_vision> report_timing
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : resource_sharing_mult_check
+Version: T-2022.03-SP5-1
+Date   : Thu Sep 14 12:30:53 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: sel (input port)
+  Endpoint: y[6] (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  input external delay                                    0.00       0.00 r
+  sel (in)                                                0.00       0.00 r
+  U2/Y (sky130_fd_sc_hd__clkinv_1)                        0.12       0.12 f
+  U22/Y (sky130_fd_sc_hd__a22oi_1)                        0.29       0.40 r
+  U24/Y (sky130_fd_sc_hd__nor2_1)                         0.09       0.49 f
+  DP_OP_9J2_122_9283/U13/SUM (sky130_fd_sc_hd__ha_1)      0.30       0.80 f
+  DP_OP_9J2_122_9283/U6/COUT (sky130_fd_sc_hd__fa_1)      0.38       1.18 f
+  DP_OP_9J2_122_9283/U5/COUT (sky130_fd_sc_hd__fa_1)      0.41       1.59 f
+  DP_OP_9J2_122_9283/U4/COUT (sky130_fd_sc_hd__fa_1)      0.38       1.97 f
+  DP_OP_9J2_122_9283/U3/COUT (sky130_fd_sc_hd__fa_1)      0.38       2.35 f
+  U27/SUM (sky130_fd_sc_hd__fa_1)                         0.46       2.81 r
+  y[6] (out)                                              0.00       2.81 r
+  data arrival time                                                  2.81
+
+  max_delay                                               2.50       2.50
+  output external delay                                   0.00       2.50
+  data required time                                                 2.50
+  --------------------------------------------------------------------------
+  data required time                                                 2.50
+  data arrival time                                                 -2.81
+  --------------------------------------------------------------------------
+  slack (VIOLATED)                                                  -0.31
+```
+Then we do compile ultra then slack is changed to 0.08.
+Again we set max delay to 0.1
+```
+design_vision> set_max_delay -from sel -to [all_outputs] 0.1
+1
+```
+Again slack changed to -2.32.
+We do compile ultra then check for area:
+```
+design_vision> report_area
+ 
+****************************************
+Report : area
+Design : resource_sharing_mult_check
+Version: T-2022.03-SP5-1
+Date   : Thu Sep 14 12:37:53 2023
+****************************************
+
+Information: Updating design information... (UID-85)
+Library(s) Used:
+
+    sky130_fd_sc_hd__tt_025C_1v80 (File: /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/lib/sky130_fd_sc_hd__tt_025C_1v80.db)
+
+Number of ports:                           25
+Number of nets:                           206
+Number of cells:                          189
+Number of combinational cells:            189
+Number of sequential cells:                 0
+Number of macros/black boxes:               0
+Number of buf/inv:                         35
+Number of references:                      16
+
+Combinational area:                962.172781
+Buf/Inv area:                      133.878396
+Noncombinational area:               0.000000
+Macro/Black Box area:                0.000000
+Net Interconnect area:      undefined  (No wire load specified)
+
+Total cell area:                   962.172781
+Total area:                 undefined
+1
+```
+Area increaseas tried to constrain timing.
+
+Now, we try contrain both area and timing:
+
+```
+design_vision> set_max_area 800
+design_vision> compile_ultra
+```
+Report Timing:
+```
+design_vision> report_timing
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : resource_sharing_mult_check
+Version: T-2022.03-SP5-1
+Date   : Thu Sep 14 12:42:44 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: sel (input port)
+  Endpoint: y[0] (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  input external delay                     0.00       0.00 f
+  sel (in)                                 0.00       0.00 f
+  U202/Y (sky130_fd_sc_hd__nand2_1)        0.04       0.04 r
+  U203/Y (sky130_fd_sc_hd__o21ai_1)        0.04       0.07 f
+  y[0] (out)                               0.00       0.07 f
+  data arrival time                                   0.07
+
+  max_delay                                0.10       0.10
+  output external delay                    0.00       0.10
+  data required time                                  0.10
+  -----------------------------------------------------------
+  data required time                                  0.10
+  data arrival time                                  -0.07
+  -----------------------------------------------------------
+  slack (MET)                                         0.03
+
+```
+
+Area Report:
+
+```
+design_vision> report_area
+ 
+****************************************
+Report : area
+Design : resource_sharing_mult_check
+Version: T-2022.03-SP5-1
+Date   : Thu Sep 14 12:44:16 2023
+****************************************
+
+Library(s) Used:
+
+    sky130_fd_sc_hd__tt_025C_1v80 (File: /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/lib/sky130_fd_sc_hd__tt_025C_1v80.db)
+
+Number of ports:                           25
+Number of nets:                           168
+Number of cells:                          150
+Number of combinational cells:            150
+Number of sequential cells:                 0
+Number of macros/black boxes:               0
+Number of buf/inv:                         18
+Number of references:                      23
+
+Combinational area:                783.251184
+Buf/Inv area:                       67.564798
+Noncombinational area:               0.000000
+Macro/Black Box area:                0.000000
+Net Interconnect area:      undefined  (No wire load specified)
+
+Total cell area:                   783.251184
+Total area:                 undefined
+1
+```
+Now,area also confined within 800.
 
 
 
