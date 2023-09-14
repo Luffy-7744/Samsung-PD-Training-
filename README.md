@@ -2635,7 +2635,7 @@ After report timing it gives same result, Hence further optimization not possbil
 
 
 
-**EX 2: Resource_sharing_mult_check**
+**EX 5: Resource_sharing_mult_check**
 
 RTL code:
 ```ruby
@@ -2864,5 +2864,154 @@ Total area:                 undefined
 ```
 Now,area also confined within 800.
 
+Tie cells
 
+Tie cells also known as tie-high and tie-low cells, are components used in vlsi design to ensure that specific signal are held at a predetermined logic value regardless of input condition. These cells are particularlly useful in preventing floating or undefined states in digital circuit.
 
+**EX 6: dff_const1**
+
+RTL:
+```ruby
+module dff_const1(input clk, input reset, output reg q);
+  always @(posedge clk, posedge reset)
+  begin
+  	if(reset)
+  		q <= 1'b0;
+  	else
+  		q <= 1'b1;
+  end
+
+endmodule
+```
+Commands:
+```
+dc_shell> read_verilog verilog_files/dff_const1.v
+dc_shell> link
+dc_shell> compile
+```
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b33c6d638fe239f64297bba4889dd1ee2eba1768/PD%23day9/dff_const1.png">
+
+**EX 7: dff_const2**
+RTL:
+```ruby
+module dff_const2(input clk, input reset, output reg q);
+always @(posedge clk, posedge reset)
+begin
+	if(reset)
+		q <= 1'b1;
+	else
+		q <= 1'b1;
+end
+
+endmodule
+```
+Commands:
+```
+dc_shell> read_verilog verilog_files/dff_const2.v
+dc_shell> link
+dc_shell> compile
+```
+
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b33c6d638fe239f64297bba4889dd1ee2eba1768/PD%23day9/dff_const2.png">
+
+**EX 8: dff_const3**
+RTL:
+```ruby
+module dff_const3(input clk, input reset, output reg q);
+reg q1;
+
+always @(posedge clk, posedge reset)
+begin
+	if(reset)
+	begin
+		q <= 1'b1;
+		q1 <= 1'b0;
+	end
+	else
+	begin
+		q1 <= 1'b1;
+		q <= q1;
+	end
+end
+
+endmodule
+```
+Commands:
+```
+dc_shell> read_verilog verilog_files/dff_const3.v
+dc_shell> link
+dc_shell> compile
+dc_shell> set compile_seqmap_propagate_constant f
+```
+
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b33c6d638fe239f64297bba4889dd1ee2eba1768/PD%23day9/dff_const3.png">
+
+**EX 9: dff_const4**
+RTL:
+```ruby
+module dff_const4(input clk, input reset, output reg q);
+reg q1;
+
+always @(posedge clk, posedge reset)
+begin
+	if(reset)
+	begin
+		q <= 1'b1;
+		q1 <= 1'b1;
+	end
+	else
+	begin
+		q1 <= 1'b1;
+		q <= q1;
+	end
+end
+
+endmodule
+```
+Commands:
+```
+dc_shell> read_verilog verilog_files/dff_const4.v
+dc_shell> link
+dc_shell> compile
+dc_shell> set compile_seqmap_propagate_constant f
+```
+
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b33c6d638fe239f64297bba4889dd1ee2eba1768/PD%23day9/dff_const4.png">
+
+**EX 10: dff_const5**
+RTL:
+```ruby
+module dff_const5(input clk, input reset, output reg q);
+reg q1;
+
+always @(posedge clk, posedge reset)
+begin
+	if(reset)
+	begin
+		q <= 1'b0;
+		q1 <= 1'b0;
+	end
+	else
+	begin
+		q1 <= 1'b1;
+		q <= q1;
+	end
+end
+
+endmodule
+```
+Commands:
+```
+dc_shell> read_verilog verilog_files/dff_const5.v
+dc_shell> link
+dc_shell> compile
+dc_shell> set compile_seqmap_propagate_constant f
+```
+
+The schematic in design vision:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b33c6d638fe239f64297bba4889dd1ee2eba1768/PD%23day9/dff_const5.png">
+</details>
