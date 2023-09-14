@@ -3014,4 +3014,178 @@ dc_shell> set compile_seqmap_propagate_constant f
 
 The schematic in design vision:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b33c6d638fe239f64297bba4889dd1ee2eba1768/PD%23day9/dff_const5.png">
+
+**Boundary Optimization**
+
+"Boundary optimization" in VLSI (Very Large Scale Integration) design generally refers to the optimization of boundaries or interfaces between different components or modules within an integrated circuit (IC) or system-on-chip (SoC).
+
+RTL Design code:
+```ruby
+module check_boundary (input clk , input res , input [3:0] val_in , output reg [3:0] val_out);
+wire en;
+internal_module u_im (.clk(clk) , .res(res) , .cnt_roll(en));
+
+always @ (posedge clk , posedge res)
+begin
+	if(res)
+		val_out <= 4'b0;
+	else if(en)
+		val_out <= val_in;	
+end
+endmodule
+
+
+module internal_module (input clk , input res , output cnt_roll);
+reg [2:0] cnt;
+
+always @(posedge clk , posedge res)
+begin
+	if(res)
+		cnt <= 3'b0;
+	else
+		cnt <= cnt + 1;
+end
+
+assign cnt_roll = (cnt == 3'b111);
+
+endmodule
+```
+No boundary , Entire design is optimized
+Without :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7e60f34abdd02ce1730651d9970396fcadfdd620/PD%23day9/check_boundry_before.png">
+
+If we don't want boundary optimization then we need to use the below command
+
+set_boundary_optimization <name_pin> false
+
+example : set_boundary_optimization u_im false
+
+
+With:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7e60f34abdd02ce1730651d9970396fcadfdd620/PD%23day9/boundry_check_after.png">
+
+
+**Register Retiiming**
+
+Register retiming is a technique used in Very Large Scale Integration (VLSI) design to optimize the performance of digital circuits by rearranging the registers in the circuit without changing its functionality. The primary goal of register retiming is to minimize the critical path delay, which is the longest path in the circuit from an input to an output.
+
+```ruby
+module check_reg_retime (input clk , input [3:0] a, input [3:0] b , output [7:0] c , input reset);
+
+wire [7:0] mult;
+assign mult = a * b;
+reg [7:0] q1;
+reg [7:0] q2;
+reg [7:0] q3;
+
+
+
+
+always @ (posedge clk , posedge reset)
+begin
+	if(reset)
+	begin
+		q1 <= 8'b0;
+		q2 <= 8'b0;
+		q3 <= 8'b0;
+	end
+	else
+	begin
+		q1 <= mult;
+		q2 <= q1;
+		q3 <= q2;
+	end
+end
+assign c = q3;
+
+endmodule
+```
+In order to rectify this we retime it using following command
+
+compile_ultra -retime
+
+GUI view before optimization:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/check_reg_retime_bc.png">
+
+Timing before the optimization:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/timing_without_retime.png">
+
+GUI view after optimization:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/check_reg_retime_bc.png">
+
+Timing after the optimization:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/timing_retime.png">
+
+Timing for all paths from al input:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/timing_retime_all_input.png">
+
+**Isolating output ports**
+
+In VLSI (Very Large Scale Integration) design, isolating output ports often refers to ensuring that the output signals of a circuit or module are properly isolated and do not interfere with each other or with other parts of the system. This isolation is crucial for maintaining signal integrity, reducing noise, and preventing unintended interactions.
+
+Isolating Output Ports:
+
+- Purpose: The primary goal of isolating output ports is to decouple the internal logic paths of a digital circuit from the variability in the output load, which can affect the cell delay and potentially lead to the failing of internal paths.
+
+- Cell Delay and Output Load: In digital design, the delay of a logic cell is often a function of the output load it drives. When the output load varies, it can result in changes in cell delay, impacting the operation of internal logic elements.
+
+- Solution: To mitigate this problem, designers use isolation techniques. Isolating output ports typically involves inserting buffers between the output ports and external loads, which effectively decouples the internal logic paths from the output paths.
+
+RTL Design code:
+```ruby
+module check_boundary (input clk , input res , input [3:0] val_in , output reg [3:0] val_out);
+wire en;
+internal_module u_im (.clk(clk) , .res(res) , .cnt_roll(en));
+
+always @ (posedge clk , posedge res)
+begin
+	if(res)
+		val_out <= 4'b0;
+	else if(en)
+		val_out <= val_in;	
+end
+endmodule
+
+
+module internal_module (input clk , input res , output cnt_roll);
+reg [2:0] cnt;
+
+always @(posedge clk , posedge res)
+begin
+	if(res)
+		cnt <= 3'b0;
+	else
+		cnt <= cnt + 1;
+end
+
+assign cnt_roll = (cnt == 3'b111);
+
+endmodule
+```
+
+The Design before isolating the ports:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/before_isolate.png">
+
+The timing report before isolating ports
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/timing_before_isolate.png">
+
+REG2REG Timing report before isolation:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/timing_before_isolate_regtoreg.png">
+
+The command set_isolate_ports –type buffer [all_outputs] instructs the tool to isolate the output ports by inserting buffer elements. Buffers drive the external load, which effectively separates the internal paths from the output paths.
+The command for isolating ports
+
+set_isolate_ports -type buffer [all_outputs]
+
+The Design after isolating the ports:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/after_isolate.png">
+
+The timing report after isolating ports
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/timing_after_isolate.png">
+
+REG2REG Timing report after isolation:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/timing_after_isolate_regtoreg.png">
+
+
+
 </details>
