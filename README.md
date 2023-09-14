@@ -3186,6 +3186,51 @@ The timing report after isolating ports
 REG2REG Timing report after isolation:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/timing_after_isolate_regtoreg.png">
 
+**Multicycle path**
 
+A multicycle path in VLSI (Very Large Scale Integration) design refers to a timing path within a digital circuit where a signal takes multiple clock cycles to propagate from a source register (or flip-flop) to a destination register. This is in contrast to a single-cycle path where the signal must propagate and settle within a single clock cycle.
+
+Multicycle paths are typically encountered in digital designs when specific timing constraints or requirements allow for signals to have longer propagation delays. These paths are often used for various purposes, including achieving certain functionalities, optimizing critical paths, or accommodating variations in clocking schemes.
+
+For a single cycle path, the setup check is done at the consecutive edge of the flop and hold is done at the same edge of the flop. Hold is always checked edge before setup. For a half cycle path, the setup check is done at the subsequent fall edge of the flop and hold is done at the previous falling edge of the flop. In a half cycle path, setup is very stringent and hold is relaxed. Fir a multicycle path, the -setup switch specifies the number of cycles after the launch edge, it needs to check setup and the -hold switch specifies the number of cycles the launch edge moves to check with capture.
+
+RTL:
+```ruby
+module mcp_check (input clk , input res  , input [7:0] a , input [7:0] b, input en , output reg [15:0] prod);
+
+reg valid; 
+
+always @ (posedge clk , posedge res)
+begin
+	if(res)
+		valid <= 1'b0;
+	else 
+		valid <= en;
+end
+
+
+
+always @ (posedge clk , posedge res)
+begin
+	if(res)
+		prod <= 16'b0;
+	else if (valid)
+		prod <= a * b;
+end
+
+endmodule
+```
+
+Timing after performing optimization for setup time:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_all_input.png">
+
+Optimization for the minimum time:
+before optimizing:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_min.png">
+after optimizing:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_min_after_mcp.png">
+
+Multicycle Path timing after performing isolation:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_after_isolate.png">
 
 </details>
