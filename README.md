@@ -3236,11 +3236,15 @@ Multicycle Path timing after performing isolation:
 </details>
 
 
+## Day-10-Quality Checks
 
-Sanity checks:
+<details>
+ <summary> Introduction </summary>
+
+**Sanity checks:**
 To ensure that the input received from the library team and synthesis team is correct or not. If we are not doing these checks then it creates problems in later stages of design.
 Basically, we are checking following input files: and make sure that these files are complete and not erroneous.
-1.      design/netlist checks
+1.      Design/netlist checks
 2.      SDC checks
 3.      Library checks
 Design checks:
@@ -3271,3 +3275,31 @@ Library checks:
 It validate the library i.e. it checks the consistency between logical and physical libraries.
 It checks the qualities of both libraries.
 check_library: This command shows the name of the library, library type & its version, units of time, capacitance, leakage power, and current. It shows the number of cells missing, the number of metal or pins missing in the physical and logical library.
+
+
+**Propagation Delay :**
+Propagation delay, in the context of digital electronics and integrated circuits, refers to the time it takes for an electrical signal to travel from the input of a digital logic gate or circuit to its output. It is a critical parameter in digital design because it affects the speed and performance of the circuit. Propagation delay is typically measured in time units, such as nanoseconds (ns) or picoseconds (ps), and it depends on various factors, including the specific technology used, the length of interconnecting wires, and the complexity of the circuit.
+
+Rising Edge Propagation Delay (tpdr): This is the time it takes for the output signal to transition from a low (0) to a high (50% of Vdd crossing) level after the input signal has made a similar transition.
+
+Falling Edge Propagation Delay (tpdf): This is the time it takes for the output signal to transition from a high (50% of Vdd crossing) to a low (0) level after the input signal has made a similar transition.
+
+**report_timing**
+
+The report_timing is used to analyse the report of a timing path that gives information such as cell delays, transition, capacitance, the slack etc.. The report_timing command gives the setup delay of a timing path with two significant digits by default. The following are the different ways to use report_timing command as follows:
+```
+    report_timing -from DFF_A/clk
+    report_timing -from DFF_A/clk -to DFF_C/D
+    report_timing -fall_from DFF_A/clk
+    report_timing -rise_from DFF_B/clk
+    report_timing -delay_type min -to DFF_C/D
+    report_timing -delay_type min -through INV/a
+    report_timing -delay_type max -through AND/b
+    report_timing -rise_from DFF_B/clk -delay_type max -nets -cap -trans -sig 4
+```
+</details>
+
+<details>
+ <summary> LABs </summary>
+
+ 
