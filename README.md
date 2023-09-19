@@ -3302,4 +3302,964 @@ The report_timing is used to analyse the report of a timing path that gives info
 <details>
  <summary> LABs </summary>
 
+Ex: lab8_circuit_modified
+
+RTL from previous labs :
+```ruby
+module lab8 circuit (input rst, input clk , input IN_A , input IN_B , output OUT_Y , output out_clk output reg out_div_clk)
+reg REGA, REGB , REGC ;
+always @ (posedge clk , posedge rst )
+begin
+	if(rst)
+	begin
+		REGA <= 1'b0 ;
+		REGB <= 1'b0 ;
+		REGC <= 1'b0 ;
+		out_div_clk <= 1'b0 ;
+	end
+	else
+	begin
+		REGA= IN_A | IN_B;
+		REGB<- IN_A ^ IN_B;
+		REGC <= !(REGA & REGB) ;
+		out_div_clk <= ~out_div_clk
+	end
+end
+
+assign OUT_Y = ~REGC ;
+
+assign out_clk = clk;
+
+endmodule
+```
+We are also created a.tcl file which sets the constrains on this design:
+```
+create_clock -name MYCLK -per 10 [get_ports clk];
+set_clock_latency -source 2 [get_clocks MYCLK];
+set_clock_latency 1 [get_clocks MYCLK];
+set_clock_uncertainty -setup 0.5 [get_clocks MYCLK];
+set_clock_uncertainty -hold 0.1 [get_clocks MYCLK];
+set_input_delay -max 4 -clock [get_clocks MYCLK] [get_ports IN_A];
+set_input_delay -max 4 -clock [get_clocks MYCLK] [get_ports IN_B];
+set_input_delay -min 1 -clock [get_clocks MYCLK] [get_ports IN_A];
+set_input_delay -min 1 -clock [get_clocks MYCLK] [get_ports IN_B];
+set_input_transition -max 0.4 [get_ports IN_A];
+set_input_transition -max 0.4 [get_ports IN_B];
+set_input_transition -min 0.1 [get_ports IN_A];
+set_input_transition -min 0.1 [get_ports IN_B];
+create_generated_clock -name MYGEN_CLK -master MYCLK -source [get_ports clk] -div 1 [get_ports out_clk];
+create_generated_clock -name MYGEN_DIV_CLK -master MYCLK -source [get_ports clk] -div 2 [get_ports out_div_clk]; 
+set_output_delay -max 4 -clock [get_clocks MYGEN_CLK] [get_ports OUT_Y];
+set_output_delay -min 1 -clock [get_clocks MYGEN_CLK] [get_ports OUT_Y];
+set_load -max 0.4 [get_ports OUT_Y];
+set_load -min 0.1 [get_ports OUT_Y];
+```
+
+Reading and compiling the design:
+```
+dc_shell> read_verilog verilog_files/lab8_circuit_modified.v 
+dc_shell> link
+dc_shell> compile_ultra
+```
+report_timing :
+```
+
+
+ dc_shell> report_timing
+Information: Updating design information... (UID-85)
  
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 12:53:14 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGA_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  input external delay                                    4.00       7.00 f
+  IN_A (in)                                               0.00       7.00 f
+  U21/Y (sky130_fd_sc_hd__nor2_1)                         0.25       7.25 r
+  U19/Y (sky130_fd_sc_hd__clkinv_1)                       0.08       7.32 f
+  REGA_reg/D (sky130_fd_sc_hd__dfrtp_1)                   0.00       7.32 f
+  data arrival time                                                  7.32
+
+  clock MYCLK (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             3.00      13.00
+  clock uncertainty                                      -0.50      12.50
+  REGA_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00      12.50 r
+  library setup time                                     -0.13      12.37
+  data required time                                                12.37
+  --------------------------------------------------------------------------
+  data required time                                                12.37
+  data arrival time                                                 -7.32
+  --------------------------------------------------------------------------
+  slack (MET)                                                        5.05
+```
+
+Falling:fall_from IN_A
+
+```
+dc_shell> report_timing -fall_from IN_A -net -capacitance -transition_time  -sig 4
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -nets
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 12:58:16 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGA_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                       Fanout       Cap     Trans      Incr       Path
+  ----------------------------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                                   0.0000     0.0000
+  clock network delay (ideal)                                               3.0000     3.0000
+  input external delay                                                      4.0000     7.0000 f
+  IN_A (in)                                                       0.4000    0.0000     7.0000 f
+  IN_A (net)                                    2       0.0045              0.0000     7.0000 f
+  U21/Y (sky130_fd_sc_hd__nor2_1)                                 0.1763    0.2481     7.2481 r
+  n12 (net)                                     2       0.0057              0.0000     7.2481 r
+  U19/Y (sky130_fd_sc_hd__clkinv_1)                               0.0495    0.0761     7.3242 f
+  n11 (net)                                     1       0.0019              0.0000     7.3242 f
+  REGA_reg/D (sky130_fd_sc_hd__dfrtp_1)                           0.0495    0.0000     7.3242 f
+  data arrival time                                                                    7.3242
+
+  clock MYCLK (rise edge)                                                  10.0000    10.0000
+  clock network delay (ideal)                                               3.0000    13.0000
+  clock uncertainty                                                        -0.5000    12.5000
+  REGA_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                                   0.0000    12.5000 r
+  library setup time                                                       -0.1266    12.3734
+  data required time                                                                  12.3734
+  ----------------------------------------------------------------------------------------------
+  data required time                                                                  12.3734
+  data arrival time                                                                   -7.3242
+  ----------------------------------------------------------------------------------------------
+  5.0492
+```
+Rising:rise_from IN_A
+```
+dc_shell> report_timing -rise_from IN_A -net -capacitance -transition_time  -sig 4
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -nets
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 13:00:56 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGB_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                       Fanout       Cap     Trans      Incr       Path
+  ----------------------------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                                   0.0000     0.0000
+  clock network delay (ideal)                                               3.0000     3.0000
+  input external delay                                                      4.0000     7.0000 r
+  IN_A (in)                                                       0.4000    0.0000     7.0000 r
+  IN_A (net)                                    2       0.0049              0.0000     7.0000 r
+  U21/Y (sky130_fd_sc_hd__nor2_1)                                 0.0938    0.1136     7.1136 f
+  n12 (net)                                     2       0.0051              0.0000     7.1136 f
+  U22/Y (sky130_fd_sc_hd__a21oi_1)                                0.1185    0.1163     7.2299 r
+  N1 (net)                                      1       0.0020              0.0000     7.2299 r
+  REGB_reg/D (sky130_fd_sc_hd__dfrtp_1)                           0.1185    0.0000     7.2299 r
+  data arrival time                                                                    7.2299
+
+  clock MYCLK (rise edge)                                                  10.0000    10.0000
+  clock network delay (ideal)                                               3.0000    13.0000
+  clock uncertainty                                                        -0.5000    12.5000
+  REGB_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                                   0.0000    12.5000 r
+  library setup time                                                       -0.0837    12.4163
+  data required time                                                                  12.4163
+  ----------------------------------------------------------------------------------------------
+  data required time                                                                  12.4163
+  data arrival time                                                                   -7.2299
+  ----------------------------------------------------------------------------------------------
+  5.1864
+```
+Delay_type min:
+```
+dc_shell> report_timing -rise_from IN_A -net -capacitance -transition_time  -sig 4 -delay_type min
+ 
+****************************************
+Report : timing
+        -path full
+        -delay min
+        -nets
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 13:10:10 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGB_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: min
+
+  Point                                       Fanout       Cap     Trans      Incr       Path
+  ----------------------------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                                   0.0000     0.0000
+  clock network delay (ideal)                                               3.0000     3.0000
+  input external delay                                                      1.0000     4.0000 r
+  IN_A (in)                                                       0.1000    0.0000     4.0000 r
+  IN_A (net)                                    2       0.0049              0.0000     4.0000 r
+  U22/Y (sky130_fd_sc_hd__a21oi_1)                                0.0397    0.0692     4.0692 f
+  N1 (net)                                      1       0.0019              0.0000     4.0692 f
+  REGB_reg/D (sky130_fd_sc_hd__dfrtp_1)                           0.0397    0.0000     4.0692 f
+  data arrival time                                                                    4.0692
+
+  clock MYCLK (rise edge)                                                   0.0000     0.0000
+  clock network delay (ideal)                                               3.0000     3.0000
+  clock uncertainty                                                         0.1000     3.1000
+  REGB_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                                   0.0000     3.1000 r
+  library hold time                                                        -0.0539     3.0461
+  data required time                                                                   3.0461
+  ----------------------------------------------------------------------------------------------
+  data required time                                                                   3.0461
+  data arrival time                                                                   -4.0692
+  ----------------------------------------------------------------------------------------------
+  slack (MET)                                                                          1.0231
+```
+
+Observation from report_timing for both rise and fall:
+
+The r indicates rise and f indicates fall delay being considered. The U21 cell has a less delay for rise to fall arc(93.8ps) than the fall to rise arc (176ps) as the gate is an inverter (negative unateness). The library setup time is different for a rise transition and fall transition. The delay varies between rise_from and fall_from of a timing path. Min path defines library hold time. The launch edge and capture edge are calculated at same instant. 
+
+*Report_timing -through <>*
+MAX:
+```
+dc_shell> report_timing -thr U21/Y
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 13:16:06 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGA_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  input external delay                                    4.00       7.00 f
+  IN_A (in)                                               0.00       7.00 f
+  U21/Y (sky130_fd_sc_hd__nor2_1) <-                      0.25       7.25 r
+  U19/Y (sky130_fd_sc_hd__clkinv_1)                       0.08       7.32 f
+  REGA_reg/D (sky130_fd_sc_hd__dfrtp_1)                   0.00       7.32 f
+  data arrival time                                                  7.32
+
+  clock MYCLK (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             3.00      13.00
+  clock uncertainty                                      -0.50      12.50
+  REGA_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00      12.50 r
+  library setup time                                     -0.13      12.37
+  data required time                                                12.37
+  --------------------------------------------------------------------------
+  data required time                                                12.37
+  data arrival time                                                 -7.32
+  --------------------------------------------------------------------------
+  slack (MET)                                                        5.05
+```
+MIN:
+```
+dc_shell> report_timing -thr U21/Y -delay_type min
+ 
+****************************************
+Report : timing
+        -path full
+        -delay min
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 13:18:22 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_B (input port clocked by MYCLK)
+  Endpoint: REGA_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  input external delay                                    1.00       4.00 r
+  IN_B (in)                                               0.00       4.00 r
+  U21/Y (sky130_fd_sc_hd__nor2_1) <-                      0.06       4.06 f
+  U19/Y (sky130_fd_sc_hd__clkinv_1)                       0.04       4.10 r
+  REGA_reg/D (sky130_fd_sc_hd__dfrtp_1)                   0.00       4.10 r
+  data arrival time                                                  4.10
+
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  clock uncertainty                                       0.10       3.10
+  REGA_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00       3.10 r
+  library hold time                                      -0.04       3.06
+  data required time                                                 3.06
+  --------------------------------------------------------------------------
+  data required time                                                 3.06
+  data arrival time                                                 -4.10
+  --------------------------------------------------------------------------
+  slack (MET)                                                        1.03
+
+```
+Checking whether the deign is loaded correctly or is there any Human error
+
+**check_design**
+The check_timing shows whether the design is properly constrained or not. The constraints shows MET and unconstrained endpoints are listed as the constraints are not defined yet. 
+Reading the design , after linking
+```
+dc_shell> read_verilog verilog_files/lab8_circuit_modified.v 
+dc_shell> link
+dc_shell> check_timing
+dc_shell> compile_ultra
+```
+check_design:
+```
+dc_shell> check_timing
+Information: Updating design information... (UID-85)
+
+Information: Checking generated_clocks...
+
+Information: Checking loops...
+
+Information: Checking no_input_delay...
+
+Information: Checking unconstrained_endpoints...
+
+Warning: The following end-points are not constrained for maximum delay.
+
+End point
+---------------
+OUT_Y
+REGA_reg/next_state
+REGB_reg/next_state
+REGC_reg/next_state
+out_clk
+out_div_clk
+out_div_clk_reg/next_state
+
+Information: Checking pulse_clock_cell_type...
+
+Information: Checking no_driving_cell...
+
+Information: Checking partial_input_delay...
+1
+```
+check_timing this showed all the paths were unconstrained. So, we report the constrains
+
+**report_constraints**
+```
+dc_shell> report_constraints
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : constraint
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 13:28:02 2023
+****************************************
+
+    Constraint                                     Slack
+    ----------------------------------------------------
+    max_leakage_power                              -0.06  (VIOLATED)
+
+
+    Constraint                                       Cost
+    -----------------------------------------------------
+    max_transition                                   0.00 (MET)
+    max_capacitance                                  0.00 (MET)
+    max_leakage_power                                0.06 (VIOLATED)
+
+```
+After defining the constraints, the check_timing shows some of endpoints are defined. So, only the clock ports are not defined. 
+```
+dc_shell> check_timing
+
+Information: Checking generated_clocks...
+
+Information: Checking loops...
+
+Information: Checking no_input_delay...
+
+Information: Checking unconstrained_endpoints...
+
+Warning: The following end-points are not constrained for maximum delay.
+
+End point
+---------------
+out_clk
+out_div_clk
+
+Information: Checking pulse_clock_cell_type...
+
+Information: Checking no_driving_cell...
+
+Information: Checking partial_input_delay...
+1
+```
+Again Report timing:
+```
+dc_shell> report_timing
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 13:35:22 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: IN_A (input port clocked by MYCLK)
+  Endpoint: REGA_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Path Group: MYCLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  input external delay                                    4.00       7.00 f
+  IN_A (in)                                               0.00       7.00 f
+  U13/Y (sky130_fd_sc_hd__nor2_1)                         0.25       7.25 r
+  U10/Y (sky130_fd_sc_hd__clkinv_1)                       0.08       7.32 f
+  REGA_reg/D (sky130_fd_sc_hd__dfrtp_1)                   0.00       7.32 f
+  data arrival time                                                  7.32
+
+  clock MYCLK (rise edge)                                10.00      10.00
+  clock network delay (ideal)                             3.00      13.00
+  clock uncertainty                                      -0.50      12.50
+  REGA_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00      12.50 r
+  library setup time                                     -0.13      12.37
+  data required time                                                12.37
+  --------------------------------------------------------------------------
+  data required time                                                12.37
+  data arrival time                                                 -7.32
+  --------------------------------------------------------------------------
+  slack (MET)                                                        5.05
+
+
+  Startpoint: REGC_reg (rising edge-triggered flip-flop clocked by MYCLK)
+  Endpoint: OUT_Y (output port clocked by MYGEN_CLK)
+  Path Group: MYGEN_CLK
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock MYCLK (rise edge)                                 0.00       0.00
+  clock network delay (ideal)                             3.00       3.00
+  REGC_reg/CLK (sky130_fd_sc_hd__dfrtp_1)                 0.00       3.00 r
+  REGC_reg/Q (sky130_fd_sc_hd__dfrtp_1)                   0.30       3.30 r
+  U11/Y (sky130_fd_sc_hd__clkinv_1)                       2.32       5.62 f
+  OUT_Y (out)                                             0.00       5.62 f
+  data arrival time                                                  5.62
+
+  clock MYGEN_CLK (rise edge)                            10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  output external delay                                  -4.00       6.00
+  data required time                                                 6.00
+  --------------------------------------------------------------------------
+  data required time                                                 6.00
+  data arrival time                                                 -5.62
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.38
+```
+Again report_constrains:
+The following shows the report_constraints that there is no negative slack. So, the constraints are MET
+```
+dc_shell> report_constraints
+ 
+****************************************
+Report : constraint
+Design : lab8_circuit
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 13:36:32 2023
+****************************************
+
+
+                                                   Weighted
+    Group (max_delay/setup)      Cost     Weight     Cost
+    -----------------------------------------------------
+    MYCLK                        0.00      1.00      0.00
+    MYGEN_CLK                    0.00      1.00      0.00
+    MYGEN_DIV_CLK                0.00      1.00      0.00
+    default                      0.00      1.00      0.00
+    -----------------------------------------------------
+    max_delay/setup                                  0.00
+
+                              Total Neg  Critical
+    Group (critical_range)      Slack    Endpoints   Cost
+    -----------------------------------------------------
+    MYCLK                        0.00         0      0.00
+    MYGEN_CLK                    0.00         0      0.00
+    MYGEN_DIV_CLK                0.00         0      0.00
+    default                      0.00         0      0.00
+    -----------------------------------------------------
+    critical_range                                   0.00
+
+                                                   Weighted
+    Group (min_delay/hold)       Cost     Weight     Cost
+    -----------------------------------------------------
+    MYCLK (no fix_hold)          0.00      1.00      0.00
+    MYGEN_CLK (no fix_hold)      0.00      1.00      0.00
+    MYGEN_DIV_CLK                0.00      1.00      0.00
+    default                      0.00      1.00      0.00
+    -----------------------------------------------------
+    min_delay/hold                                   0.00
+    Constraint                                     Slack
+    ----------------------------------------------------
+    max_leakage_power                              -0.06  (VIOLATED)
+
+
+    Constraint                                       Cost
+    -----------------------------------------------------
+    max_transition                                   1.58 (VIOLATED)
+    max_capacitance                                  0.21 (VIOLATED)
+    max_delay/setup                                  0.00 (MET)
+    sequential_clock_pulse_width                     0.00 (MET)
+    critical_range                                   0.00 (MET)
+    max_leakage_power                                0.06 (VIOLATED)
+
+```
+
+**EX 2: mux_generate_128.v**
+RTL:
+```
+module mux_generate ( input [127:0] in, input [6:0] sel, output reg y);
+integer k;
+always @ (*)
+begin
+for(k = 0; k < 128; k=k+1) begin
+	if(k == sel)
+		y = in[k];
+end
+end
+endmodule
+```
+Commands:
+```
+dc_shell> read_verilog verilog_files/mux_generate_128.v
+Loading verilog file '/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/mux_generate_128.v'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Compiling source file /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/mux_generate_128.v
+Warning:  /home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/mux_generate_128.v:7: signed to unsigned conversion occurs. (VER-318)
+
+Inferred memory devices in process
+	in routine mux_generate line 4 in file
+		'/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/mux_generate_128.v'.
+===========================================================================
+|    Register Name    | Type  | Width | Bus | MB | AR | AS | SR | SS | ST |
+===========================================================================
+|        y_reg        | Latch |   1   |  N  | N  | N  | N  | -  | -  | -  |
+===========================================================================
+Presto compilation completed successfully.
+Current design is now '/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/mux_generate.db:mux_generate'
+Loaded 1 design.
+Current design is 'mux_generate'.
+mux_generate
+
+//Latch is infered
+
+dc_shell> write -f verilog -out verilog_files/mux_generate_128_net.v
+Writing verilog file '/home/prakhar.g2/Samsung-PD-Training-/sky130RTLDesignAndSynthesisWorkshop/DC_WORKSHOP/verilog_files/mux_generate_128_net.v'.
+1
+dc_shell> sh gvim verilog_files/mux_generate_128_net.v
+
+```
+The latch is inferred because always statement is used and y is assigned in for loop.
+
+The following image shows the generated list is a pure combinational logic design:
+
+<img width="1085" alt="lib1" src="">
+Then we do report_timing, The report_timing shows it has so many fanouts such as 15, 18. The fanout can increase the capacitance as it shows the net with fanout of 18 has a capacitance of 40fF
+Now we set the max delay :
+
+dc_shell> set_max_delay -from [all_inputs] -to [all_outputs] 3.5
+
+Then we do report_timing:
+
+```
+dc_shell> report_timing
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : mux_generate
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 14:10:32 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: sel[2] (input port)
+  Endpoint: y (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  input external delay                     0.00       0.00 r
+  sel[2] (in)                              0.00       0.00 r
+  U485/Y (sky130_fd_sc_hd__clkinv_1)       0.21       0.21 f
+  U486/Y (sky130_fd_sc_hd__nor2_1)         0.68       0.89 r
+  U477/Y (sky130_fd_sc_hd__clkinv_1)       0.35       1.24 f
+  U561/Y (sky130_fd_sc_hd__o22ai_1)        0.19       1.42 r
+  U562/Y (sky130_fd_sc_hd__a31oi_1)        0.05       1.48 f
+  U563/Y (sky130_fd_sc_hd__a21oi_1)        0.14       1.62 r
+  U564/Y (sky130_fd_sc_hd__a31oi_1)        0.05       1.67 f
+  U566/Y (sky130_fd_sc_hd__o21ai_1)        0.16       1.82 r
+  U567/Y (sky130_fd_sc_hd__a21oi_1)        0.05       1.87 f
+  U568/Y (sky130_fd_sc_hd__a21oi_1)        0.11       1.98 r
+  U569/Y (sky130_fd_sc_hd__o21ai_1)        0.07       2.05 f
+  U570/Y (sky130_fd_sc_hd__o21ai_1)        0.06       2.11 r
+  U571/Y (sky130_fd_sc_hd__a21oi_1)        0.05       2.16 f
+  U573/Y (sky130_fd_sc_hd__o22ai_1)        0.11       2.28 r
+  U576/Y (sky130_fd_sc_hd__a22oi_1)        0.08       2.35 f
+  U578/X (sky130_fd_sc_hd__a22o_1)         0.19       2.54 f
+  U581/Y (sky130_fd_sc_hd__a222oi_1)       0.29       2.83 r
+  U582/Y (sky130_fd_sc_hd__a31oi_1)        0.06       2.90 f
+  U584/X (sky130_fd_sc_hd__a22o_1)         0.19       3.09 f
+  U587/Y (sky130_fd_sc_hd__a222oi_1)       0.29       3.38 r
+  U588/Y (sky130_fd_sc_hd__a31oi_1)        0.06       3.44 f
+  U590/Y (sky130_fd_sc_hd__o21ai_1)        0.15       3.59 r
+  U591/Y (sky130_fd_sc_hd__a21oi_1)        0.05       3.64 f
+  U592/Y (sky130_fd_sc_hd__a21oi_1)        0.11       3.75 r
+  U593/Y (sky130_fd_sc_hd__o21ai_1)        0.07       3.81 f
+  U594/Y (sky130_fd_sc_hd__o21ai_1)        0.06       3.88 r
+  U595/Y (sky130_fd_sc_hd__a21oi_1)        0.05       3.93 f
+  U597/Y (sky130_fd_sc_hd__o22ai_1)        0.11       4.04 r
+  U600/Y (sky130_fd_sc_hd__a22oi_1)        0.08       4.12 f
+  U602/X (sky130_fd_sc_hd__a22o_1)         0.19       4.31 f
+  U605/Y (sky130_fd_sc_hd__a222oi_1)       0.29       4.60 r
+  U606/Y (sky130_fd_sc_hd__a31oi_1)        0.06       4.66 f
+  U608/X (sky130_fd_sc_hd__a22o_1)         0.19       4.85 f
+  U611/Y (sky130_fd_sc_hd__a222oi_1)       0.29       5.14 r
+  U612/Y (sky130_fd_sc_hd__a31oi_1)        0.06       5.20 f
+  U614/Y (sky130_fd_sc_hd__o21ai_1)        0.15       5.36 r
+  U615/Y (sky130_fd_sc_hd__a21oi_1)        0.05       5.40 f
+  U617/Y (sky130_fd_sc_hd__a21oi_1)        0.14       5.54 r
+  U618/Y (sky130_fd_sc_hd__a211oi_1)       0.05       5.59 f
+  U620/Y (sky130_fd_sc_hd__o22ai_1)        0.11       5.71 r
+  U623/Y (sky130_fd_sc_hd__nand2_1)        0.06       5.77 f
+  U624/X (sky130_fd_sc_hd__a22o_1)         0.20       5.97 f
+  U627/Y (sky130_fd_sc_hd__a222oi_1)       0.29       6.26 r
+  U628/Y (sky130_fd_sc_hd__a31oi_1)        0.06       6.32 f
+  U629/X (sky130_fd_sc_hd__a22o_1)         0.19       6.51 f
+  U632/Y (sky130_fd_sc_hd__a222oi_1)       0.29       6.80 r
+  U633/Y (sky130_fd_sc_hd__a31oi_1)        0.06       6.86 f
+  U635/Y (sky130_fd_sc_hd__a21oi_1)        0.15       7.01 r
+  U636/Y (sky130_fd_sc_hd__a211oi_1)       0.06       7.07 f
+  U637/Y (sky130_fd_sc_hd__a22oi_1)        0.18       7.25 r
+  U640/Y (sky130_fd_sc_hd__nor2_1)         0.06       7.31 f
+  U644/Y (sky130_fd_sc_hd__o22ai_1)        0.15       7.46 r
+  U645/Y (sky130_fd_sc_hd__nor2b_1)        0.06       7.52 f
+  U648/Y (sky130_fd_sc_hd__o22ai_1)        0.15       7.66 r
+  U649/Y (sky130_fd_sc_hd__a21oi_1)        0.05       7.72 f
+  U651/Y (sky130_fd_sc_hd__o22ai_1)        0.13       7.84 r
+  U654/Y (sky130_fd_sc_hd__a22oi_1)        0.07       7.92 f
+  U655/Y (sky130_fd_sc_hd__a21oi_1)        0.11       8.03 r
+  U656/Y (sky130_fd_sc_hd__a21oi_1)        0.05       8.07 f
+  U659/Y (sky130_fd_sc_hd__o22ai_1)        0.15       8.22 r
+  U660/Y (sky130_fd_sc_hd__a21oi_1)        0.05       8.28 f
+  U663/Y (sky130_fd_sc_hd__o22ai_1)        0.13       8.40 r
+  U666/Y (sky130_fd_sc_hd__a22oi_1)        0.07       8.48 f
+  U667/Y (sky130_fd_sc_hd__a31oi_1)        0.13       8.61 r
+  U668/Y (sky130_fd_sc_hd__a21oi_1)        0.05       8.66 f
+  U671/Y (sky130_fd_sc_hd__o22ai_1)        0.15       8.81 r
+  U672/Y (sky130_fd_sc_hd__a21oi_1)        0.05       8.86 f
+  U677/Y (sky130_fd_sc_hd__o22ai_1)        0.16       9.02 r
+  U682/Y (sky130_fd_sc_hd__a21oi_1)        0.08       9.10 f
+  U685/Y (sky130_fd_sc_hd__o22ai_1)        0.15       9.25 r
+  U686/Y (sky130_fd_sc_hd__a21oi_1)        0.05       9.30 f
+  U687/Y (sky130_fd_sc_hd__a21oi_1)        0.12       9.42 r
+  U688/Y (sky130_fd_sc_hd__a21oi_1)        0.05       9.47 f
+  U691/Y (sky130_fd_sc_hd__o21ai_1)        0.08       9.55 r
+  y (out)                                  0.00       9.55 r
+  data arrival time                                   9.55
+
+  max_delay                                3.50       3.50
+  output external delay                    0.00       3.50
+  data required time                                  3.50
+  -----------------------------------------------------------
+  data required time                                  3.50
+  data arrival time                                  -9.55
+  -----------------------------------------------------------
+  slack (VIOLATED)                                   -6.05
+```
+
+We set the max capacitance and report the constraints:
+
+set_max_capacitance 0.025 [current_design]
+```
+dc_shell> set_max_capacitance 0.025 [current_design]
+Current design is 'mux_generate'.
+1
+
+
+dc_shell> report_constraint -all_violators 
+ 
+****************************************
+Report : constraint
+        -all_violators
+Design : mux_generate
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 14:16:32 2023
+****************************************
+
+
+   max_delay/setup ('default' group)
+
+                             Required        Actual
+   Endpoint                 Path Delay     Path Delay        Slack
+   -----------------------------------------------------------------
+   y                            3.50           9.55 r        -6.05  (VIOLATED)
+
+
+   max_capacitance
+
+                             Required        Actual
+   Net                      Capacitance    Capacitance       Slack
+   -----------------------------------------------------------------
+   n567                         0.03           0.05          -0.02  (VIOLATED)
+   sel[3]                       0.03           0.05          -0.02  (VIOLATED)
+   n591                         0.03           0.04          -0.02  (VIOLATED)
+   n671                         0.03           0.04          -0.01  (VIOLATED)
+   n670                         0.03           0.04          -0.01  (VIOLATED)
+   n602                         0.03           0.04          -0.01  (VIOLATED)
+   n669                         0.03           0.04          -0.01  (VIOLATED)
+   n684                         0.03           0.04          -0.01  (VIOLATED)
+   sel[2]                       0.03           0.03           0.00  (VIOLATED: increase significant digits)
+   sel[4]                       0.03           0.03           0.00  (VIOLATED: increase significant digits)
+   sel[5]                       0.03           0.03           0.00  (VIOLATED: increase significant digits)
+   sel[1]                       0.03           0.03           0.00  (VIOLATED: increase significant digits)
+
+   -----------------------------------------------------------------
+   Total                      12                 -0.13  
+
+   max_leakage_power
+
+                             Required        Actual
+   Design                   Leakage Power  Leakage Power     Slack
+   -----------------------------------------------------------------
+   mux_generate                 0.00           0.36          -0.36  (VIOLATED)
+
+```
+
+Now, after compile_ultra, there is no unconstrained endpoint due to set_max_delay command.
+The report_constraint shows that all constraints MET as the set_max_capacitance is defined. The set_max_capacitance is used for buffering the high fanout net :
+```
+
+dc_shell> report_constraints
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : constraint
+Design : mux_generate
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 14:18:55 2023
+****************************************
+
+
+                                                   Weighted
+    Group (max_delay/setup)      Cost     Weight     Cost
+    -----------------------------------------------------
+    default                      0.00      1.00      0.00
+    -----------------------------------------------------
+    max_delay/setup                                  0.00
+
+                              Total Neg  Critical
+    Group (critical_range)      Slack    Endpoints   Cost
+    -----------------------------------------------------
+    default                      0.00         0      0.00
+    -----------------------------------------------------
+    critical_range                                   0.00
+    Constraint                                     Slack
+    ----------------------------------------------------
+    max_leakage_power                              -0.43  (VIOLATED)
+
+
+    Constraint                                       Cost
+    -----------------------------------------------------
+    max_transition                                   0.00 (MET)
+    max_capacitance                                  0.00 (MET)
+    max_delay/setup                                  0.00 (MET)
+    critical_range                                   0.00 (MET)
+    max_leakage_power                                0.43 (VIOLATED)
+
+```
+Report_timing is met :
+
+```
+dc_shell> report_timing -net -cap -sig 4
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -nets
+        -max_paths 1
+        -capacitance
+Design : mux_generate
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 14:21:54 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: sel[3] (input port)
+  Endpoint: y (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                        Fanout       Cap      Incr       Path
+  ---------------------------------------------------------------------
+  input external delay                             0.0000     0.0000 f
+  sel[3] (in)                                      0.0000     0.0000 f
+  sel[3] (net)                   6       0.0141    0.0000     0.0000 f
+  U724/Y (sky130_fd_sc_hd__clkinv_1)               0.1010     0.1010 r
+  n903 (net)                     9       0.0235    0.0000     0.1010 r
+  U683/Y (sky130_fd_sc_hd__clkinv_1)               0.1590     0.2600 f
+  n904 (net)                     7       0.0155    0.0000     0.2600 f
+  U775/Y (sky130_fd_sc_hd__nand2_1)                0.2200     0.4800 r
+  n1092 (net)                    9       0.0232    0.0000     0.4800 r
+  U709/Y (sky130_fd_sc_hd__clkinv_1)               0.1631     0.6431 f
+  n1052 (net)                    5       0.0111    0.0000     0.6431 f
+  U838/Y (sky130_fd_sc_hd__nand2_1)                0.1044     0.7475 r
+  n1004 (net)                    2       0.0058    0.0000     0.7475 r
+  U697/Y (sky130_fd_sc_hd__clkinv_1)               0.0686     0.8162 f
+  n1074 (net)                    2       0.0043    0.0000     0.8162 f
+  U840/Y (sky130_fd_sc_hd__a31oi_1)                0.1188     0.9349 r
+  n994 (net)                     1       0.0025    0.0000     0.9349 r
+  U841/Y (sky130_fd_sc_hd__a21oi_1)                0.0454     0.9803 f
+  n1007 (net)                    1       0.0015    0.0000     0.9803 f
+  U848/X (sky130_fd_sc_hd__or3_1)                  0.3297     1.3101 f
+  n1008 (net)                    1       0.0022    0.0000     1.3101 f
+  U849/Y (sky130_fd_sc_hd__a21oi_1)                0.1126     1.4226 r
+  n1012 (net)                    1       0.0026    0.0000     1.4226 r
+  U852/Y (sky130_fd_sc_hd__o21ai_1)                0.0633     1.4860 f
+  n1014 (net)                    1       0.0023    0.0000     1.4860 f
+  U853/Y (sky130_fd_sc_hd__o211ai_1)               0.0731     1.5591 r
+  n1040 (net)                    1       0.0024    0.0000     1.5591 r
+  U871/Y (sky130_fd_sc_hd__a31oi_1)                0.0875     1.6466 f
+  n1041 (net)                    1       0.0022    0.0000     1.6466 f
+  U872/Y (sky130_fd_sc_hd__nor3_1)                 0.1240     1.7706 r
+  n1044 (net)                    1       0.0025    0.0000     1.7706 r
+  U873/Y (sky130_fd_sc_hd__a21oi_1)                0.0522     1.8228 f
+  n1046 (net)                    1       0.0022    0.0000     1.8228 f
+  U874/Y (sky130_fd_sc_hd__nor2_1)                 0.0775     1.9004 r
+  n1048 (net)                    1       0.0025    0.0000     1.9004 r
+  U875/Y (sky130_fd_sc_hd__o22ai_1)                0.0621     1.9625 f
+  n1056 (net)                    1       0.0023    0.0000     1.9625 f
+  U880/Y (sky130_fd_sc_hd__a21oi_1)                0.1205     2.0830 r
+  n1057 (net)                    1       0.0025    0.0000     2.0830 r
+  U881/Y (sky130_fd_sc_hd__o22ai_1)                0.0709     2.1539 f
+  n1064 (net)                    1       0.0023    0.0000     2.1539 f
+  U883/Y (sky130_fd_sc_hd__a2bb2oi_1)              0.1212     2.2752 r
+  n1066 (net)                    1       0.0025    0.0000     2.2752 r
+  U884/Y (sky130_fd_sc_hd__o22ai_1)                0.0725     2.3476 f
+  n1077 (net)                    1       0.0021    0.0000     2.3476 f
+  U889/Y (sky130_fd_sc_hd__a222oi_1)               0.3021     2.6497 r
+  n1078 (net)                    1       0.0025    0.0000     2.6497 r
+  U890/Y (sky130_fd_sc_hd__o22ai_1)                0.0979     2.7476 f
+  n1086 (net)                    1       0.0023    0.0000     2.7476 f
+  U893/Y (sky130_fd_sc_hd__a21oi_1)                0.1232     2.8708 r
+  n1087 (net)                    1       0.0025    0.0000     2.8708 r
+  U894/Y (sky130_fd_sc_hd__o22ai_1)                0.0704     2.9412 f
+  n1099 (net)                    1       0.0023    0.0000     2.9412 f
+  U898/Y (sky130_fd_sc_hd__a21oi_1)                0.1255     3.0668 r
+  n1100 (net)                    1       0.0025    0.0000     3.0668 r
+  U899/Y (sky130_fd_sc_hd__a21oi_1)                0.0460     3.1128 f
+  n1102 (net)                    1       0.0022    0.0000     3.1128 f
+  U900/Y (sky130_fd_sc_hd__a21oi_1)                0.1046     3.2174 r
+  n1105 (net)                    1       0.0024    0.0000     3.2174 r
+  U901/Y (sky130_fd_sc_hd__a31oi_1)                0.0471     3.2645 f
+  n1112 (net)                    1       0.0023    0.0000     3.2645 f
+  U904/Y (sky130_fd_sc_hd__o21ai_1)                0.1111     3.3755 r
+  n1131 (net)                    1       0.0024    0.0000     3.3755 r
+  U914/Y (sky130_fd_sc_hd__a21oi_1)                0.0503     3.4258 f
+  y (net)                        1       0.0000    0.0000     3.4258 f
+  y (out)                                          0.0000     3.4258 f
+  data arrival time                                           3.4258
+
+  max_delay                                        3.5000     3.5000
+  output external delay                            0.0000     3.5000
+  data required time                                          3.5000
+  ---------------------------------------------------------------------
+  data required time                                          3.5000
+  data arrival time                                          -3.4258
+  ---------------------------------------------------------------------
+  slack (MET)                                                 0.0742
+
+```
+Number of inputs increase, the fanout of selectline increases. A high fan-out corresponds to a very high capacitance load,can high transition time.
+
+
+
