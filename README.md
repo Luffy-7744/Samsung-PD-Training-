@@ -3259,7 +3259,7 @@ It checks the quality of netlist and identifies:
 6.       Pin mismatch counts between an instance and its reference
 7.       Tristate buses with non-tristate drivers
 8.       Wire loops across hierarchies
-ICC command: check_design:
+*command: check_design*:
 Checks for multi driven nets, floating nets/pins, empty modules.
 Pins mismatch, cells or instances without I/O pins/ports etc. 
 
@@ -3270,12 +3270,12 @@ SDC Checks:
 4.      Check unconstrained endpoints 
 5.      Port missing input/output delay.
 6.      Port missing slew/load constraints.
-ICC command: check_timing
+*command: check_timing*
 
 Library checks:
 It validate the library i.e. it checks the consistency between logical and physical libraries.
 It checks the qualities of both libraries.
-check_library: This command shows the name of the library, library type & its version, units of time, capacitance, leakage power, and current. It shows the number of cells missing, the number of metal or pins missing in the physical and logical library.
+*check_library*: This command shows the name of the library, library type & its version, units of time, capacitance, leakage power, and current. It shows the number of cells missing, the number of metal or pins missing in the physical and logical library.
 
 
 **Propagation Delay :**
