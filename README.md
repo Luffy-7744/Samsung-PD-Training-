@@ -3065,7 +3065,7 @@ With:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7e60f34abdd02ce1730651d9970396fcadfdd620/PD%23day9/boundry_check_after.png">
 
 
-**Register Retiiming**
+**Register Retiming**
 
 Register retiming is a technique used in Very Large Scale Integration (VLSI) design to optimize the performance of digital circuits by rearranging the registers in the circuit without changing its functionality. The primary goal of register retiming is to minimize the critical path delay, which is the longest path in the circuit from an input to an output.
 
@@ -3108,7 +3108,7 @@ GUI view before optimization:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/check_reg_retime_bc.png">
 
 Timing before the optimization:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/timing_without_retime.png">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/95713055d2b47d7a443f3925f01f94f472ecf082/PD%23Day9/IMG_7053.jpeg">
 
 GUI view after optimization:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a93a9270ab984bebc7ad48bd7e3363f0b9626659/PD%23day9/check_reg_retime_bc.png">
@@ -3167,7 +3167,7 @@ The Design before isolating the ports:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/before_isolate.png">
 
 The timing report before isolating ports
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/timing_before_isolate.png">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/6ae4a420490f131a0002e332d251bb69dffb4cd6/PD%23Day9/IMG_7054.jpeg">
 
 REG2REG Timing report before isolation:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/b5bc6f6b6f27fde0c83252cc25bd1a783e447d51/PD%23day9/timing_before_isolate_regtoreg.png">
@@ -3222,15 +3222,15 @@ endmodule
 ```
 
 Timing after performing optimization for setup time:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_all_input.png">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d8260286e5a9141c8df4fdaba5b7f2377c8e1b4a/PD%23Day9/IMG_7055.jpeg">
 
 Optimization for the minimum time:
 before optimizing:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_min.png">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d8260286e5a9141c8df4fdaba5b7f2377c8e1b4a/PD%23Day9/IMG_7056.jpeg">
 after optimizing:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_min_after_mcp.png">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d8260286e5a9141c8df4fdaba5b7f2377c8e1b4a/PD%23Day9/IMG_7057.jpeg">
 
 Multicycle Path timing after performing isolation:
-<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/22a50da6e17340d9aef63b8988a438e7180e5559/PD%23day9/mcp_timing_after_isolate.png">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d8260286e5a9141c8df4fdaba5b7f2377c8e1b4a/PD%23Day9/IMG_7058.jpeg">
 
 </details>
