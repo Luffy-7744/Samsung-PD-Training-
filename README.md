@@ -3234,3 +3234,40 @@ Multicycle Path timing after performing isolation:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d8260286e5a9141c8df4fdaba5b7f2377c8e1b4a/PD%23Day9/IMG_7058.jpeg">
 
 </details>
+
+
+
+Sanity checks:
+To ensure that the input received from the library team and synthesis team is correct or not. If we are not doing these checks then it creates problems in later stages of design.
+Basically, we are checking following input files: and make sure that these files are complete and not erroneous.
+1.      design/netlist checks
+2.      SDC checks
+3.      Library checks
+Design checks:
+Check if current design is consistent or not
+It checks the quality of netlist and identifies:
+1.       Floating pins
+2.       Multidriven nets 
+3.       Undriven input ports
+4.       Unloaded outputs
+5.       Unconstrained pins 
+6.       Pin mismatch counts between an instance and its reference
+7.       Tristate buses with non-tristate drivers
+8.       Wire loops across hierarchies
+ICC command: check_design:
+Checks for multi driven nets, floating nets/pins, empty modules.
+Pins mismatch, cells or instances without I/O pins/ports etc. 
+
+SDC Checks:
+1.      If any unconstrained paths exist in the design then PNR tool will not optimize that path, so these checks are used to report unconstrained paths 
+2.      Checks whether the clock is reaching to all the clock pin of the flip-flop.
+3.      Check if multiple clock are driving same registers
+4.      Check unconstrained endpoints 
+5.      Port missing input/output delay.
+6.      Port missing slew/load constraints.
+ICC command: check_timing
+
+Library checks:
+It validate the library i.e. it checks the consistency between logical and physical libraries.
+It checks the qualities of both libraries.
+check_library: This command shows the name of the library, library type & its version, units of time, capacitance, leakage power, and current. It shows the number of cells missing, the number of metal or pins missing in the physical and logical library.
