@@ -4262,4 +4262,526 @@ Wire Load Model Mode: top
 Number of inputs increase, the fanout of selectline increases. A high fan-out corresponds to a very high capacitance load,can high transition time.
 
 
+**EX 3: 128 bit enable**
+
+RTL:
+```ruby
+module en_128 (input [127:0] x , output [127:0] y , input en);
+	assign y[127:0] = en ?x[127:0]:128'b0;
+endmodule
+```
+ Commands:
+ 
+```
+dc_shell> read_verilog verilog_files/en_128.v 
+dc_shell> link
+dc_shell> compile_ultra
+dc_shell> report_timing -net -cap -inp -from en
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -input_pins
+        -nets
+        -max_paths 1
+        -capacitance
+Design : en_128
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 16:24:49 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: en (input port)
+  Endpoint: y[127] (output port)
+  Path Group: (none)
+  Path Type: max
+
+  Point                        Fanout       Cap      Incr       Path
+  ---------------------------------------------------------------------
+  input external delay                               0.00       0.00 f
+  en (in)                                            0.00       0.00 f
+  en (net)                     128         0.20      0.00       0.00 f
+  U257/A (sky130_fd_sc_hd__and2_0)                   0.00       0.00 f
+  U257/X (sky130_fd_sc_hd__and2_0)                   0.09       0.09 f
+  y[127] (net)                   1         0.00      0.00       0.09 f
+  y[127] (out)                                       0.00       0.09 f
+  data arrival time                                             0.09
+  ---------------------------------------------------------------------
+  (Path is unconstrained)
+```
+The report_timing shows the unconstrained path. It has a fanout of 128 which results a high capacitance of 0.2pF.
+
+Constraint the capacitance to 30fF on current design:
+
+dc_shell> set_max_capacitance 0.03 [current_design]
+
+report_constraints:
+```
+dc_shell> report_constraints
+ 
+****************************************
+Report : constraint
+Design : en_128
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 16:28:31 2023
+****************************************
+
+    Constraint                                     Slack
+    ----------------------------------------------------
+    max_leakage_power                              -0.29  (VIOLATED)
+
+
+    Constraint                                       Cost
+    -----------------------------------------------------
+    max_transition                                   0.00 (MET)
+    max_capacitance                                  0.17 (VIOLATED)
+    max_leakage_power                                0.29 (VIOLATED)
+
+
+```
+
+Now after compile_ultra, the capacitance is now limited to 0.03 pF and fanout is reduced to 17 :
+report_timing:
+```
+dc_shell> report_timing -net -cap -inp -from en
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -input_pins
+        -nets
+        -max_paths 1
+        -capacitance
+Design : en_128
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 16:31:15 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: en (input port)
+  Endpoint: y[116] (output port)
+  Path Group: (none)
+  Path Type: max
+
+  Point                        Fanout       Cap      Incr       Path
+  ---------------------------------------------------------------------
+  input external delay                               0.00       0.00 r
+  en (in)                                            0.00       0.00 r
+  en (net)                      17         0.03      0.00       0.00 r
+  U271/A (sky130_fd_sc_hd__clkbuf_1)                 0.00       0.00 r
+  U271/X (sky130_fd_sc_hd__clkbuf_1)                 0.28       0.28 r
+  n1 (net)                      19         0.03      0.00       0.28 r
+  U272/A (sky130_fd_sc_hd__and2_1)                   0.00       0.28 r
+  U272/X (sky130_fd_sc_hd__and2_1)                   0.16       0.44 r
+  y[116] (net)                   1         0.00      0.00       0.44 r
+  y[116] (out)                                       0.00       0.44 r
+  data arrival time                                             0.44
+  ---------------------------------------------------------------------
+  (Path is unconstrained)
+```
+Then we write design ddc.
+
+dc_shell> write -f ddc -out verilog_files/en_128.ddc
+
+design_vision> read_ddc verilog_files/en_128.ddc
+
+<img width="1085" alt="lib1" src="">
+En is Zoomed:
+<img width="1085" alt="lib1" src="">
+
+Then we constrain max trans:
+
+dc_shell> set_max_transition 0.150 [current_design]
+
+The we report constraints:
+```
+dc_shell> report_constraints -all_violators 
+ 
+****************************************
+Report : constraint
+        -all_violators
+Design : en_128
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 16:45:07 2023
+****************************************
+
+
+   max_transition
+
+                             Required        Actual
+   Net                      Transition     Transition        Slack
+   -----------------------------------------------------------------
+   n1                           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U332/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U339/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U348/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U357/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U366/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U372/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U272/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U273/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U274/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U275/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U276/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U277/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U278/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U279/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U280/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U281/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U282/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U283/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U284/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U271/X           0.15           0.36          -0.21  (VIOLATED)
+   n2                           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U333/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U340/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U349/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U358/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U373/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U378/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U286/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U287/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U288/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U289/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U290/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U291/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U292/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U293/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U294/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U295/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U296/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U297/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U298/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U285/X           0.15           0.36          -0.21  (VIOLATED)
+   n4                           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U331/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U338/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U343/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U351/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U360/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U375/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U314/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U315/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U316/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U317/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U318/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U319/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U320/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U321/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U322/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U323/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U324/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U325/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U326/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U313/X           0.15           0.36          -0.21  (VIOLATED)
+   n6                           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U335/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U346/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U352/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U355/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U362/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U364/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U370/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U259/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U380/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U381/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U382/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U383/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U384/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U385/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U386/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U387/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U388/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U389/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U390/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U391/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U258/X           0.15           0.36          -0.21  (VIOLATED)
+   n3                           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U330/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U337/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U342/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U350/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U359/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U374/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U376/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U300/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U301/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U302/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U303/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U304/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U305/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U306/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U307/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U308/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U309/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U310/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U311/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U312/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U299/X           0.15           0.36          -0.21  (VIOLATED)
+   n5                           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U336/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U347/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U356/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U361/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U365/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U367/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U368/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U371/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U377/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U261/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U262/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U263/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U264/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U265/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U266/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U267/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U268/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U269/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U270/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U328/A           0.15           0.36          -0.21  (VIOLATED)
+       PIN :   U260/X           0.15           0.36          -0.21  (VIOLATED)
+
+   -----------------------------------------------------------------
+   Total                      6                  -1.28  
+
+   max_leakage_power
+
+                             Required        Actual
+   Design                   Leakage Power  Leakage Power     Slack
+   -----------------------------------------------------------------
+   en_128                       0.00           0.32          -0.32  (VIOLATED)
+```
+
+Check_timing: 
+The check_timing shows only the unconstrained endpoints. 
+
+```
+dc_shell> check_timing 
+
+Information: Checking generated_clocks...
+
+Information: Checking loops...
+
+Information: Checking no_input_delay...
+
+Information: Checking unconstrained_endpoints...
+
+Warning: The following end-points are not constrained for maximum delay.
+
+End point
+---------------
+y[0]
+y[1]
+y[2]
+y[3]
+y[4]
+y[5]
+y[6]
+y[7]
+y[8]
+y[9]
+y[10]
+y[11]
+y[12]
+y[13]
+y[14]
+y[15]
+y[16]
+y[17]
+y[18]
+y[19]
+y[20]
+y[21]
+y[22]
+y[23]
+y[24]
+y[25]
+y[26]
+y[27]
+y[28]
+y[29]
+y[30]
+y[31]
+y[32]
+y[33]
+y[34]
+y[35]
+y[36]
+y[37]
+y[38]
+y[39]
+y[40]
+y[41]
+y[42]
+y[43]
+y[44]
+y[45]
+y[46]
+y[47]
+y[48]
+y[49]
+y[50]
+y[51]
+y[52]
+y[53]
+y[54]
+y[55]
+y[56]
+y[57]
+y[58]
+y[59]
+y[60]
+y[61]
+y[62]
+y[63]
+y[64]
+y[65]
+y[66]
+y[67]
+y[68]
+y[69]
+y[70]
+y[71]
+y[72]
+y[73]
+y[74]
+y[75]
+y[76]
+y[77]
+y[78]
+y[79]
+y[80]
+y[81]
+y[82]
+y[83]
+y[84]
+y[85]
+y[86]
+y[87]
+y[88]
+y[89]
+y[90]
+y[91]
+y[92]
+y[93]
+y[94]
+y[95]
+y[96]
+y[97]
+y[98]
+y[99]
+y[100]
+y[101]
+y[102]
+y[103]
+y[104]
+y[105]
+y[106]
+y[107]
+y[108]
+y[109]
+y[110]
+y[111]
+y[112]
+y[113]
+y[114]
+y[115]
+y[116]
+y[117]
+y[118]
+y[119]
+y[120]
+y[121]
+y[122]
+y[123]
+y[124]
+y[125]
+y[126]he check_timing shows only the unconstrained endpoints 
+y[127]
+
+Information: Checking pulse_clock_cell_type...
+
+Information: Checking no_driving_cell...
+
+Information: Checking partial_input_delay...
+1
+```
+
+report_timing:
+```
+dc_shell> report_timing -inp -nets -cap -trans -sig 4 -nosplit
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -input_pins
+        -nets
+        -max_paths 1
+        -transition_time
+        -capacitance
+Design : en_128
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 16:49:37 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: en (input port)
+  Endpoint: y[116] (output port)
+  Path Group: (none)
+  Path Type: max
+
+  Point                        Fanout       Cap     Trans      Incr       Path
+  -------------------------------------------------------------------------------
+  input external delay                                       0.0000     0.0000 r
+  en (in)                                          0.0000    0.0000     0.0000 r
+  en (net)                      17       0.0308              0.0000     0.0000 r
+  U271/A (sky130_fd_sc_hd__clkbuf_1)               0.0000    0.0000     0.0000 r
+  U271/X (sky130_fd_sc_hd__clkbuf_1)               0.3636    0.2849     0.2849 r
+  n1 (net)                      19       0.0307              0.0000     0.2849 r
+  U272/A (sky130_fd_sc_hd__and2_1)                 0.3636    0.0000     0.2849 r
+  U272/X (sky130_fd_sc_hd__and2_1)                 0.0302    0.1576     0.4425 r
+  y[116] (net)                   1       0.0000              0.0000     0.4425 r
+  y[116] (out)                                     0.0302    0.0000     0.4425 r
+  data arrival time                                                     0.4425
+  -------------------------------------------------------------------------------
+  (Path is unconstrained)
+```
+
+Now, the transition is limited to 150ps in the timing report:
+```
+dc_shell> set_max_transition 0.150 [current_design]
+
+dc_shell> report_constraints
+ 
+****************************************
+Report : constraint
+Design : en_128
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 16:53:12 2023
+****************************************
+
+    Constraint                                     Slack
+    ----------------------------------------------------
+    max_leakage_power                              -0.32  (VIOLATED)
+
+
+    Constraint                                       Cost
+    -----------------------------------------------------
+    max_transition                                   1.28 (VIOLATED)
+    max_capacitance                                  0.00 (MET)
+    max_leakage_power                                0.32 (VIOLATED)
+
+```
+
+The max_cap and max_trans should be constrained because the tool takes the values from lib if not defined. check_design ensures the quality of design is proper or not. check_timing ensures all constraints are implemented. report_constraints shows constraints violated if any.
 
