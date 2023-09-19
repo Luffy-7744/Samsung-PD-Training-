@@ -3242,6 +3242,7 @@ Multicycle Path timing after performing isolation:
  <summary> Introduction </summary>
 
 **Sanity checks:**
+
 To ensure that the input received from the library team and synthesis team is correct or not. If we are not doing these checks then it creates problems in later stages of design.
 Basically, we are checking following input files: and make sure that these files are complete and not erroneous.
 1.      Design/netlist checks
@@ -3302,7 +3303,7 @@ The report_timing is used to analyse the report of a timing path that gives info
 <details>
  <summary> LABs </summary>
 
-Ex: lab8_circuit_modified
+**Ex: lab8_circuit_modified**
 
 RTL from previous labs :
 ```ruby
@@ -3568,6 +3569,7 @@ Observation from report_timing for both rise and fall:
 The r indicates rise and f indicates fall delay being considered. The U21 cell has a less delay for rise to fall arc(93.8ps) than the fall to rise arc (176ps) as the gate is an inverter (negative unateness). The library setup time is different for a rise transition and fall transition. The delay varies between rise_from and fall_from of a timing path. Min path defines library hold time. The launch edge and capture edge are calculated at same instant. 
 
 *Report_timing -through <>*
+
 MAX:
 ```
 dc_shell> report_timing -thr U21/Y
@@ -3662,6 +3664,7 @@ Wire Load Model Mode: top
 Checking whether the deign is loaded correctly or is there any Human error
 
 **check_design**
+
 The check_timing shows whether the design is properly constrained or not. The constraints shows MET and unconstrained endpoints are listed as the constraints are not defined yet. 
 Reading the design , after linking
 ```
@@ -3884,7 +3887,9 @@ Date   : Tue Sep 19 13:36:32 2023
 ```
 
 **EX 2: mux_generate_128.v**
+
 RTL:
+
 ```
 module mux_generate ( input [127:0] in, input [6:0] sel, output reg y);
 integer k;
@@ -3933,7 +3938,7 @@ The latch is inferred because always statement is used and y is assigned in for 
 
 The following image shows the generated list is a pure combinational logic design:
 
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/001959e3c6ef7590067ced6b4d7c875cac493b6b/PD%23day10/mux_128_net.png">
 Then we do report_timing, The report_timing shows it has so many fanouts such as 15, 18. The fanout can increase the capacitance as it shows the net with fanout of 18 has a capacitance of 40fF
 Now we set the max delay :
 
@@ -4392,9 +4397,9 @@ dc_shell> write -f ddc -out verilog_files/en_128.ddc
 
 design_vision> read_ddc verilog_files/en_128.ddc
 
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/001959e3c6ef7590067ced6b4d7c875cac493b6b/PD%23day10/en_128_sch1.png">
 En is Zoomed:
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/001959e3c6ef7590067ced6b4d7c875cac493b6b/PD%23day10/en_128_sch2.png">
 
 Then we constrain max trans:
 
