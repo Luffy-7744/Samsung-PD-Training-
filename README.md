@@ -4790,3 +4790,90 @@ Date   : Tue Sep 19 16:53:12 2023
 
 The max_cap and max_trans should be constrained because the tool takes the values from lib if not defined. check_design ensures the quality of design is proper or not. check_timing ensures all constraints are implemented. report_constraints shows constraints violated if any.
 
+**Report_QOR**
+This reports the quality of design, which includes reports of timing path group and cell count details, along with current design statistics such as cobinational, non combinational and total area. This also reports the static power, design rule violation and compile time details.
+
+```
+dc_shell> report_qor
+ 
+****************************************
+Report : qor
+Design : en_128
+Version: T-2022.03-SP5-1
+Date   : Tue Sep 19 17:13:54 2023
+****************************************
+
+
+  Timing Path Group (none)
+  -----------------------------------
+  Levels of Logic:               2.00
+  Critical Path Length:          0.44
+  Critical Path Slack:         uninit
+  Critical Path Clk Period:       n/a
+  Total Negative Slack:          0.00
+  No. of Violating Paths:        0.00
+  Worst Hold Violation:          0.00
+  Total Hold Violation:          0.00
+  No. of Hold Violations:        0.00
+  -----------------------------------
+
+
+  Cell Count
+  -----------------------------------
+  Hierarchical Cell Count:          0
+  Hierarchical Port Count:          0
+  Leaf Cell Count:                134
+  Buf/Inv Cell Count:               6
+  Buf Cell Count:                   6
+  Inv Cell Count:                   0
+  CT Buf/Inv Cell Count:            0
+  Combinational Cell Count:       134
+  Sequential Cell Count:            0
+  Macro Count:                      0
+  -----------------------------------
+
+
+  Area
+  -----------------------------------
+  Combinational Area:      823.289605
+  Noncombinational Area:     0.000000
+  Buf/Inv Area:             22.521599
+  Total Buffer Area:            22.52
+  Total Inverter Area:           0.00
+  Macro/Black Box Area:      0.000000
+  Net Area:                  0.000000
+  -----------------------------------
+  Cell Area:               823.289605
+  Design Area:             823.289605
+
+
+  Design Rules
+  -----------------------------------
+  Total Number of Nets:           263
+  Nets With Violations:             6
+  Max Trans Violations:             6
+  Max Cap Violations:               0
+  -----------------------------------
+
+
+  Hostname: ssirlab03
+
+  Compile CPU Statistics
+  -----------------------------------------
+  Resource Sharing:                    0.00
+  Logic Optimization:                  0.04
+  Mapping Optimization:                0.26
+  -----------------------------------------
+  Overall Compile Time:                2.08
+  Overall Compile Wall Clock Time:     2.35
+
+  --------------------------------------------------------------------
+
+  Design  WNS: 0.00  TNS: 0.00  Number of Violating Paths: 0
+
+
+  Design (Hold)  WNS: 0.00  TNS: 0.00  Number of Violating Paths: 0
+
+  --------------------------------------------------------------------
+
+```
