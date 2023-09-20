@@ -4912,6 +4912,37 @@ Connectivity :
     It would have featured various connectivity options, including Wi-Fi, Bluetooth, and GPS.
 
 Multimedia :
+Exynos 2100 was one of Samsung's flagship system-on-chip (SoC) designs. It was used in some of Samsung's high-end smartphones and other devices.
+
+Architecture
+
+CPU Cores :
+
+    The Exynos 2100 featured a tri-cluster CPU architecture.
+    One prime Cortex-X1 core: This high-performance core was designed for demanding tasks and offered a significant boost in single-threaded performance.
+    Three Cortex-A78 cores: These were high-performance cores intended for multi-threaded tasks, providing a balance between performance and efficiency.
+    Four Cortex-A55 cores: These were energy-efficient cores used for less demanding tasks to save power.
+
+GPU :
+
+    The Exynos 2100 was equipped with the Mali-G78 GPU, which was designed to deliver excellent graphics and gaming performance.
+    It featured multiple execution cores and supported the latest graphics APIs.
+
+AI and Machine Learning :
+
+    The SoC incorporated dedicated AI (Artificial Intelligence) and machine learning accelerators to enhance AI-related tasks such as image recognition, voice processing, and more.
+    Samsung's proprietary NPU (Neural Processing Unit) or AI Engine likely played a role in this.
+
+Memory:
+
+    The Exynos 2100 supported LPDDR5 (Low Power DDR5) RAM for fast and efficient memory access. This enabled smooth multitasking and app performance.
+
+Connectivity :
+
+    The chip likely included a 5G modem to support high-speed mobile data connectivity.
+    It would have featured various connectivity options, including Wi-Fi, Bluetooth, and GPS.
+
+Multimedia :
 
     The Exynos 2100 supported advanced multimedia features, including high-resolution camera sensors, 8K video recording, and hardware-based codecs for efficient video playback and encoding.
 
@@ -4922,3 +4953,14 @@ Security :
 Power Efficiency :
 
     The 5nm manufacturing process, combined with the heterogeneous CPU architecture, was aimed at providing a good balance between performance and power efficiency.
+
+    The Exynos 2100 supported advanced multimedia features, including high-resolution camera sensors, 8K video recording, and hardware-based codecs for efficient video playback and encoding.
+
+Security :
+
+    Samsung typically includes a range of security features in its flagship SoCs. This may include hardware-based encryption, secure boot processes, and trusted execution environments for enhanced device security.
+
+Power Efficiency :
+
+    The 5nm manufacturing process, combined with the heterogeneous CPU architecture, was aimed at providing a good balance between performance and power efficiency.
+</details>
