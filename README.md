@@ -5021,10 +5021,78 @@ module tb_fulladd;
                  c_in <= $random;
       end
    end
-  
+  tb_adder4.v
    initial begin
      $dumpvars;
      $dumpfile("dump.vcd");
    end
 endmodule
+```
+Commands to run:
+```
+[prakhar.g2@ssirlab03 rvmyth]$ iverilog adder4.v tb_adder4.v
+[prakhar.g2@ssirlab03 rvmyth]$ ./a.out
+VCD info: dumpfile dump.vcd opened for output.
+VCD warning: tb_adder4.v:34: $dumpfile called after $dumpvars started,
+                             using existing file (dump.vcd).
+a=0x0 b=0x0 c_in=0x0 c_out=0x0 sum=0x0
+a=0x4 b=0x1 c_in=0x1 c_out=0x0 sum=0x6
+a=0x3 b=0xd c_in=0x1 c_out=0x1 sum=0x1
+a=0x5 b=0x2 c_in=0x1 c_out=0x0 sum=0x8
+a=0xd b=0x6 c_in=0x1 c_out=0x1 sum=0x4
+a=0xd b=0xc c_in=0x1 c_out=0x1 sum=0xa
+[prakhar.g2@ssirlab03 rvmyth]$ gtkwave dump.vcd
+```
+GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/9cafb50830d10b483a8e157aba0eff851f4af6b3/PD%23day11/adder_gtk.png">
+
+</details>
+
+
+<details>
+<summary> VSD BabySoC </summary>
+
+**Individual Simulation of modules**
+
+1. Modelling RVMYTH
+
+
+Commands:
+```
+[prakhar.g2@ssirlab03 rvmyth]$ iverilog mythcore_test.v tb_mythcore_test.v 
+[prakhar.g2@ssirlab03 rvmyth]$ ./a.out
+VCD info: dumpfile tb_mythcore_test.vcd opened for output.
+[prakhar.g2@ssirlab03 rvmyth]$ gtkwave tb_mythcore_test.vcd
+```
+GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/626895be01a6481920ef64febf8083e8f45da514/PD%23day11/mythcore_gtk.png">
+10-bit digital codes observed at the output of rvmyth. It works as RISC V prcessor which 5 cycle fetch , decode , read , execute and write. 
+Working : Adds 1 to 1000 as 10 bit binary and 11th bit kept for sign flag as it becomes high it starts counting down.
+
+2. Modelling DAC
+Commands:
+```
+[prakhar.g2@ssirlab03 Pre-synthesis]$ iverilog avsddac.v avsddac_tb_test.v
+[prakhar.g2@ssirlab03 Pre-synthesis]$ ./a.out
+VCD info: dumpfile avsddac_tb_test.vcd opened for output.
+[prakhar.g2@ssirlab03 Pre-synthesis]$ gtkwave avsddac_tb_test.vcd
+```
+GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d9160236b2007b77070a241561aeccb424396814/PD%23day11/dac_gtk.png">
+
+Working : It is DAC whose Vref High is 3.3v and Vef Low = 0v. At coverts the equivalent 10 bit sign to its respective output.
+EX: D[9:0] = 111111010 = equivalent to 1019
+Out = Vref * (1019/1024) =3.283886 Which is matched with gtkwave.
+
+3. Modeling PLL
+
+Commands:
+```
+[prakhar.g2@ssirlab03 module]$ iverilog rvmyth_pll.v rvmyth_pll_tb.v
+[prakhar.g2@ssirlab03 module]$ gvim pll_tb.v
+[prakhar.g2@ssirlab03 module]$ gvim pll_tb.v
+[prakhar.g2@ssirlab03 module]$ iverilog avsd_pll_1v8.v pll_tb.v
+[prakhar.g2@ssirlab03 module]$ ./a.out
+VCD info: dumpfile test.vcd opened for output.
+[prakhar.g2@ssirlab03 module]$ gtkwave test.vcd
 ```
