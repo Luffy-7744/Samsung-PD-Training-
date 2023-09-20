@@ -4877,9 +4877,12 @@ Date   : Tue Sep 19 17:13:54 2023
   --------------------------------------------------------------------
 
 ```
+
+
 ## Day-11-About My processor
+
 <details>
- <summary> EXYNOS 2100 </summary>
+<summary> EXYNOS 2100 </summary>
 
 Exynos 2100 was one of Samsung's flagship system-on-chip (SoC) designs. It was used in some of Samsung's high-end smartphones and other devices.
 
@@ -4963,4 +4966,5 @@ Security :
 Power Efficiency :
 
     The 5nm manufacturing process, combined with the heterogeneous CPU architecture, was aimed at providing a good balance between performance and power efficiency.
+    
 </details>
