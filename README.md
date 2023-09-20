@@ -4877,7 +4877,8 @@ Date   : Tue Sep 19 17:13:54 2023
   --------------------------------------------------------------------
 
 ```
-
+    
+</details>
 
 ## Day-11-About My processor
 
@@ -4968,3 +4969,19 @@ Power Efficiency :
     The 5nm manufacturing process, combined with the heterogeneous CPU architecture, was aimed at providing a good balance between performance and power efficiency.
     
 </details>
+
+## Day-11-Modeling BabySoC
+
+<details>
+<summary> Example of 4 bit Adder </summary>
+
+RTL:
+```ruby
+
+
+```
+
+Testbench:
+```ruby
+
+```
