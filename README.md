@@ -5096,3 +5096,18 @@ Commands:
 VCD info: dumpfile test.vcd opened for output.
 [prakhar.g2@ssirlab03 module]$ gtkwave test.vcd
 ```
+GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e3cc764fc0d8217764765028d000fdabe30ee66d/PD%23day11/pll_gtk.png">
+
+**Interfacing all the modules**
+
+Commands:
+```
+[prakhar.g2@ssirlab03 module]$ iverilog vsdbabysoc.v testbench.v avsdpll.v avsddac.v mythcore_test.v
+[prakhar.g2@ssirlab03 module]$ ./a.out
+VCD info: dumpfile dump.vcd opened for output.
+[prakhar.g2@ssirlab03 module]$ gtkwave dump.vcd
+```
+GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e3cc764fc0d8217764765028d000fdabe30ee66d/PD%23day11/combined_gtk.png">
+
