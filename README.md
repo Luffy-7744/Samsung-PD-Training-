@@ -4970,7 +4970,7 @@ Power Efficiency :
     
 </details>
 
-## Day-11-Modeling BabySoC
+## Day-12-Modeling BabySoC
 
 <details>
 <summary> Example of 4 bit Adder </summary>
@@ -5110,4 +5110,70 @@ VCD info: dumpfile dump.vcd opened for output.
 ```
 GTKwave :
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e3cc764fc0d8217764765028d000fdabe30ee66d/PD%23day11/combined_gtk.png">
+</details>
 
+## Day-13-Post-Synthesis Simulation of BabySoC
+
+<details>
+<summary> Post-Synthesis Simulation </summary>
+
+**1. Converting .lib to .db**
+
+Git cone all the .lib files then convert it in .db using lc_shell :
+
+1. For DAC lib file
+Commands:
+```
+lc_shell> read_lib libs/avsddac.lib 
+Reading '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.lib' ...
+Warning: Line 27, Cell 'avsddac', The 'area' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_output_pin_rise_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_inout_pin_fall_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_inout_pin_rise_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_fanout_load' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_slope_rise' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_output_pin_fall_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_intrinsic_rise' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_slope_fall' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_intrinsic_fall' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_inout_pin_cap' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_input_pin_cap' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_output_pin_cap' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 28, Cell 'avsddac', pin 'OUT', The 'OUT' Pin/bus on the 'avsddac' cell has no 'function' attribute.
+	The cell becomes a black box. (LIBG-16)
+Technology library 'avsddac' read successfully
+1
+lc_shell> write_lib avsddac -format db -output avsddac.db
+Wrote the 'avsddac' library to '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsddac.db' successfully
+1
+```
+
+2. For PLL lib file 
+Commands :
+```
+lc_shell> read_lib libs/avsdpll.lib
+Reading '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.lib' ...
+Warning: Line 18, Cell 'avsdpll', The 'area' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_output_pin_rise_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_inout_pin_fall_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_inout_pin_rise_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_fanout_load' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_slope_rise' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_output_pin_fall_res' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_intrinsic_rise' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_slope_fall' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 1, The 'default_intrinsic_fall' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_inout_pin_cap' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_input_pin_cap' attribute is not specified. Using 1.00. (LBDB-172)
+Warning: Line 1, The 'default_output_pin_cap' attribute is not specified. Using 0.00. (LBDB-172)
+Warning: Line 19, Cell 'avsdpll', pin 'CLK', The 'CLK' Pin/bus on the 'avsdpll' cell has no 'function' attribute.
+	The cell becomes a black box. (LIBG-16)
+Technology library 'avsdpll' read successfully
+1
+lc_shell> write_lib avsdpll -format db -output avsdpll.db
+Wrote the 'avsdpll' library to '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsdpll.db' successfully
+1
+```
+3. We aready have .db file of sky 130
+
+**2. Setting target and link library**
