@@ -5177,3 +5177,195 @@ Wrote the 'avsdpll' library to '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC
 3. We aready have .db file of sky 130
 
 **2. Setting target and link library**
+Make vim file by name .synopsys_dc.setup, inside that vim file write :
+```ruby
+set target_library { /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db }
+
+set link_library {* /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db}
+```
+
+After setting lib check in dc_shell:
+```
+dc_shell> echo $target_library 
+ /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
+
+dc_shell> echo $link_library 
+* /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
+```
+reading the rtl :
+As we read the avsd_pll_1v8.v file it shows an error, becaus we used constructs which is not supported by synthesis.
+```
+dc_shell> read_verilog avsd_pll_1v8.v 
+Loading db file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db'
+Loading db file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db'
+Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/gtech.db'
+Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/standard.sldb'
+  Loading link library 'avsdpll'
+  Loading link library 'sky130_fd_sc_hd__tt_025C_1v80'
+  Loading link library 'gtech'
+Loading verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
+Compiling source file /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v
+Error:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:17: real declarations are not supported by synthesis. (VER-177)
+*** Presto compilation terminated with 1 errors. ***
+Error: Can't read 'verilog' file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v'. (UID-59)
+No designs were read
+```
+
+Now we make changes in RTL such that it supports the synthesis.
+
+RTL : Changes shown in comments
+
+```ruby
+`timescale 1ns / 1ps
+module avsd_pll_1v8( CLK, VCO_IN, VDDA, VDDD, VSSA, VSSD, EN_VCO, REF);
+
+  input VSSD;
+  input EN_VCO;
+  input VSSA;
+  input VDDD;
+  input VDDA;
+  input VCO_IN;
+  output CLK;
+  input REF;
+
+ 
+ 
+ 
+  reg CLK;
+  reg period, lastedge, refpd;  //-------- changing real to reg
+  wire  VSSD, VSSA, VDDD, VDDA;
+ 
+
+  initial begin
+     lastedge = 0.0;
+     period = 25.0; // 25ns period = 40MHz
+     CLK <= 0;
+      end
+
+  // Toggle clock at rate determined by period
+  always @(CLK or EN_VCO) begin
+     if (EN_VCO == 1'b1) begin
+        #12.5;  //-------------changing  #(period/2.0) to #12.5 
+        CLK <= (CLK == 1'b0); // -----------------changing === to ==
+     end else if (EN_VCO == 1'b0) begin
+        CLK <= 1'b0;
+     end else begin
+        CLK <= 1'bx;
+     end
+  end
+   
+  // Update period on every reference rising edge
+  always @(posedge REF) begin
+     if (lastedge > 0) begin    // --------changing 0.0 to 0
+//refpd = $realtime - lastedge;   //----------------commenting this line 
+// Adjust period towards 1/8 the reference period
+        //period = (0.99 * period) + (0.01 * (refpd / 8.0));
+        period =  (refpd / 8) ;    // --------changing 8.0 to 8
+     end
+     lastedge = $time;  //---------------changing $realtime to $time
+  end
+endmodule
+```
+Then again we read the rtl , link the design and do compile ultra after this:
+```
+dc_shell> read_verilog avsd_pll_1v8.v
+Loading verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v'
+Detecting input file type automatically (-rtl or -netlist).
+Reading with Presto HDL Compiler (equivalent to -rtl option).
+Running PRESTO HDLC
+Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
+Compiling source file /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v
+Warning:  Little argument or return value checking implemented for system task or function '$time'. (VER-209)
+Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:30: delay controls are ignored for synthesis. (VER-176)
+Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:31: Nonblocking assignments and blocking delays in the same process; potential simulation or synthesis mismatch. (VER-140)
+Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:33: Nonblocking assignments and blocking delays in the same process; potential simulation or synthesis mismatch. (VER-140)
+Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:35: Nonblocking assignments and blocking delays in the same process; potential simulation or synthesis mismatch. (VER-140)
+Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:21: The statements in initial blocks are ignored. (VER-281)
+Presto compilation completed successfully.
+Current design is now '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.db:avsd_pll_1v8'
+Loaded 1 design.
+Current design is 'avsd_pll_1v8'.
+avsd_pll_1v8
+
+dc_shell> link
+Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
+
+  Linking design 'avsd_pll_1v8'
+  Using the following designs and libraries:
+  --------------------------------------------------------------------------
+  avsd_pll_1v8                /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.db
+  avsdpll (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db
+  sky130_fd_sc_hd__tt_025C_1v80 (library) /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
+
+dc_shell> compile_ultra
+Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
+Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/dw_foundation.sldb'
+Warning: DesignWare synthetic library dw_foundation.sldb is added to the synthetic_library in the current command. (UISN-40)
+Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
+Information: Performing power optimization. (PWR-850)
+Loading db file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'
+Analyzing: "/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db"
+Analyzing: "/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db"
+Analyzing: "/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db"
+Library analysis succeeded.
+Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
+Information: Evaluating DesignWare library utilization. (UISN-27)
+
+============================================================================
+| DesignWare Building Block Library  |         Version         | Available |
+============================================================================
+| Basic DW Building Blocks           | T-2022.03-DWBB_202203.4 |     *     |
+| Licensed DW Building Blocks        | T-2022.03-DWBB_202203.4 |     *     |
+============================================================================
+
+====================================================================================================
+| Flow Information                                                                                 |
+----------------------------------------------------------------------------------------------------
+| Flow         | Design Compiler WLM                                                               |
+| Comand Line  | compile_ultra                                                                     |
+====================================================================================================
+| Design Information                                      | Value                                  |
+====================================================================================================
+| Number of Scenarios                                     | 0                                      |
+| Leaf Cell Count                                         | 9                                      |
+| Number of User Hierarchies                              | 0                                      |
+| Sequential Cell Count                                   | 0                                      |
+| Macro Count                                             | 0                                      |
+| Number of Power Domains                                 | 0                                      |
+| Number of Path Groups                                   | 1                                      |
+| Number of VT Class                                      | 0                                      |
+| Number of Clocks                                        | 0                                      |
+| Number of Dont Touch Cells                              | 2                                      |
+| Number of Dont Touch Nets                               | 0                                      |
+| Number of Size Only Cells                               | 0                                      |
+| Design with UPF Data                                    | false                                  |
+====================================================================================================
+
+dc_shell> write -f verilog -out avsdpll_net.v
+Writing verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsdpll_net.v'.
+1
+
+```
+
+Then we get a netlist as : 2 input and gate 
+```ruby
+/////////////////////////////////////////////////////////////
+// Created by: Synopsys DC Expert(TM) in wire load mode
+// Version   : T-2022.03-SP5-1
+// Date      : Thu Sep 21 16:36:15 2023
+/////////////////////////////////////////////////////////////
+
+
+module avsd_pll_1v8 ( CLK, VCO_IN, VDDA, VDDD, VSSA, VSSD, EN_VCO, REF );
+  input VCO_IN, VDDA, VDDD, VSSA, VSSD, EN_VCO, REF;
+  output CLK;
+
+
+  sky130_fd_sc_hd__and2b_2 U3 ( .B(EN_VCO), .A_N(CLK), .X(CLK) );
+endmodule
+```
+
