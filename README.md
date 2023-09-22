@@ -5215,7 +5215,7 @@ Writing verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/modul
 Warning: Verilog 'assign' or 'tran' statements are written out. (VO-4)
 1
 ```
-Generated Nelist :
+Generated Netlist :
 ```ruby
 module core ( clk, reset, out );
   output [9:0] out;
