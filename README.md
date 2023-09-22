@@ -5192,180 +5192,4965 @@ dc_shell> echo $target_library
 dc_shell> echo $link_library 
 * /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
 ```
+
 reading the rtl :
-As we read the avsd_pll_1v8.v file it shows an error, becaus we used constructs which is not supported by synthesis.
+
 ```
-dc_shell> read_verilog avsd_pll_1v8.v 
-Loading db file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db'
-Loading db file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db'
-Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/gtech.db'
-Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/standard.sldb'
-  Loading link library 'avsdpll'
-  Loading link library 'sky130_fd_sc_hd__tt_025C_1v80'
-  Loading link library 'gtech'
-Loading verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v'
-Detecting input file type automatically (-rtl or -netlist).
-Reading with Presto HDL Compiler (equivalent to -rtl option).
-Running PRESTO HDLC
-Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
-Compiling source file /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v
-Error:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:17: real declarations are not supported by synthesis. (VER-177)
-*** Presto compilation terminated with 1 errors. ***
-Error: Can't read 'verilog' file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v'. (UID-59)
-No designs were read
-```
-
-Now we make changes in RTL such that it supports the synthesis.
-
-RTL : Changes shown in comments
-
-```ruby
-`timescale 1ns / 1ps
-module avsd_pll_1v8( CLK, VCO_IN, VDDA, VDDD, VSSA, VSSD, EN_VCO, REF);
-
-  input VSSD;
-  input EN_VCO;
-  input VSSA;
-  input VDDD;
-  input VDDA;
-  input VCO_IN;
-  output CLK;
-  input REF;
-
- 
- 
- 
-  reg CLK;
-  reg period, lastedge, refpd;  //-------- changing real to reg
-  wire  VSSD, VSSA, VDDD, VDDA;
- 
-
-  initial begin
-     lastedge = 0.0;
-     period = 25.0; // 25ns period = 40MHz
-     CLK <= 0;
-      end
-
-  // Toggle clock at rate determined by period
-  always @(CLK or EN_VCO) begin
-     if (EN_VCO == 1'b1) begin
-        #12.5;  //-------------changing  #(period/2.0) to #12.5 
-        CLK <= (CLK == 1'b0); // -----------------changing === to ==
-     end else if (EN_VCO == 1'b0) begin
-        CLK <= 1'b0;
-     end else begin
-        CLK <= 1'bx;
-     end
-  end
-   
-  // Update period on every reference rising edge
-  always @(posedge REF) begin
-     if (lastedge > 0) begin    // --------changing 0.0 to 0
-//refpd = $realtime - lastedge;   //----------------commenting this line 
-// Adjust period towards 1/8 the reference period
-        //period = (0.99 * period) + (0.01 * (refpd / 8.0));
-        period =  (refpd / 8) ;    // --------changing 8.0 to 8
-     end
-     lastedge = $time;  //---------------changing $realtime to $time
-  end
-endmodule
-```
-Then again we read the rtl , link the design and do compile ultra after this:
-```
-dc_shell> read_verilog avsd_pll_1v8.v
-Loading verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v'
-Detecting input file type automatically (-rtl or -netlist).
-Reading with Presto HDL Compiler (equivalent to -rtl option).
-Running PRESTO HDLC
-Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
-Compiling source file /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v
-Warning:  Little argument or return value checking implemented for system task or function '$time'. (VER-209)
-Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:30: delay controls are ignored for synthesis. (VER-176)
-Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:31: Nonblocking assignments and blocking delays in the same process; potential simulation or synthesis mismatch. (VER-140)
-Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:33: Nonblocking assignments and blocking delays in the same process; potential simulation or synthesis mismatch. (VER-140)
-Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:35: Nonblocking assignments and blocking delays in the same process; potential simulation or synthesis mismatch. (VER-140)
-Warning:  /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.v:21: The statements in initial blocks are ignored. (VER-281)
-Presto compilation completed successfully.
-Current design is now '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.db:avsd_pll_1v8'
-Loaded 1 design.
-Current design is 'avsd_pll_1v8'.
-avsd_pll_1v8
-
+dc_shell> read_verilog mythcore_test.v
 dc_shell> link
-Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
 
-  Linking design 'avsd_pll_1v8'
+  Linking design 'clk_gate'
   Using the following designs and libraries:
   --------------------------------------------------------------------------
-  avsd_pll_1v8                /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsd_pll_1v8.db
+  * (2 designs)               /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/clk_gate.db, etc
   avsdpll (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db
+  avsddac (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db
   sky130_fd_sc_hd__tt_025C_1v80 (library) /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
 
+dc_shell> set current_design core
+
 dc_shell> compile_ultra
-Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
-Loading db file '/home/synopsys/DC/syn_vT-2022.03-SP5-1/libraries/syn/dw_foundation.sldb'
-Warning: DesignWare synthetic library dw_foundation.sldb is added to the synthetic_library in the current command. (UISN-40)
-Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
-Information: Performing power optimization. (PWR-850)
-Loading db file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'
-Analyzing: "/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db"
-Analyzing: "/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db"
-Analyzing: "/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db"
-Library analysis succeeded.
-Warning: Can't read link_library file 'home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db'. (UID-3)
-Information: Evaluating DesignWare library utilization. (UISN-27)
-
-============================================================================
-| DesignWare Building Block Library  |         Version         | Available |
-============================================================================
-| Basic DW Building Blocks           | T-2022.03-DWBB_202203.4 |     *     |
-| Licensed DW Building Blocks        | T-2022.03-DWBB_202203.4 |     *     |
-============================================================================
-
-====================================================================================================
-| Flow Information                                                                                 |
-----------------------------------------------------------------------------------------------------
-| Flow         | Design Compiler WLM                                                               |
-| Comand Line  | compile_ultra                                                                     |
-====================================================================================================
-| Design Information                                      | Value                                  |
-====================================================================================================
-| Number of Scenarios                                     | 0                                      |
-| Leaf Cell Count                                         | 9                                      |
-| Number of User Hierarchies                              | 0                                      |
-| Sequential Cell Count                                   | 0                                      |
-| Macro Count                                             | 0                                      |
-| Number of Power Domains                                 | 0                                      |
-| Number of Path Groups                                   | 1                                      |
-| Number of VT Class                                      | 0                                      |
-| Number of Clocks                                        | 0                                      |
-| Number of Dont Touch Cells                              | 2                                      |
-| Number of Dont Touch Nets                               | 0                                      |
-| Number of Size Only Cells                               | 0                                      |
-| Design with UPF Data                                    | false                                  |
-====================================================================================================
-
-dc_shell> write -f verilog -out avsdpll_net.v
-Writing verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/avsdpll_net.v'.
+dc_shell> write -f verilog -out myth_core_net.v
+Writing verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/myth_core_net.v'.
+Warning: Verilog 'assign' or 'tran' statements are written out. (VO-4)
 1
-
 ```
-
-Then we get a netlist as : 2 input and gate 
+Generated Nelist :
 ```ruby
-/////////////////////////////////////////////////////////////
-// Created by: Synopsys DC Expert(TM) in wire load mode
-// Version   : T-2022.03-SP5-1
-// Date      : Thu Sep 21 16:36:15 2023
-/////////////////////////////////////////////////////////////
+module core ( clk, reset, out );
+  output [9:0] out;
+  input clk, reset;
+  wire   N49, N51, N54, N55, N56, CPU_is_add_a2, CPU_is_add_a3, CPU_is_addi_a2,
+         CPU_is_addi_a3, CPU_is_blt_a2, CPU_is_blt_a3, CPU_is_sub_a2,
+         CPU_is_sub_a3, clkP_CPU_rd_valid_a2, CPU_rd_valid_a2, CPU_rd_valid_a3,
+         CPU_reset_a1, CPU_reset_a2, CPU_reset_a3, CPU_valid_taken_br_a4,
+         CPU_valid_taken_br_a5, \CPU_Xreg_value_a3[31][31] ,
+         \CPU_Xreg_value_a3[31][30] , \CPU_Xreg_value_a3[31][29] ,
+         \CPU_Xreg_value_a3[31][28] , \CPU_Xreg_value_a3[31][27] ,
+         \CPU_Xreg_value_a3[31][26] , \CPU_Xreg_value_a3[31][25] ,
+         \CPU_Xreg_value_a3[31][24] , \CPU_Xreg_value_a3[31][23] ,
+         \CPU_Xreg_value_a3[31][22] , \CPU_Xreg_value_a3[31][21] ,
+         \CPU_Xreg_value_a3[31][20] , \CPU_Xreg_value_a3[31][19] ,
+         \CPU_Xreg_value_a3[31][18] , \CPU_Xreg_value_a3[31][17] ,
+         \CPU_Xreg_value_a3[31][16] , \CPU_Xreg_value_a3[31][15] ,
+         \CPU_Xreg_value_a3[31][14] , \CPU_Xreg_value_a3[31][13] ,
+         \CPU_Xreg_value_a3[31][12] , \CPU_Xreg_value_a3[31][11] ,
+         \CPU_Xreg_value_a3[31][10] , \CPU_Xreg_value_a3[31][9] ,
+         \CPU_Xreg_value_a3[31][8] , \CPU_Xreg_value_a3[31][7] ,
+         \CPU_Xreg_value_a3[31][6] , \CPU_Xreg_value_a3[31][5] ,
+         \CPU_Xreg_value_a3[31][4] , \CPU_Xreg_value_a3[31][3] ,
+         \CPU_Xreg_value_a3[31][2] , \CPU_Xreg_value_a3[31][1] ,
+         \CPU_Xreg_value_a3[31][0] , \CPU_Xreg_value_a3[30][31] ,
+         \CPU_Xreg_value_a3[30][30] , \CPU_Xreg_value_a3[30][29] ,
+         \CPU_Xreg_value_a3[30][28] , \CPU_Xreg_value_a3[30][27] ,
+         \CPU_Xreg_value_a3[30][26] , \CPU_Xreg_value_a3[30][25] ,
+         \CPU_Xreg_value_a3[30][24] , \CPU_Xreg_value_a3[30][23] ,
+         \CPU_Xreg_value_a3[30][22] , \CPU_Xreg_value_a3[30][21] ,
+         \CPU_Xreg_value_a3[30][20] , \CPU_Xreg_value_a3[30][19] ,
+         \CPU_Xreg_value_a3[30][18] , \CPU_Xreg_value_a3[30][17] ,
+         \CPU_Xreg_value_a3[30][16] , \CPU_Xreg_value_a3[30][15] ,
+         \CPU_Xreg_value_a3[30][14] , \CPU_Xreg_value_a3[30][13] ,
+         \CPU_Xreg_value_a3[30][12] , \CPU_Xreg_value_a3[30][11] ,
+         \CPU_Xreg_value_a3[30][10] , \CPU_Xreg_value_a3[30][9] ,
+         \CPU_Xreg_value_a3[30][8] , \CPU_Xreg_value_a3[30][7] ,
+         \CPU_Xreg_value_a3[30][6] , \CPU_Xreg_value_a3[30][5] ,
+         \CPU_Xreg_value_a3[30][4] , \CPU_Xreg_value_a3[30][3] ,
+         \CPU_Xreg_value_a3[30][2] , \CPU_Xreg_value_a3[30][1] ,
+         \CPU_Xreg_value_a3[30][0] , \CPU_Xreg_value_a3[29][31] ,
+         \CPU_Xreg_value_a3[29][30] , \CPU_Xreg_value_a3[29][29] ,
+         \CPU_Xreg_value_a3[29][28] , \CPU_Xreg_value_a3[29][27] ,
+         \CPU_Xreg_value_a3[29][26] , \CPU_Xreg_value_a3[29][25] ,
+         \CPU_Xreg_value_a3[29][24] , \CPU_Xreg_value_a3[29][23] ,
+         \CPU_Xreg_value_a3[29][22] , \CPU_Xreg_value_a3[29][21] ,
+         \CPU_Xreg_value_a3[29][20] , \CPU_Xreg_value_a3[29][19] ,
+         \CPU_Xreg_value_a3[29][18] , \CPU_Xreg_value_a3[29][17] ,
+         \CPU_Xreg_value_a3[29][16] , \CPU_Xreg_value_a3[29][15] ,
+         \CPU_Xreg_value_a3[29][14] , \CPU_Xreg_value_a3[29][13] ,
+         \CPU_Xreg_value_a3[29][12] , \CPU_Xreg_value_a3[29][11] ,
+         \CPU_Xreg_value_a3[29][10] , \CPU_Xreg_value_a3[29][9] ,
+         \CPU_Xreg_value_a3[29][8] , \CPU_Xreg_value_a3[29][7] ,
+         \CPU_Xreg_value_a3[29][6] , \CPU_Xreg_value_a3[29][5] ,
+         \CPU_Xreg_value_a3[29][4] , \CPU_Xreg_value_a3[29][3] ,
+         \CPU_Xreg_value_a3[29][2] , \CPU_Xreg_value_a3[29][1] ,
+         \CPU_Xreg_value_a3[29][0] , \CPU_Xreg_value_a3[28][31] ,
+         \CPU_Xreg_value_a3[28][30] , \CPU_Xreg_value_a3[28][29] ,
+         \CPU_Xreg_value_a3[28][28] , \CPU_Xreg_value_a3[28][27] ,
+         \CPU_Xreg_value_a3[28][26] , \CPU_Xreg_value_a3[28][25] ,
+         \CPU_Xreg_value_a3[28][24] , \CPU_Xreg_value_a3[28][23] ,
+         \CPU_Xreg_value_a3[28][22] , \CPU_Xreg_value_a3[28][21] ,
+         \CPU_Xreg_value_a3[28][20] , \CPU_Xreg_value_a3[28][19] ,
+         \CPU_Xreg_value_a3[28][18] , \CPU_Xreg_value_a3[28][17] ,
+         \CPU_Xreg_value_a3[28][16] , \CPU_Xreg_value_a3[28][15] ,
+         \CPU_Xreg_value_a3[28][14] , \CPU_Xreg_value_a3[28][13] ,
+         \CPU_Xreg_value_a3[28][12] , \CPU_Xreg_value_a3[28][11] ,
+         \CPU_Xreg_value_a3[28][10] , \CPU_Xreg_value_a3[28][9] ,
+         \CPU_Xreg_value_a3[28][8] , \CPU_Xreg_value_a3[28][7] ,
+         \CPU_Xreg_value_a3[28][6] , \CPU_Xreg_value_a3[28][5] ,
+         \CPU_Xreg_value_a3[28][4] , \CPU_Xreg_value_a3[28][3] ,
+         \CPU_Xreg_value_a3[28][2] , \CPU_Xreg_value_a3[28][1] ,
+         \CPU_Xreg_value_a3[28][0] , \CPU_Xreg_value_a3[19][31] ,
+         \CPU_Xreg_value_a3[19][30] , \CPU_Xreg_value_a3[19][29] ,
+         \CPU_Xreg_value_a3[19][28] , \CPU_Xreg_value_a3[19][27] ,
+         \CPU_Xreg_value_a3[19][26] , \CPU_Xreg_value_a3[19][25] ,
+         \CPU_Xreg_value_a3[19][24] , \CPU_Xreg_value_a3[19][23] ,
+         \CPU_Xreg_value_a3[19][22] , \CPU_Xreg_value_a3[19][21] ,
+         \CPU_Xreg_value_a3[19][20] , \CPU_Xreg_value_a3[19][19] ,
+         \CPU_Xreg_value_a3[19][18] , \CPU_Xreg_value_a3[19][17] ,
+         \CPU_Xreg_value_a3[19][16] , \CPU_Xreg_value_a3[19][15] ,
+         \CPU_Xreg_value_a3[19][14] , \CPU_Xreg_value_a3[19][13] ,
+         \CPU_Xreg_value_a3[19][12] , \CPU_Xreg_value_a3[19][11] ,
+         \CPU_Xreg_value_a3[19][10] , \CPU_Xreg_value_a3[19][9] ,
+         \CPU_Xreg_value_a3[19][8] , \CPU_Xreg_value_a3[19][7] ,
+         \CPU_Xreg_value_a3[19][6] , \CPU_Xreg_value_a3[19][5] ,
+         \CPU_Xreg_value_a3[19][4] , \CPU_Xreg_value_a3[19][3] ,
+         \CPU_Xreg_value_a3[19][2] , \CPU_Xreg_value_a3[19][1] ,
+         \CPU_Xreg_value_a3[19][0] , \CPU_Xreg_value_a3[18][31] ,
+         \CPU_Xreg_value_a3[18][30] , \CPU_Xreg_value_a3[18][29] ,
+         \CPU_Xreg_value_a3[18][28] , \CPU_Xreg_value_a3[18][27] ,
+         \CPU_Xreg_value_a3[18][26] , \CPU_Xreg_value_a3[18][25] ,
+         \CPU_Xreg_value_a3[18][24] , \CPU_Xreg_value_a3[18][23] ,
+         \CPU_Xreg_value_a3[18][22] , \CPU_Xreg_value_a3[18][21] ,
+         \CPU_Xreg_value_a3[18][20] , \CPU_Xreg_value_a3[18][19] ,
+         \CPU_Xreg_value_a3[18][18] , \CPU_Xreg_value_a3[18][17] ,
+         \CPU_Xreg_value_a3[18][16] , \CPU_Xreg_value_a3[18][15] ,
+         \CPU_Xreg_value_a3[18][14] , \CPU_Xreg_value_a3[18][13] ,
+         \CPU_Xreg_value_a3[18][12] , \CPU_Xreg_value_a3[18][11] ,
+         \CPU_Xreg_value_a3[18][10] , \CPU_Xreg_value_a3[18][9] ,
+         \CPU_Xreg_value_a3[18][8] , \CPU_Xreg_value_a3[18][7] ,
+         \CPU_Xreg_value_a3[18][6] , \CPU_Xreg_value_a3[18][5] ,
+         \CPU_Xreg_value_a3[18][4] , \CPU_Xreg_value_a3[18][3] ,
+         \CPU_Xreg_value_a3[18][2] , \CPU_Xreg_value_a3[18][1] ,
+         \CPU_Xreg_value_a3[18][0] , \CPU_Xreg_value_a3[17][31] ,
+         \CPU_Xreg_value_a3[17][30] , \CPU_Xreg_value_a3[17][29] ,
+         \CPU_Xreg_value_a3[17][28] , \CPU_Xreg_value_a3[17][27] ,
+         \CPU_Xreg_value_a3[17][26] , \CPU_Xreg_value_a3[17][25] ,
+         \CPU_Xreg_value_a3[17][24] , \CPU_Xreg_value_a3[17][23] ,
+         \CPU_Xreg_value_a3[17][22] , \CPU_Xreg_value_a3[17][21] ,
+         \CPU_Xreg_value_a3[17][20] , \CPU_Xreg_value_a3[17][19] ,
+         \CPU_Xreg_value_a3[17][18] , \CPU_Xreg_value_a3[17][17] ,
+         \CPU_Xreg_value_a3[17][16] , \CPU_Xreg_value_a3[17][15] ,
+         \CPU_Xreg_value_a3[17][14] , \CPU_Xreg_value_a3[17][13] ,
+         \CPU_Xreg_value_a3[17][12] , \CPU_Xreg_value_a3[17][11] ,
+         \CPU_Xreg_value_a3[17][10] , \CPU_Xreg_value_a3[17][9] ,
+         \CPU_Xreg_value_a3[17][8] , \CPU_Xreg_value_a3[17][7] ,
+         \CPU_Xreg_value_a3[17][6] , \CPU_Xreg_value_a3[17][5] ,
+         \CPU_Xreg_value_a3[17][4] , \CPU_Xreg_value_a3[17][3] ,
+         \CPU_Xreg_value_a3[17][2] , \CPU_Xreg_value_a3[17][1] ,
+         \CPU_Xreg_value_a3[17][0] , \CPU_Xreg_value_a3[16][31] ,
+         \CPU_Xreg_value_a3[16][30] , \CPU_Xreg_value_a3[16][29] ,
+         \CPU_Xreg_value_a3[16][28] , \CPU_Xreg_value_a3[16][27] ,
+         \CPU_Xreg_value_a3[16][26] , \CPU_Xreg_value_a3[16][25] ,
+         \CPU_Xreg_value_a3[16][24] , \CPU_Xreg_value_a3[16][23] ,
+         \CPU_Xreg_value_a3[16][22] , \CPU_Xreg_value_a3[16][21] ,
+         \CPU_Xreg_value_a3[16][20] , \CPU_Xreg_value_a3[16][19] ,
+         \CPU_Xreg_value_a3[16][18] , \CPU_Xreg_value_a3[16][17] ,
+         \CPU_Xreg_value_a3[16][16] , \CPU_Xreg_value_a3[16][15] ,
+         \CPU_Xreg_value_a3[16][14] , \CPU_Xreg_value_a3[16][13] ,
+         \CPU_Xreg_value_a3[16][12] , \CPU_Xreg_value_a3[16][11] ,
+         \CPU_Xreg_value_a3[16][10] , \CPU_Xreg_value_a3[16][9] ,
+         \CPU_Xreg_value_a3[16][8] , \CPU_Xreg_value_a3[16][7] ,
+         \CPU_Xreg_value_a3[16][6] , \CPU_Xreg_value_a3[16][5] ,
+         \CPU_Xreg_value_a3[16][4] , \CPU_Xreg_value_a3[16][3] ,
+         \CPU_Xreg_value_a3[16][2] , \CPU_Xreg_value_a3[16][1] ,
+         \CPU_Xreg_value_a3[16][0] , \CPU_Xreg_value_a3[15][31] ,
+         \CPU_Xreg_value_a3[15][30] , \CPU_Xreg_value_a3[15][29] ,
+         \CPU_Xreg_value_a3[15][28] , \CPU_Xreg_value_a3[15][27] ,
+         \CPU_Xreg_value_a3[15][26] , \CPU_Xreg_value_a3[15][25] ,
+         \CPU_Xreg_value_a3[15][24] , \CPU_Xreg_value_a3[15][23] ,
+         \CPU_Xreg_value_a3[15][22] , \CPU_Xreg_value_a3[15][21] ,
+         \CPU_Xreg_value_a3[15][20] , \CPU_Xreg_value_a3[15][19] ,
+         \CPU_Xreg_value_a3[15][18] , \CPU_Xreg_value_a3[15][17] ,
+         \CPU_Xreg_value_a3[15][16] , \CPU_Xreg_value_a3[15][15] ,
+         \CPU_Xreg_value_a3[15][14] , \CPU_Xreg_value_a3[15][13] ,
+         \CPU_Xreg_value_a3[15][12] , \CPU_Xreg_value_a3[15][11] ,
+         \CPU_Xreg_value_a3[15][10] , \CPU_Xreg_value_a3[15][9] ,
+         \CPU_Xreg_value_a3[15][8] , \CPU_Xreg_value_a3[15][7] ,
+         \CPU_Xreg_value_a3[15][6] , \CPU_Xreg_value_a3[15][5] ,
+         \CPU_Xreg_value_a3[15][4] , \CPU_Xreg_value_a3[15][3] ,
+         \CPU_Xreg_value_a3[15][2] , \CPU_Xreg_value_a3[15][1] ,
+         \CPU_Xreg_value_a3[15][0] , \CPU_Xreg_value_a3[14][31] ,
+         \CPU_Xreg_value_a3[14][30] , \CPU_Xreg_value_a3[14][29] ,
+         \CPU_Xreg_value_a3[14][28] , \CPU_Xreg_value_a3[14][27] ,
+         \CPU_Xreg_value_a3[14][26] , \CPU_Xreg_value_a3[14][25] ,
+         \CPU_Xreg_value_a3[14][24] , \CPU_Xreg_value_a3[14][23] ,
+         \CPU_Xreg_value_a3[14][22] , \CPU_Xreg_value_a3[14][21] ,
+         \CPU_Xreg_value_a3[14][20] , \CPU_Xreg_value_a3[14][19] ,
+         \CPU_Xreg_value_a3[14][18] , \CPU_Xreg_value_a3[14][17] ,
+         \CPU_Xreg_value_a3[14][16] , \CPU_Xreg_value_a3[14][15] ,
+         \CPU_Xreg_value_a3[14][14] , \CPU_Xreg_value_a3[14][13] ,
+         \CPU_Xreg_value_a3[14][12] , \CPU_Xreg_value_a3[14][11] ,
+         \CPU_Xreg_value_a3[14][10] , \CPU_Xreg_value_a3[14][9] ,
+         \CPU_Xreg_value_a3[14][8] , \CPU_Xreg_value_a3[14][7] ,
+         \CPU_Xreg_value_a3[14][6] , \CPU_Xreg_value_a3[14][5] ,
+         \CPU_Xreg_value_a3[14][4] , \CPU_Xreg_value_a3[14][3] ,
+         \CPU_Xreg_value_a3[14][2] , \CPU_Xreg_value_a3[14][1] ,
+         \CPU_Xreg_value_a3[14][0] , \CPU_Xreg_value_a3[13][31] ,
+         \CPU_Xreg_value_a3[13][30] , \CPU_Xreg_value_a3[13][29] ,
+         \CPU_Xreg_value_a3[13][28] , \CPU_Xreg_value_a3[13][27] ,
+         \CPU_Xreg_value_a3[13][26] , \CPU_Xreg_value_a3[13][25] ,
+         \CPU_Xreg_value_a3[13][24] , \CPU_Xreg_value_a3[13][23] ,
+         \CPU_Xreg_value_a3[13][22] , \CPU_Xreg_value_a3[13][21] ,
+         \CPU_Xreg_value_a3[13][20] , \CPU_Xreg_value_a3[13][19] ,
+         \CPU_Xreg_value_a3[13][18] , \CPU_Xreg_value_a3[13][17] ,
+         \CPU_Xreg_value_a3[13][16] , \CPU_Xreg_value_a3[13][15] ,
+         \CPU_Xreg_value_a3[13][14] , \CPU_Xreg_value_a3[13][13] ,
+         \CPU_Xreg_value_a3[13][12] , \CPU_Xreg_value_a3[13][11] ,
+         \CPU_Xreg_value_a3[13][10] , \CPU_Xreg_value_a3[13][9] ,
+         \CPU_Xreg_value_a3[13][8] , \CPU_Xreg_value_a3[13][7] ,
+         \CPU_Xreg_value_a3[13][6] , \CPU_Xreg_value_a3[13][5] ,
+         \CPU_Xreg_value_a3[13][4] , \CPU_Xreg_value_a3[13][3] ,
+         \CPU_Xreg_value_a3[13][2] , \CPU_Xreg_value_a3[13][1] ,
+         \CPU_Xreg_value_a3[13][0] , \CPU_Xreg_value_a3[12][31] ,
+         \CPU_Xreg_value_a3[12][30] , \CPU_Xreg_value_a3[12][29] ,
+         \CPU_Xreg_value_a3[12][28] , \CPU_Xreg_value_a3[12][27] ,
+         \CPU_Xreg_value_a3[12][26] , \CPU_Xreg_value_a3[12][25] ,
+         \CPU_Xreg_value_a3[12][24] , \CPU_Xreg_value_a3[12][23] ,
+         \CPU_Xreg_value_a3[12][22] , \CPU_Xreg_value_a3[12][21] ,
+         \CPU_Xreg_value_a3[12][20] , \CPU_Xreg_value_a3[12][19] ,
+         \CPU_Xreg_value_a3[12][18] , \CPU_Xreg_value_a3[12][17] ,
+         \CPU_Xreg_value_a3[12][16] , \CPU_Xreg_value_a3[12][15] ,
+         \CPU_Xreg_value_a3[12][14] , \CPU_Xreg_value_a3[12][13] ,
+         \CPU_Xreg_value_a3[12][12] , \CPU_Xreg_value_a3[12][11] ,
+         \CPU_Xreg_value_a3[12][10] , \CPU_Xreg_value_a3[12][9] ,
+         \CPU_Xreg_value_a3[12][8] , \CPU_Xreg_value_a3[12][7] ,
+         \CPU_Xreg_value_a3[12][6] , \CPU_Xreg_value_a3[12][5] ,
+         \CPU_Xreg_value_a3[12][4] , \CPU_Xreg_value_a3[12][3] ,
+         \CPU_Xreg_value_a3[12][2] , \CPU_Xreg_value_a3[12][1] ,
+         \CPU_Xreg_value_a3[12][0] , \CPU_Xreg_value_a3[3][31] ,
+         \CPU_Xreg_value_a3[3][30] , \CPU_Xreg_value_a3[3][29] ,
+         \CPU_Xreg_value_a3[3][28] , \CPU_Xreg_value_a3[3][27] ,
+         \CPU_Xreg_value_a3[3][26] , \CPU_Xreg_value_a3[3][25] ,
+         \CPU_Xreg_value_a3[3][24] , \CPU_Xreg_value_a3[3][23] ,
+         \CPU_Xreg_value_a3[3][22] , \CPU_Xreg_value_a3[3][21] ,
+         \CPU_Xreg_value_a3[3][20] , \CPU_Xreg_value_a3[3][19] ,
+         \CPU_Xreg_value_a3[3][18] , \CPU_Xreg_value_a3[3][17] ,
+         \CPU_Xreg_value_a3[3][16] , \CPU_Xreg_value_a3[3][15] ,
+         \CPU_Xreg_value_a3[3][14] , \CPU_Xreg_value_a3[3][13] ,
+         \CPU_Xreg_value_a3[3][12] , \CPU_Xreg_value_a3[3][11] ,
+         \CPU_Xreg_value_a3[3][10] , \CPU_Xreg_value_a3[3][9] ,
+         \CPU_Xreg_value_a3[3][8] , \CPU_Xreg_value_a3[3][7] ,
+         \CPU_Xreg_value_a3[3][6] , \CPU_Xreg_value_a3[3][5] ,
+         \CPU_Xreg_value_a3[3][4] , \CPU_Xreg_value_a3[3][3] ,
+         \CPU_Xreg_value_a3[3][2] , \CPU_Xreg_value_a3[3][1] ,
+         \CPU_Xreg_value_a3[3][0] , \CPU_Xreg_value_a3[2][31] ,
+         \CPU_Xreg_value_a3[2][30] , \CPU_Xreg_value_a3[2][29] ,
+         \CPU_Xreg_value_a3[2][28] , \CPU_Xreg_value_a3[2][27] ,
+         \CPU_Xreg_value_a3[2][26] , \CPU_Xreg_value_a3[2][25] ,
+         \CPU_Xreg_value_a3[2][24] , \CPU_Xreg_value_a3[2][23] ,
+         \CPU_Xreg_value_a3[2][22] , \CPU_Xreg_value_a3[2][21] ,
+         \CPU_Xreg_value_a3[2][20] , \CPU_Xreg_value_a3[2][19] ,
+         \CPU_Xreg_value_a3[2][18] , \CPU_Xreg_value_a3[2][17] ,
+         \CPU_Xreg_value_a3[2][16] , \CPU_Xreg_value_a3[2][15] ,
+         \CPU_Xreg_value_a3[2][14] , \CPU_Xreg_value_a3[2][13] ,
+         \CPU_Xreg_value_a3[2][12] , \CPU_Xreg_value_a3[2][11] ,
+         \CPU_Xreg_value_a3[2][10] , \CPU_Xreg_value_a3[2][9] ,
+         \CPU_Xreg_value_a3[2][8] , \CPU_Xreg_value_a3[2][7] ,
+         \CPU_Xreg_value_a3[2][6] , \CPU_Xreg_value_a3[2][5] ,
+         \CPU_Xreg_value_a3[2][4] , \CPU_Xreg_value_a3[2][3] ,
+         \CPU_Xreg_value_a3[2][2] , \CPU_Xreg_value_a3[2][1] ,
+         \CPU_Xreg_value_a3[2][0] , \CPU_Xreg_value_a3[1][31] ,
+         \CPU_Xreg_value_a3[1][30] , \CPU_Xreg_value_a3[1][29] ,
+         \CPU_Xreg_value_a3[1][28] , \CPU_Xreg_value_a3[1][27] ,
+         \CPU_Xreg_value_a3[1][26] , \CPU_Xreg_value_a3[1][25] ,
+         \CPU_Xreg_value_a3[1][24] , \CPU_Xreg_value_a3[1][23] ,
+         \CPU_Xreg_value_a3[1][22] , \CPU_Xreg_value_a3[1][21] ,
+         \CPU_Xreg_value_a3[1][20] , \CPU_Xreg_value_a3[1][19] ,
+         \CPU_Xreg_value_a3[1][18] , \CPU_Xreg_value_a3[1][17] ,
+         \CPU_Xreg_value_a3[1][16] , \CPU_Xreg_value_a3[1][15] ,
+         \CPU_Xreg_value_a3[1][14] , \CPU_Xreg_value_a3[1][13] ,
+         \CPU_Xreg_value_a3[1][12] , \CPU_Xreg_value_a3[1][11] ,
+         \CPU_Xreg_value_a3[1][10] , \CPU_Xreg_value_a3[1][9] ,
+         \CPU_Xreg_value_a3[1][8] , \CPU_Xreg_value_a3[1][7] ,
+         \CPU_Xreg_value_a3[1][6] , \CPU_Xreg_value_a3[1][5] ,
+         \CPU_Xreg_value_a3[1][4] , \CPU_Xreg_value_a3[1][3] ,
+         \CPU_Xreg_value_a3[1][2] , \CPU_Xreg_value_a3[1][1] ,
+         \CPU_Xreg_value_a3[1][0] , \CPU_Xreg_value_a4[31][31] ,
+         \CPU_Xreg_value_a4[31][30] , \CPU_Xreg_value_a4[31][29] ,
+         \CPU_Xreg_value_a4[31][28] , \CPU_Xreg_value_a4[31][27] ,
+         \CPU_Xreg_value_a4[31][26] , \CPU_Xreg_value_a4[31][25] ,
+         \CPU_Xreg_value_a4[31][24] , \CPU_Xreg_value_a4[31][23] ,
+         \CPU_Xreg_value_a4[31][22] , \CPU_Xreg_value_a4[31][21] ,
+         \CPU_Xreg_value_a4[31][20] , \CPU_Xreg_value_a4[31][19] ,
+         \CPU_Xreg_value_a4[31][18] , \CPU_Xreg_value_a4[31][17] ,
+         \CPU_Xreg_value_a4[31][16] , \CPU_Xreg_value_a4[31][15] ,
+         \CPU_Xreg_value_a4[31][14] , \CPU_Xreg_value_a4[31][13] ,
+         \CPU_Xreg_value_a4[31][12] , \CPU_Xreg_value_a4[31][11] ,
+         \CPU_Xreg_value_a4[31][10] , \CPU_Xreg_value_a4[31][9] ,
+         \CPU_Xreg_value_a4[31][8] , \CPU_Xreg_value_a4[31][7] ,
+         \CPU_Xreg_value_a4[31][6] , \CPU_Xreg_value_a4[31][5] ,
+         \CPU_Xreg_value_a4[31][4] , \CPU_Xreg_value_a4[31][3] ,
+         \CPU_Xreg_value_a4[31][2] , \CPU_Xreg_value_a4[31][1] ,
+         \CPU_Xreg_value_a4[31][0] , \CPU_Xreg_value_a4[30][31] ,
+         \CPU_Xreg_value_a4[30][30] , \CPU_Xreg_value_a4[30][29] ,
+         \CPU_Xreg_value_a4[30][28] , \CPU_Xreg_value_a4[30][27] ,
+         \CPU_Xreg_value_a4[30][26] , \CPU_Xreg_value_a4[30][25] ,
+         \CPU_Xreg_value_a4[30][24] , \CPU_Xreg_value_a4[30][23] ,
+         \CPU_Xreg_value_a4[30][22] , \CPU_Xreg_value_a4[30][21] ,
+         \CPU_Xreg_value_a4[30][20] , \CPU_Xreg_value_a4[30][19] ,
+         \CPU_Xreg_value_a4[30][18] , \CPU_Xreg_value_a4[30][17] ,
+         \CPU_Xreg_value_a4[30][16] , \CPU_Xreg_value_a4[30][15] ,
+         \CPU_Xreg_value_a4[30][14] , \CPU_Xreg_value_a4[30][13] ,
+         \CPU_Xreg_value_a4[30][12] , \CPU_Xreg_value_a4[30][11] ,
+         \CPU_Xreg_value_a4[30][10] , \CPU_Xreg_value_a4[30][9] ,
+         \CPU_Xreg_value_a4[30][8] , \CPU_Xreg_value_a4[30][7] ,
+         \CPU_Xreg_value_a4[30][6] , \CPU_Xreg_value_a4[30][5] ,
+         \CPU_Xreg_value_a4[30][4] , \CPU_Xreg_value_a4[30][3] ,
+         \CPU_Xreg_value_a4[30][2] , \CPU_Xreg_value_a4[30][1] ,
+         \CPU_Xreg_value_a4[30][0] , \CPU_Xreg_value_a4[29][31] ,
+         \CPU_Xreg_value_a4[29][30] , \CPU_Xreg_value_a4[29][29] ,
+         \CPU_Xreg_value_a4[29][28] , \CPU_Xreg_value_a4[29][27] ,
+         \CPU_Xreg_value_a4[29][26] , \CPU_Xreg_value_a4[29][25] ,
+         \CPU_Xreg_value_a4[29][24] , \CPU_Xreg_value_a4[29][23] ,
+         \CPU_Xreg_value_a5[29][22] , \CPU_Xreg_value_a4[29][21] ,
+         \CPU_Xreg_value_a4[29][20] , \CPU_Xreg_value_a4[29][19] ,
+         \CPU_Xreg_value_a4[29][18] , \CPU_Xreg_value_a4[29][17] ,
+         \CPU_Xreg_value_a4[29][16] , \CPU_Xreg_value_a4[29][15] ,
+         \CPU_Xreg_value_a4[29][14] , \CPU_Xreg_value_a4[29][13] ,
+         \CPU_Xreg_value_a4[29][12] , \CPU_Xreg_value_a4[29][11] ,
+         \CPU_Xreg_value_a4[29][10] , \CPU_Xreg_value_a4[29][9] ,
+         \CPU_Xreg_value_a4[29][8] , \CPU_Xreg_value_a4[29][7] ,
+         \CPU_Xreg_value_a4[29][6] , \CPU_Xreg_value_a4[29][5] ,
+         \CPU_Xreg_value_a4[29][4] , \CPU_Xreg_value_a4[29][3] ,
+         \CPU_Xreg_value_a4[29][2] , \CPU_Xreg_value_a4[29][1] ,
+         \CPU_Xreg_value_a4[29][0] , \CPU_Xreg_value_a4[28][31] ,
+         \CPU_Xreg_value_a4[28][30] , \CPU_Xreg_value_a4[28][29] ,
+         \CPU_Xreg_value_a4[28][28] , \CPU_Xreg_value_a4[28][27] ,
+         \CPU_Xreg_value_a4[28][26] , \CPU_Xreg_value_a4[28][25] ,
+         \CPU_Xreg_value_a4[28][24] , \CPU_Xreg_value_a4[28][23] ,
+         \CPU_Xreg_value_a4[28][22] , \CPU_Xreg_value_a4[28][21] ,
+         \CPU_Xreg_value_a4[28][20] , \CPU_Xreg_value_a4[28][19] ,
+         \CPU_Xreg_value_a4[28][18] , \CPU_Xreg_value_a4[28][17] ,
+         \CPU_Xreg_value_a4[28][16] , \CPU_Xreg_value_a4[28][15] ,
+         \CPU_Xreg_value_a4[28][14] , \CPU_Xreg_value_a4[28][13] ,
+         \CPU_Xreg_value_a4[28][12] , \CPU_Xreg_value_a4[28][11] ,
+         \CPU_Xreg_value_a4[28][10] , \CPU_Xreg_value_a4[28][9] ,
+         \CPU_Xreg_value_a4[28][8] , \CPU_Xreg_value_a4[28][7] ,
+         \CPU_Xreg_value_a4[28][6] , \CPU_Xreg_value_a4[28][5] ,
+         \CPU_Xreg_value_a4[28][4] , \CPU_Xreg_value_a4[28][3] ,
+         \CPU_Xreg_value_a4[28][2] , \CPU_Xreg_value_a4[28][1] ,
+         \CPU_Xreg_value_a4[28][0] , \CPU_Xreg_value_a4[19][31] ,
+         \CPU_Xreg_value_a4[19][30] , \CPU_Xreg_value_a4[19][29] ,
+         \CPU_Xreg_value_a4[19][28] , \CPU_Xreg_value_a4[19][27] ,
+         \CPU_Xreg_value_a4[19][26] , \CPU_Xreg_value_a4[19][25] ,
+         \CPU_Xreg_value_a4[19][24] , \CPU_Xreg_value_a4[19][23] ,
+         \CPU_Xreg_value_a4[19][22] , \CPU_Xreg_value_a4[19][21] ,
+         \CPU_Xreg_value_a4[19][20] , \CPU_Xreg_value_a4[19][19] ,
+         \CPU_Xreg_value_a4[19][18] , \CPU_Xreg_value_a4[19][17] ,
+         \CPU_Xreg_value_a4[19][16] , \CPU_Xreg_value_a4[19][15] ,
+         \CPU_Xreg_value_a4[19][14] , \CPU_Xreg_value_a4[19][13] ,
+         \CPU_Xreg_value_a4[19][12] , \CPU_Xreg_value_a4[19][11] ,
+         \CPU_Xreg_value_a4[19][10] , \CPU_Xreg_value_a4[19][9] ,
+         \CPU_Xreg_value_a4[19][8] , \CPU_Xreg_value_a4[19][7] ,
+         \CPU_Xreg_value_a4[19][6] , \CPU_Xreg_value_a4[19][5] ,
+         \CPU_Xreg_value_a4[19][4] , \CPU_Xreg_value_a4[19][3] ,
+         \CPU_Xreg_value_a4[19][2] , \CPU_Xreg_value_a4[19][1] ,
+         \CPU_Xreg_value_a4[19][0] , \CPU_Xreg_value_a4[18][31] ,
+         \CPU_Xreg_value_a4[18][30] , \CPU_Xreg_value_a4[18][29] ,
+         \CPU_Xreg_value_a4[18][28] , \CPU_Xreg_value_a4[18][27] ,
+         \CPU_Xreg_value_a4[18][26] , \CPU_Xreg_value_a4[18][25] ,
+         \CPU_Xreg_value_a4[18][24] , \CPU_Xreg_value_a4[18][23] ,
+         \CPU_Xreg_value_a4[18][22] , \CPU_Xreg_value_a4[18][21] ,
+         \CPU_Xreg_value_a4[18][20] , \CPU_Xreg_value_a4[18][19] ,
+         \CPU_Xreg_value_a4[18][18] , \CPU_Xreg_value_a4[18][17] ,
+         \CPU_Xreg_value_a4[18][16] , \CPU_Xreg_value_a4[18][15] ,
+         \CPU_Xreg_value_a4[18][14] , \CPU_Xreg_value_a4[18][13] ,
+         \CPU_Xreg_value_a4[18][12] , \CPU_Xreg_value_a4[18][11] ,
+         \CPU_Xreg_value_a4[18][10] , \CPU_Xreg_value_a4[18][9] ,
+         \CPU_Xreg_value_a4[18][8] , \CPU_Xreg_value_a4[18][7] ,
+         \CPU_Xreg_value_a4[18][6] , \CPU_Xreg_value_a4[18][5] ,
+         \CPU_Xreg_value_a4[18][4] , \CPU_Xreg_value_a4[18][3] ,
+         \CPU_Xreg_value_a4[18][2] , \CPU_Xreg_value_a4[18][1] ,
+         \CPU_Xreg_value_a4[18][0] , \CPU_Xreg_value_a4[17][31] ,
+         \CPU_Xreg_value_a4[17][30] , \CPU_Xreg_value_a4[17][29] ,
+         \CPU_Xreg_value_a4[17][28] , \CPU_Xreg_value_a4[17][27] ,
+         \CPU_Xreg_value_a4[17][26] , \CPU_Xreg_value_a4[17][25] ,
+         \CPU_Xreg_value_a4[17][24] , \CPU_Xreg_value_a4[17][23] ,
+         \CPU_Xreg_value_a4[17][22] , \CPU_Xreg_value_a4[17][21] ,
+         \CPU_Xreg_value_a4[17][20] , \CPU_Xreg_value_a4[17][19] ,
+         \CPU_Xreg_value_a4[17][18] , \CPU_Xreg_value_a4[17][17] ,
+         \CPU_Xreg_value_a4[17][16] , \CPU_Xreg_value_a4[17][15] ,
+         \CPU_Xreg_value_a4[17][14] , \CPU_Xreg_value_a4[17][13] ,
+         \CPU_Xreg_value_a4[17][12] , \CPU_Xreg_value_a4[17][11] ,
+         \CPU_Xreg_value_a4[17][10] , \CPU_Xreg_value_a4[17][9] ,
+         \CPU_Xreg_value_a4[17][8] , \CPU_Xreg_value_a4[17][7] ,
+         \CPU_Xreg_value_a4[17][6] , \CPU_Xreg_value_a4[17][5] ,
+         \CPU_Xreg_value_a4[17][4] , \CPU_Xreg_value_a4[17][3] ,
+         \CPU_Xreg_value_a4[17][2] , \CPU_Xreg_value_a4[17][1] ,
+         \CPU_Xreg_value_a4[17][0] , \CPU_Xreg_value_a4[16][31] ,
+         \CPU_Xreg_value_a4[16][30] , \CPU_Xreg_value_a4[16][29] ,
+         \CPU_Xreg_value_a4[16][28] , \CPU_Xreg_value_a4[16][27] ,
+         \CPU_Xreg_value_a4[16][26] , \CPU_Xreg_value_a4[16][25] ,
+         \CPU_Xreg_value_a4[16][24] , \CPU_Xreg_value_a4[16][23] ,
+         \CPU_Xreg_value_a4[16][22] , \CPU_Xreg_value_a4[16][21] ,
+         \CPU_Xreg_value_a4[16][20] , \CPU_Xreg_value_a4[16][19] ,
+         \CPU_Xreg_value_a4[16][18] , \CPU_Xreg_value_a4[16][17] ,
+         \CPU_Xreg_value_a4[16][16] , \CPU_Xreg_value_a4[16][15] ,
+         \CPU_Xreg_value_a4[16][14] , \CPU_Xreg_value_a4[16][13] ,
+         \CPU_Xreg_value_a4[16][12] , \CPU_Xreg_value_a4[16][11] ,
+         \CPU_Xreg_value_a4[16][10] , \CPU_Xreg_value_a4[16][9] ,
+         \CPU_Xreg_value_a4[16][8] , \CPU_Xreg_value_a4[16][7] ,
+         \CPU_Xreg_value_a4[16][6] , \CPU_Xreg_value_a4[16][5] ,
+         \CPU_Xreg_value_a4[16][4] , \CPU_Xreg_value_a4[16][3] ,
+         \CPU_Xreg_value_a4[16][2] , \CPU_Xreg_value_a4[16][1] ,
+         \CPU_Xreg_value_a4[16][0] , \CPU_Xreg_value_a4[15][31] ,
+         \CPU_Xreg_value_a4[15][30] , \CPU_Xreg_value_a4[15][29] ,
+         \CPU_Xreg_value_a4[15][28] , \CPU_Xreg_value_a4[15][27] ,
+         \CPU_Xreg_value_a4[15][26] , \CPU_Xreg_value_a4[15][25] ,
+         \CPU_Xreg_value_a4[15][24] , \CPU_Xreg_value_a4[15][23] ,
+         \CPU_Xreg_value_a4[15][22] , \CPU_Xreg_value_a4[15][21] ,
+         \CPU_Xreg_value_a4[15][20] , \CPU_Xreg_value_a4[15][19] ,
+         \CPU_Xreg_value_a4[15][18] , \CPU_Xreg_value_a4[15][17] ,
+         \CPU_Xreg_value_a4[15][16] , \CPU_Xreg_value_a4[15][15] ,
+         \CPU_Xreg_value_a4[15][14] , \CPU_Xreg_value_a4[15][13] ,
+         \CPU_Xreg_value_a4[15][12] , \CPU_Xreg_value_a4[15][11] ,
+         \CPU_Xreg_value_a4[15][10] , \CPU_Xreg_value_a4[15][9] ,
+         \CPU_Xreg_value_a4[15][8] , \CPU_Xreg_value_a4[15][7] ,
+         \CPU_Xreg_value_a4[15][6] , \CPU_Xreg_value_a4[15][5] ,
+         \CPU_Xreg_value_a4[15][4] , \CPU_Xreg_value_a4[15][3] ,
+         \CPU_Xreg_value_a4[15][2] , \CPU_Xreg_value_a4[15][1] ,
+         \CPU_Xreg_value_a4[15][0] , \CPU_Xreg_value_a4[14][31] ,
+         \CPU_Xreg_value_a4[14][30] , \CPU_Xreg_value_a4[14][29] ,
+         \CPU_Xreg_value_a4[14][28] , \CPU_Xreg_value_a4[14][27] ,
+         \CPU_Xreg_value_a4[14][26] , \CPU_Xreg_value_a4[14][25] ,
+         \CPU_Xreg_value_a4[14][24] , \CPU_Xreg_value_a4[14][23] ,
+         \CPU_Xreg_value_a4[14][22] , \CPU_Xreg_value_a4[14][21] ,
+         \CPU_Xreg_value_a4[14][20] , \CPU_Xreg_value_a4[14][19] ,
+         \CPU_Xreg_value_a4[14][18] , \CPU_Xreg_value_a4[14][17] ,
+         \CPU_Xreg_value_a4[14][16] , \CPU_Xreg_value_a4[14][15] ,
+         \CPU_Xreg_value_a4[14][14] , \CPU_Xreg_value_a4[14][13] ,
+         \CPU_Xreg_value_a4[14][12] , \CPU_Xreg_value_a4[14][11] ,
+         \CPU_Xreg_value_a4[14][10] , \CPU_Xreg_value_a4[14][9] ,
+         \CPU_Xreg_value_a4[14][8] , \CPU_Xreg_value_a4[14][7] ,
+         \CPU_Xreg_value_a4[14][6] , \CPU_Xreg_value_a4[14][5] ,
+         \CPU_Xreg_value_a4[14][4] , \CPU_Xreg_value_a4[14][3] ,
+         \CPU_Xreg_value_a4[14][2] , \CPU_Xreg_value_a4[14][1] ,
+         \CPU_Xreg_value_a4[14][0] , \CPU_Xreg_value_a4[13][31] ,
+         \CPU_Xreg_value_a4[13][30] , \CPU_Xreg_value_a4[13][29] ,
+         \CPU_Xreg_value_a4[13][28] , \CPU_Xreg_value_a4[13][27] ,
+         \CPU_Xreg_value_a4[13][26] , \CPU_Xreg_value_a4[13][25] ,
+         \CPU_Xreg_value_a4[13][24] , \CPU_Xreg_value_a4[13][23] ,
+         \CPU_Xreg_value_a4[13][22] , \CPU_Xreg_value_a4[13][21] ,
+         \CPU_Xreg_value_a4[13][20] , \CPU_Xreg_value_a4[13][19] ,
+         \CPU_Xreg_value_a4[13][18] , \CPU_Xreg_value_a4[13][17] ,
+         \CPU_Xreg_value_a4[13][16] , \CPU_Xreg_value_a4[13][15] ,
+         \CPU_Xreg_value_a4[13][14] , \CPU_Xreg_value_a4[13][13] ,
+         \CPU_Xreg_value_a4[13][12] , \CPU_Xreg_value_a4[13][11] ,
+         \CPU_Xreg_value_a4[13][10] , \CPU_Xreg_value_a4[13][9] ,
+         \CPU_Xreg_value_a4[13][8] , \CPU_Xreg_value_a4[13][7] ,
+         \CPU_Xreg_value_a4[13][6] , \CPU_Xreg_value_a4[13][5] ,
+         \CPU_Xreg_value_a4[13][4] , \CPU_Xreg_value_a4[13][3] ,
+         \CPU_Xreg_value_a4[13][2] , \CPU_Xreg_value_a4[13][1] ,
+         \CPU_Xreg_value_a4[13][0] , \CPU_Xreg_value_a4[12][31] ,
+         \CPU_Xreg_value_a4[12][30] , \CPU_Xreg_value_a4[12][29] ,
+         \CPU_Xreg_value_a4[12][28] , \CPU_Xreg_value_a4[12][27] ,
+         \CPU_Xreg_value_a4[12][26] , \CPU_Xreg_value_a4[12][25] ,
+         \CPU_Xreg_value_a4[12][24] , \CPU_Xreg_value_a4[12][23] ,
+         \CPU_Xreg_value_a4[12][22] , \CPU_Xreg_value_a4[12][21] ,
+         \CPU_Xreg_value_a4[12][20] , \CPU_Xreg_value_a4[12][19] ,
+         \CPU_Xreg_value_a4[12][18] , \CPU_Xreg_value_a4[12][17] ,
+         \CPU_Xreg_value_a4[12][16] , \CPU_Xreg_value_a4[12][15] ,
+         \CPU_Xreg_value_a4[12][14] , \CPU_Xreg_value_a4[12][13] ,
+         \CPU_Xreg_value_a4[12][12] , \CPU_Xreg_value_a4[12][11] ,
+         \CPU_Xreg_value_a4[12][10] , \CPU_Xreg_value_a4[12][9] ,
+         \CPU_Xreg_value_a4[12][8] , \CPU_Xreg_value_a4[12][7] ,
+         \CPU_Xreg_value_a4[12][6] , \CPU_Xreg_value_a4[12][5] ,
+         \CPU_Xreg_value_a4[12][4] , \CPU_Xreg_value_a4[12][3] ,
+         \CPU_Xreg_value_a4[12][2] , \CPU_Xreg_value_a4[12][1] ,
+         \CPU_Xreg_value_a4[12][0] , \CPU_Xreg_value_a4[3][31] ,
+         \CPU_Xreg_value_a4[3][30] , \CPU_Xreg_value_a4[3][29] ,
+         \CPU_Xreg_value_a4[3][28] , \CPU_Xreg_value_a4[3][27] ,
+         \CPU_Xreg_value_a4[3][26] , \CPU_Xreg_value_a4[3][25] ,
+         \CPU_Xreg_value_a4[3][24] , \CPU_Xreg_value_a4[3][23] ,
+         \CPU_Xreg_value_a4[3][22] , \CPU_Xreg_value_a4[3][21] ,
+         \CPU_Xreg_value_a4[3][20] , \CPU_Xreg_value_a4[3][19] ,
+         \CPU_Xreg_value_a4[3][18] , \CPU_Xreg_value_a4[3][17] ,
+         \CPU_Xreg_value_a4[3][16] , \CPU_Xreg_value_a4[3][15] ,
+         \CPU_Xreg_value_a4[3][14] , \CPU_Xreg_value_a4[3][13] ,
+         \CPU_Xreg_value_a4[3][12] , \CPU_Xreg_value_a4[3][11] ,
+         \CPU_Xreg_value_a4[3][10] , \CPU_Xreg_value_a4[3][9] ,
+         \CPU_Xreg_value_a4[3][8] , \CPU_Xreg_value_a4[3][7] ,
+         \CPU_Xreg_value_a4[3][6] , \CPU_Xreg_value_a4[3][5] ,
+         \CPU_Xreg_value_a4[3][4] , \CPU_Xreg_value_a4[3][3] ,
+         \CPU_Xreg_value_a4[3][2] , \CPU_Xreg_value_a4[3][1] ,
+         \CPU_Xreg_value_a4[3][0] , \CPU_Xreg_value_a4[2][31] ,
+         \CPU_Xreg_value_a4[2][30] , \CPU_Xreg_value_a4[2][29] ,
+         \CPU_Xreg_value_a4[2][28] , \CPU_Xreg_value_a4[2][27] ,
+         \CPU_Xreg_value_a4[2][26] , \CPU_Xreg_value_a4[2][25] ,
+         \CPU_Xreg_value_a4[2][24] , \CPU_Xreg_value_a4[2][23] ,
+         \CPU_Xreg_value_a4[2][22] , \CPU_Xreg_value_a4[2][21] ,
+         \CPU_Xreg_value_a4[2][20] , \CPU_Xreg_value_a4[2][19] ,
+         \CPU_Xreg_value_a4[2][18] , \CPU_Xreg_value_a4[2][17] ,
+         \CPU_Xreg_value_a4[2][16] , \CPU_Xreg_value_a4[2][15] ,
+         \CPU_Xreg_value_a4[2][14] , \CPU_Xreg_value_a4[2][13] ,
+         \CPU_Xreg_value_a4[2][12] , \CPU_Xreg_value_a4[2][11] ,
+         \CPU_Xreg_value_a4[2][10] , \CPU_Xreg_value_a4[2][9] ,
+         \CPU_Xreg_value_a4[2][8] , \CPU_Xreg_value_a4[2][7] ,
+         \CPU_Xreg_value_a4[2][6] , \CPU_Xreg_value_a4[2][5] ,
+         \CPU_Xreg_value_a4[2][4] , \CPU_Xreg_value_a4[2][3] ,
+         \CPU_Xreg_value_a4[2][2] , \CPU_Xreg_value_a4[2][1] ,
+         \CPU_Xreg_value_a4[2][0] , \CPU_Xreg_value_a4[1][31] ,
+         \CPU_Xreg_value_a4[1][30] , \CPU_Xreg_value_a4[1][29] ,
+         \CPU_Xreg_value_a4[1][28] , \CPU_Xreg_value_a4[1][27] ,
+         \CPU_Xreg_value_a4[1][26] , \CPU_Xreg_value_a4[1][25] ,
+         \CPU_Xreg_value_a4[1][24] , \CPU_Xreg_value_a4[1][23] ,
+         \CPU_Xreg_value_a4[1][22] , \CPU_Xreg_value_a4[1][21] ,
+         \CPU_Xreg_value_a4[1][20] , \CPU_Xreg_value_a4[1][19] ,
+         \CPU_Xreg_value_a4[1][18] , \CPU_Xreg_value_a4[1][17] ,
+         \CPU_Xreg_value_a4[1][16] , \CPU_Xreg_value_a4[1][15] ,
+         \CPU_Xreg_value_a4[1][14] , \CPU_Xreg_value_a4[1][13] ,
+         \CPU_Xreg_value_a4[1][12] , \CPU_Xreg_value_a4[1][11] ,
+         \CPU_Xreg_value_a4[1][10] , \CPU_Xreg_value_a4[1][9] ,
+         \CPU_Xreg_value_a4[1][8] , \CPU_Xreg_value_a4[1][7] ,
+         \CPU_Xreg_value_a4[1][6] , \CPU_Xreg_value_a4[1][5] ,
+         \CPU_Xreg_value_a4[1][4] , \CPU_Xreg_value_a4[1][3] ,
+         \CPU_Xreg_value_a4[1][2] , \CPU_Xreg_value_a4[1][1] ,
+         \CPU_Xreg_value_a4[1][0] , \CPU_Xreg_value_a5[14][9] ,
+         \CPU_Xreg_value_a5[14][8] , \CPU_Xreg_value_a5[14][7] ,
+         \CPU_Xreg_value_a5[14][6] , \CPU_Xreg_value_a5[14][5] ,
+         \CPU_Xreg_value_a5[14][4] , \CPU_Xreg_value_a5[14][3] ,
+         \CPU_Xreg_value_a5[14][2] , \CPU_Xreg_value_a5[14][1] ,
+         \CPU_Xreg_value_a5[14][0] , CPU_instr_a1_18, CPU_instr_a1_15,
+         CPU_instr_a1_10, CPU_instr_a1_9, CPU_instr_a1_8, CPU_instr_a1_7, N706,
+         N707, N708, N709, N710, N711, N712, N713, N714, N715, N716, N717,
+         N718, N719, N720, N721, N722, N723, N724, N725, N726, N727, N728,
+         N729, N730, N731, N732, N733, N734, N735, N736, N737, n1981, n1982,
+         n4240, n4241, n5075, n5076, n5077, n5078, n5079, n5080, n5107, n5109,
+         n5111, \r250/carry[1] , \r250/carry[2] , \r250/carry[3] ,
+         \r250/carry[4] , \r250/carry[5] , \r250/carry[6] , \r250/carry[7] ,
+         \r250/carry[8] , \r250/carry[9] , \r250/carry[10] , \r250/carry[11] ,
+         \r250/carry[12] , \r250/carry[13] , \r250/carry[14] ,
+         \r250/carry[15] , \r250/carry[16] , \r250/carry[17] ,
+         \r250/carry[18] , \r250/carry[19] , \r250/carry[20] ,
+         \r250/carry[21] , \r250/carry[22] , \r250/carry[23] ,
+         \r250/carry[24] , \r250/carry[25] , \r250/carry[26] ,
+         \r250/carry[27] , \r250/carry[28] , \r250/carry[29] ,
+         \r250/carry[30] , \r250/carry[31] , \add_158/n1 , n5114, n5115, n5116,
+         n5117, n5118, n5119, n5120, n5121, n5122, n5123, n5124, n5125, n5126,
+         n5127, n5128, n5129, n5130, n5131, n5132, n5133, n5134, n5135, n5136,
+         n5137, n5138, n5139, n5140, n5141, n5142, n5143, n5144, n5145, n5146,
+         n5147, n5148, n5149, n5150, n5151, n5152, n5153, n5154, n5155, n5156,
+         n5157, n5158, n5159, n5160, n5161, n5162, n5163, n5164, n5165, n5166,
+         n5167, n5168, n5169, n5170, n5171, n5172, n5173, n5174, n5175, n5176,
+         n5177, n5178, n5179, n5180, n5181, n5182, n5183, n5184, n5185, n5186,
+         n5187, n5188, n5189, n5190, n5191, n5192, n5193, n5194, n5195, n5196,
+         n5197, n5198, n5199, n5200, n5201, n5202, n5203, n5204, n5205, n5206,
+         n5207, n5208, n5209, n5210, n5211, n5212, n5213, n5214, n5215, n5216,
+         n5217, n5218, n5219, n5220, n5221, n5222, n5223, n5224, n5225, n5226,
+         n5227, n5228, n5229, n5230, n5231, n5232, n5233, n5234, n5235, n5236,
+         n5237, n5238, n5239, n5240, n5241, n5242, n5243, n5244, n5245, n5246,
+         n5247, n5248, n5249, n5250, n5251, n5252, n5253, n5254, n5255, n5256,
+         n5257, n5258, n5259, n5260, n5261, n5262, n5263, n5264, n5265, n5266,
+         n5267, n5268, n5269, n5270, n5271, n5272, n5273, n5274, n5275, n5276,
+         n5277, n5278, n5279, n5280, n5281, n5282, n5283, n5284, n5285, n5286,
+         n5287, n5288, n5289, n5290, n5291, n5292, n5293, n5294, n5295, n5296,
+         n5297, n5298, n5299, n5300, n5301, n5302, n5303, n5304, n5305, n5306,
+         n5307, n5308, n5309, n5310, n5311, n5312, n5313, n5314, n5315, n5316,
+         n5317, n5318, n5319, n5320, n5321, n5322, n5323, n5324, n5325, n5326,
+         n5327, n5328, n5329, n5330, n5331, n5332, n5333, n5334, n5335, n5336,
+         n5337, n5338, n5339, n5340, n5341, n5342, n5343, n5344, n5345, n5346,
+         n5347, n5348, n5349, n5350, n5351, n5352, n5353, n5354, n5355, n5356,
+         n5357, n5358, n5359, n5360, n5361, n5362, n5363, n5364, n5365, n5366,
+         n5367, n5368, n5369, n5370, n5371, n5372, n5373, n5374, n5375, n5376,
+         n5377, n5378, n5379, n5380, n5381, n5382, n5383, n5384, n5385, n5386,
+         n5387, n5388, n5389, n5390, n5391, n5392, n5393, n5394, n5395, n5396,
+         n5397, n5398, n5399, n5400, n5401, n5402, n5403, n5404, n5405, n5406,
+         n5407, n5408, n5409, n5410, n5411, n5412, n5413, n5414, n5415, n5416,
+         n5417, n5418, n5419, n5420, n5421, n5422, n5423, n5424, n5425, n5426,
+         n5427, n5428, n5429, n5430, n5431, n5432, n5433, n5434, n5435, n5436,
+         n5437, n5438, n5439, n5440, n5441, n5442, n5443, n5444, n5445, n5446,
+         n5447, n5448, n5449, n5450, n5451, n5452, n5453, n5454, n5455, n5456,
+         n5457, n5458, n5459, n5460, n5461, n5462, n5463, n5464, n5465, n5466,
+         n5467, n5468, n5469, n5470, n5471, n5472, n5473, n5474, n5475, n5476,
+         n5477, n5478, n5479, n5480, n5481, n5482, n5483, n5484, n5485, n5486,
+         n5487, n5488, n5489, n5490, n5491, n5492, n5493, n5494, n5495, n5496,
+         n5497, n5498, n5499, n5500, n5501, n5502, n5503, n5504, n5505, n5506,
+         n5507, n5508, n5509, n5510, n5511, n5512, n5513, n5514, n5515, n5516,
+         n5517, n5518, n5519, n5520, n5521, n5522, n5523, n5524, n5525, n5526,
+         n5527, n5528, n5529, n5530, n5531, n5532, n5533, n5534, n5535, n5536,
+         n5537, n5538, n5539, n5540, n5541, n5542, n5543, n5544, n5545, n5546,
+         n5547, n5548, n5549, n5550, n5551, n5552, n5553, n5554, n5555, n5556,
+         n5557, n5558, n5559, n5560, n5561, n5562, n5563, n5564, n5565, n5566,
+         n5567, n5568, n5569, n5570, n5571, n5572, n5573, n5574, n5575, n5576,
+         n5577, n5578, n5579, n5580, n5581, n5582, n5583, n5584, n5585, n5586,
+         n5587, n5588, n5589, n5590, n5591, n5592, n5593, n5594, n5595, n5596,
+         n5597, n5598, n5599, n5600, n5601, n5602, n5603, n5604, n5605, n5606,
+         n5607, n5608, n5609, n5610, n5611, n5612, n5613, n5614, n5615, n5616,
+         n5617, n5618, n5619, n5620, n5621, n5622, n5623, n5624, n5625, n5626,
+         n5627, n5628, n5629, n5630, n5631, n5632, n5633, n5634, n5635, n5636,
+         n5637, n5638, n5639, n5640, n5641, n5642, n5643, n5644, n5645, n5646,
+         n5647, n5648, n5649, n5650, n5651, n5652, n5653, n5654, n5655, n5656,
+         n5657, n5658, n5659, n5660, n5661, n5662, n5663, n5664, n5665, n5666,
+         n5667, n5668, n5669, n5670, n5671, n5672, n5673, n5674, n5675, n5676,
+         n5677, n5678, n5679, n5680, n5681, n5682, n5683, n5684, n5685, n5686,
+         n5687, n5688, n5689, n5690, n5691, n5692, n5693, n5694, n5695, n5696,
+         n5697, n5698, n5699, n5700, n5701, n5702, n5703, n5704, n5705, n5706,
+         n5707, n5708, n5709, n5710, n5711, n5712, n5713, n5714, n5715, n5716,
+         n5717, n5718, n5719, n5720, n5721, n5722, n5723, n5724, n5725, n5726,
+         n5727, n5728, n5729, n5730, n5731, n5732, n5733, n5734, n5735, n5736,
+         n5737, n5738, n5739, n5740, n5741, n5742, n5743, n5744, n5745, n5746,
+         n5747, n5748, n5749, n5750, n5751, n5752, n5753, n5754, n5755, n5756,
+         n5757, n5758, n5759, n5760, n5761, n5762, n5763, n5764, n5765, n5766,
+         n5767, n5768, n5769, n5770, n5771, n5772, n5773, n5774, n5775, n5776,
+         n5777, n5778, n5779, n5780, n5781, n5782, n5783, n5784, n5785, n5786,
+         n5787, n5788, n5789, n5790, n5791, n5792, n5793, n5794, n5795, n5796,
+         n5797, n5798, n5799, n5800, n5801, n5802, n5803, n5804, n5805, n5806,
+         n5807, n5808, n5809, n5810, n5811, n5812, n5813, n5814, n5815, n5816,
+         n5817, n5818, n5819, n5820, n5821, n5822, n5823, n5824, n5825, n5826,
+         n5827, n5828, n5829, n5830, n5831, n5832, n5833, n5834, n5835, n5836,
+         n5837, n5838, n5839, n5840, n5841, n5842, n5843, n5844, n5845, n5846,
+         n5847, n5848, n5849, n5850, n5851, n5852, n5853, n5854, n5855, n5856,
+         n5857, n5858, n5859, n5860, n5861, n5862, n5863, n5864, n5865, n5866,
+         n5867, n5868, n5869, n5870, n5871;
+  wire   [31:0] CPU_br_tgt_pc_a3;
+  wire   [31:0] CPU_br_tgt_pc_a2;
+  wire   [31:0] CPU_imem_rd_addr_a1;
+  wire   [31:0] CPU_imm_a2;
+  wire   [31:0] CPU_imm_a1;
+  wire   [31:0] CPU_imm_a3;
+  wire   [31:0] CPU_inc_pc_a2;
+  wire   [31:0] CPU_inc_pc_a1;
+  wire   [31:0] CPU_pc_a2;
+  wire   [4:0] CPU_rd_a2;
+  wire   [4:0] CPU_rd_a3;
+  wire   [31:0] CPU_src1_value_a3;
+  wire   [31:0] CPU_src1_value_a2;
+  wire   [31:0] CPU_src2_value_a3;
+  wire   [31:0] CPU_src2_value_a2;
+  wire   [31:20] CPU_instr_a1;
+  wire   [31:0] \r250/B_AS ;
+  wire   [31:1] \add_158/carry ;
+  assign clkP_CPU_rd_valid_a2 = clk;
 
-
-module avsd_pll_1v8 ( CLK, VCO_IN, VDDA, VDDD, VSSA, VSSD, EN_VCO, REF );
-  input VCO_IN, VDDA, VDDD, VSSA, VSSD, EN_VCO, REF;
-  output CLK;
-
-
-  sky130_fd_sc_hd__and2b_2 U3 ( .B(EN_VCO), .A_N(CLK), .X(CLK) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_blt_a3_reg ( .D(CPU_is_blt_a2), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_blt_a3) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_br_tgt_pc_a3_reg[0]  ( .D(CPU_br_tgt_pc_a2[0]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_br_tgt_pc_a3[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_br_tgt_pc_a3_reg[1]  ( .D(CPU_br_tgt_pc_a2[1]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_br_tgt_pc_a3[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_br_tgt_pc_a3_reg[2]  ( .D(CPU_br_tgt_pc_a2[2]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_br_tgt_pc_a3[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_br_tgt_pc_a3_reg[3]  ( .D(CPU_br_tgt_pc_a2[3]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_br_tgt_pc_a3[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_br_tgt_pc_a3_reg[4]  ( .D(CPU_br_tgt_pc_a2[4]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_br_tgt_pc_a3[4]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_br_tgt_pc_a3_reg[5]  ( .D(CPU_br_tgt_pc_a2[5]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_br_tgt_pc_a3[5]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a3_reg[5]  ( .D(CPU_imm_a2[3]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a3[5]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a3_reg[1]  ( .D(CPU_imm_a2[1]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a3[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a3_reg[2]  ( .D(CPU_imm_a2[2]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a3[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a3_reg[10]  ( .D(CPU_imm_a2[10]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a3[10]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a3_reg[0]  ( .D(CPU_imm_a2[0]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a3[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a3_reg[3]  ( .D(CPU_imm_a2[3]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a3[3]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_valid_taken_br_a5_reg ( .D(
+        CPU_valid_taken_br_a4), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_valid_taken_br_a5) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[4]  ( .D(
+        CPU_src2_value_a2[4]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[4]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[5]  ( .D(
+        CPU_src2_value_a2[5]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[5]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[6]  ( .D(
+        CPU_src2_value_a2[6]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[6]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[7]  ( .D(
+        CPU_src2_value_a2[7]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[7]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[8]  ( .D(
+        CPU_src2_value_a2[8]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[8]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[9]  ( .D(
+        CPU_src2_value_a2[9]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[9]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_sub_a3_reg ( .D(CPU_is_sub_a2), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_sub_a3) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_rd_valid_a3_reg ( .D(CPU_rd_valid_a2), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_valid_a3) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_add_a3_reg ( .D(CPU_is_add_a2), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_add_a3) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_valid_taken_br_a4_reg ( .D(n5107), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_valid_taken_br_a4) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_addi_a3_reg ( .D(CPU_is_addi_a2), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_addi_a3) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][4]  ( .D(
+        \CPU_Xreg_value_a3[16][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][4]  ( .D(
+        \CPU_Xreg_value_a3[18][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][1]  ( .D(
+        \CPU_Xreg_value_a3[18][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][4]  ( .D(
+        \CPU_Xreg_value_a3[28][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][3]  ( .D(
+        \CPU_Xreg_value_a3[28][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][2]  ( .D(
+        \CPU_Xreg_value_a3[28][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][4]  ( .D(
+        \CPU_Xreg_value_a3[30][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][3]  ( .D(
+        \CPU_Xreg_value_a3[30][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][2]  ( .D(
+        \CPU_Xreg_value_a3[30][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][1]  ( .D(
+        \CPU_Xreg_value_a3[30][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][31]  ( .D(
+        \CPU_Xreg_value_a3[16][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][30]  ( .D(
+        \CPU_Xreg_value_a3[16][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][29]  ( .D(
+        \CPU_Xreg_value_a3[16][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][28]  ( .D(
+        \CPU_Xreg_value_a3[16][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][27]  ( .D(
+        \CPU_Xreg_value_a3[16][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][26]  ( .D(
+        \CPU_Xreg_value_a3[16][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][25]  ( .D(
+        \CPU_Xreg_value_a3[16][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][24]  ( .D(
+        \CPU_Xreg_value_a3[16][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][23]  ( .D(
+        \CPU_Xreg_value_a3[16][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][22]  ( .D(
+        \CPU_Xreg_value_a3[16][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][21]  ( .D(
+        \CPU_Xreg_value_a3[16][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][20]  ( .D(
+        \CPU_Xreg_value_a3[16][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][19]  ( .D(
+        \CPU_Xreg_value_a3[16][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][18]  ( .D(
+        \CPU_Xreg_value_a3[16][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][17]  ( .D(
+        \CPU_Xreg_value_a3[16][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][16]  ( .D(
+        \CPU_Xreg_value_a3[16][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][15]  ( .D(
+        \CPU_Xreg_value_a3[16][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][14]  ( .D(
+        \CPU_Xreg_value_a3[16][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][13]  ( .D(
+        \CPU_Xreg_value_a3[16][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][12]  ( .D(
+        \CPU_Xreg_value_a3[16][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][11]  ( .D(
+        \CPU_Xreg_value_a3[16][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][10]  ( .D(
+        \CPU_Xreg_value_a3[16][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][9]  ( .D(
+        \CPU_Xreg_value_a3[16][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][8]  ( .D(
+        \CPU_Xreg_value_a3[16][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][7]  ( .D(
+        \CPU_Xreg_value_a3[16][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][6]  ( .D(
+        \CPU_Xreg_value_a3[16][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][5]  ( .D(
+        \CPU_Xreg_value_a3[16][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][31]  ( .D(
+        \CPU_Xreg_value_a3[18][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][30]  ( .D(
+        \CPU_Xreg_value_a3[18][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][29]  ( .D(
+        \CPU_Xreg_value_a3[18][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][28]  ( .D(
+        \CPU_Xreg_value_a3[18][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][27]  ( .D(
+        \CPU_Xreg_value_a3[18][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][26]  ( .D(
+        \CPU_Xreg_value_a3[18][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][25]  ( .D(
+        \CPU_Xreg_value_a3[18][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][24]  ( .D(
+        \CPU_Xreg_value_a3[18][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][23]  ( .D(
+        \CPU_Xreg_value_a3[18][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][22]  ( .D(
+        \CPU_Xreg_value_a3[18][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][21]  ( .D(
+        \CPU_Xreg_value_a3[18][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][20]  ( .D(
+        \CPU_Xreg_value_a3[18][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][19]  ( .D(
+        \CPU_Xreg_value_a3[18][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][18]  ( .D(
+        \CPU_Xreg_value_a3[18][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][17]  ( .D(
+        \CPU_Xreg_value_a3[18][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][16]  ( .D(
+        \CPU_Xreg_value_a3[18][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][15]  ( .D(
+        \CPU_Xreg_value_a3[18][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][14]  ( .D(
+        \CPU_Xreg_value_a3[18][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][13]  ( .D(
+        \CPU_Xreg_value_a3[18][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][12]  ( .D(
+        \CPU_Xreg_value_a3[18][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][11]  ( .D(
+        \CPU_Xreg_value_a3[18][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][10]  ( .D(
+        \CPU_Xreg_value_a3[18][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][9]  ( .D(
+        \CPU_Xreg_value_a3[18][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][8]  ( .D(
+        \CPU_Xreg_value_a3[18][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][7]  ( .D(
+        \CPU_Xreg_value_a3[18][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][6]  ( .D(
+        \CPU_Xreg_value_a3[18][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][5]  ( .D(
+        \CPU_Xreg_value_a3[18][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][31]  ( .D(
+        \CPU_Xreg_value_a3[28][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][30]  ( .D(
+        \CPU_Xreg_value_a3[28][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][29]  ( .D(
+        \CPU_Xreg_value_a3[28][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][28]  ( .D(
+        \CPU_Xreg_value_a3[28][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][27]  ( .D(
+        \CPU_Xreg_value_a3[28][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][26]  ( .D(
+        \CPU_Xreg_value_a3[28][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][25]  ( .D(
+        \CPU_Xreg_value_a3[28][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][24]  ( .D(
+        \CPU_Xreg_value_a3[28][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][23]  ( .D(
+        \CPU_Xreg_value_a3[28][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][22]  ( .D(
+        \CPU_Xreg_value_a3[28][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][21]  ( .D(
+        \CPU_Xreg_value_a3[28][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][20]  ( .D(
+        \CPU_Xreg_value_a3[28][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][19]  ( .D(
+        \CPU_Xreg_value_a3[28][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][18]  ( .D(
+        \CPU_Xreg_value_a3[28][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][17]  ( .D(
+        \CPU_Xreg_value_a3[28][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][16]  ( .D(
+        \CPU_Xreg_value_a3[28][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][15]  ( .D(
+        \CPU_Xreg_value_a3[28][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][14]  ( .D(
+        \CPU_Xreg_value_a3[28][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][13]  ( .D(
+        \CPU_Xreg_value_a3[28][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][12]  ( .D(
+        \CPU_Xreg_value_a3[28][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][11]  ( .D(
+        \CPU_Xreg_value_a3[28][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][10]  ( .D(
+        \CPU_Xreg_value_a3[28][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][9]  ( .D(
+        \CPU_Xreg_value_a3[28][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][8]  ( .D(
+        \CPU_Xreg_value_a3[28][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][7]  ( .D(
+        \CPU_Xreg_value_a3[28][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][6]  ( .D(
+        \CPU_Xreg_value_a3[28][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][5]  ( .D(
+        \CPU_Xreg_value_a3[28][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][31]  ( .D(
+        \CPU_Xreg_value_a3[30][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][30]  ( .D(
+        \CPU_Xreg_value_a3[30][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][29]  ( .D(
+        \CPU_Xreg_value_a3[30][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][28]  ( .D(
+        \CPU_Xreg_value_a3[30][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][27]  ( .D(
+        \CPU_Xreg_value_a3[30][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][26]  ( .D(
+        \CPU_Xreg_value_a3[30][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][25]  ( .D(
+        \CPU_Xreg_value_a3[30][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][24]  ( .D(
+        \CPU_Xreg_value_a3[30][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][23]  ( .D(
+        \CPU_Xreg_value_a3[30][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][22]  ( .D(
+        \CPU_Xreg_value_a3[30][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][21]  ( .D(
+        \CPU_Xreg_value_a3[30][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][20]  ( .D(
+        \CPU_Xreg_value_a3[30][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][19]  ( .D(
+        \CPU_Xreg_value_a3[30][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][18]  ( .D(
+        \CPU_Xreg_value_a3[30][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][17]  ( .D(
+        \CPU_Xreg_value_a3[30][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][16]  ( .D(
+        \CPU_Xreg_value_a3[30][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][15]  ( .D(
+        \CPU_Xreg_value_a3[30][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][14]  ( .D(
+        \CPU_Xreg_value_a3[30][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][13]  ( .D(
+        \CPU_Xreg_value_a3[30][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][12]  ( .D(
+        \CPU_Xreg_value_a3[30][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][11]  ( .D(
+        \CPU_Xreg_value_a3[30][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][10]  ( .D(
+        \CPU_Xreg_value_a3[30][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][9]  ( .D(
+        \CPU_Xreg_value_a3[30][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][8]  ( .D(
+        \CPU_Xreg_value_a3[30][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][7]  ( .D(
+        \CPU_Xreg_value_a3[30][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][6]  ( .D(
+        \CPU_Xreg_value_a3[30][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][5]  ( .D(
+        \CPU_Xreg_value_a3[30][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_pc_a2_reg[2]  ( .D(CPU_imem_rd_addr_a1[0]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_pc_a2[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_pc_a2_reg[5]  ( .D(CPU_imem_rd_addr_a1[3]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_pc_a2[5]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_pc_a2_reg[4]  ( .D(CPU_imem_rd_addr_a1[2]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_pc_a2[4]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_pc_a2_reg[3]  ( .D(CPU_imem_rd_addr_a1[1]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_pc_a2[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][31]  ( .D(
+        \CPU_Xreg_value_a3[17][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][30]  ( .D(
+        \CPU_Xreg_value_a3[17][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][29]  ( .D(
+        \CPU_Xreg_value_a3[17][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][28]  ( .D(
+        \CPU_Xreg_value_a3[17][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][27]  ( .D(
+        \CPU_Xreg_value_a3[17][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][26]  ( .D(
+        \CPU_Xreg_value_a3[17][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][25]  ( .D(
+        \CPU_Xreg_value_a3[17][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][24]  ( .D(
+        \CPU_Xreg_value_a3[17][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][23]  ( .D(
+        \CPU_Xreg_value_a3[17][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][22]  ( .D(
+        \CPU_Xreg_value_a3[17][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][21]  ( .D(
+        \CPU_Xreg_value_a3[17][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][20]  ( .D(
+        \CPU_Xreg_value_a3[17][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][19]  ( .D(
+        \CPU_Xreg_value_a3[17][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][18]  ( .D(
+        \CPU_Xreg_value_a3[17][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][17]  ( .D(
+        \CPU_Xreg_value_a3[17][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][16]  ( .D(
+        \CPU_Xreg_value_a3[17][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][15]  ( .D(
+        \CPU_Xreg_value_a3[17][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][14]  ( .D(
+        \CPU_Xreg_value_a3[17][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][13]  ( .D(
+        \CPU_Xreg_value_a3[17][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][12]  ( .D(
+        \CPU_Xreg_value_a3[17][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][11]  ( .D(
+        \CPU_Xreg_value_a3[17][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][10]  ( .D(
+        \CPU_Xreg_value_a3[17][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][9]  ( .D(
+        \CPU_Xreg_value_a3[17][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][8]  ( .D(
+        \CPU_Xreg_value_a3[17][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][7]  ( .D(
+        \CPU_Xreg_value_a3[17][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][6]  ( .D(
+        \CPU_Xreg_value_a3[17][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][5]  ( .D(
+        \CPU_Xreg_value_a3[17][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][31]  ( .D(
+        \CPU_Xreg_value_a3[19][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][30]  ( .D(
+        \CPU_Xreg_value_a3[19][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][29]  ( .D(
+        \CPU_Xreg_value_a3[19][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][28]  ( .D(
+        \CPU_Xreg_value_a3[19][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][27]  ( .D(
+        \CPU_Xreg_value_a3[19][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][26]  ( .D(
+        \CPU_Xreg_value_a3[19][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][25]  ( .D(
+        \CPU_Xreg_value_a3[19][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][24]  ( .D(
+        \CPU_Xreg_value_a3[19][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][23]  ( .D(
+        \CPU_Xreg_value_a3[19][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][22]  ( .D(
+        \CPU_Xreg_value_a3[19][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][21]  ( .D(
+        \CPU_Xreg_value_a3[19][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][20]  ( .D(
+        \CPU_Xreg_value_a3[19][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][19]  ( .D(
+        \CPU_Xreg_value_a3[19][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][18]  ( .D(
+        \CPU_Xreg_value_a3[19][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][17]  ( .D(
+        \CPU_Xreg_value_a3[19][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][16]  ( .D(
+        \CPU_Xreg_value_a3[19][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][15]  ( .D(
+        \CPU_Xreg_value_a3[19][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][14]  ( .D(
+        \CPU_Xreg_value_a3[19][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][13]  ( .D(
+        \CPU_Xreg_value_a3[19][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][12]  ( .D(
+        \CPU_Xreg_value_a3[19][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][11]  ( .D(
+        \CPU_Xreg_value_a3[19][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][10]  ( .D(
+        \CPU_Xreg_value_a3[19][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][9]  ( .D(
+        \CPU_Xreg_value_a3[19][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][8]  ( .D(
+        \CPU_Xreg_value_a3[19][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][7]  ( .D(
+        \CPU_Xreg_value_a3[19][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][6]  ( .D(
+        \CPU_Xreg_value_a3[19][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][5]  ( .D(
+        \CPU_Xreg_value_a3[19][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][31]  ( .D(
+        \CPU_Xreg_value_a3[29][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][30]  ( .D(
+        \CPU_Xreg_value_a3[29][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][29]  ( .D(
+        \CPU_Xreg_value_a3[29][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][28]  ( .D(
+        \CPU_Xreg_value_a3[29][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][27]  ( .D(
+        \CPU_Xreg_value_a3[29][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][26]  ( .D(
+        \CPU_Xreg_value_a3[29][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][25]  ( .D(
+        \CPU_Xreg_value_a3[29][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][24]  ( .D(
+        \CPU_Xreg_value_a3[29][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][23]  ( .D(
+        \CPU_Xreg_value_a3[29][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][22]  ( .D(
+        \CPU_Xreg_value_a3[29][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][21]  ( .D(
+        \CPU_Xreg_value_a3[29][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][20]  ( .D(
+        \CPU_Xreg_value_a3[29][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][19]  ( .D(
+        \CPU_Xreg_value_a3[29][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][18]  ( .D(
+        \CPU_Xreg_value_a3[29][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][17]  ( .D(
+        \CPU_Xreg_value_a3[29][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][16]  ( .D(
+        \CPU_Xreg_value_a3[29][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][15]  ( .D(
+        \CPU_Xreg_value_a3[29][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][14]  ( .D(
+        \CPU_Xreg_value_a3[29][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][13]  ( .D(
+        \CPU_Xreg_value_a3[29][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][12]  ( .D(
+        \CPU_Xreg_value_a3[29][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][11]  ( .D(
+        \CPU_Xreg_value_a3[29][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][10]  ( .D(
+        \CPU_Xreg_value_a3[29][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][9]  ( .D(
+        \CPU_Xreg_value_a3[29][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][8]  ( .D(
+        \CPU_Xreg_value_a3[29][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][7]  ( .D(
+        \CPU_Xreg_value_a3[29][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][6]  ( .D(
+        \CPU_Xreg_value_a3[29][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][5]  ( .D(
+        \CPU_Xreg_value_a3[29][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][31]  ( .D(
+        \CPU_Xreg_value_a3[31][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][30]  ( .D(
+        \CPU_Xreg_value_a3[31][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][29]  ( .D(
+        \CPU_Xreg_value_a3[31][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][28]  ( .D(
+        \CPU_Xreg_value_a3[31][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][27]  ( .D(
+        \CPU_Xreg_value_a3[31][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][26]  ( .D(
+        \CPU_Xreg_value_a3[31][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][25]  ( .D(
+        \CPU_Xreg_value_a3[31][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][24]  ( .D(
+        \CPU_Xreg_value_a3[31][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][23]  ( .D(
+        \CPU_Xreg_value_a3[31][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][22]  ( .D(
+        \CPU_Xreg_value_a3[31][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][21]  ( .D(
+        \CPU_Xreg_value_a3[31][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][20]  ( .D(
+        \CPU_Xreg_value_a3[31][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][19]  ( .D(
+        \CPU_Xreg_value_a3[31][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][18]  ( .D(
+        \CPU_Xreg_value_a3[31][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][17]  ( .D(
+        \CPU_Xreg_value_a3[31][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][16]  ( .D(
+        \CPU_Xreg_value_a3[31][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][15]  ( .D(
+        \CPU_Xreg_value_a3[31][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][14]  ( .D(
+        \CPU_Xreg_value_a3[31][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][13]  ( .D(
+        \CPU_Xreg_value_a3[31][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][12]  ( .D(
+        \CPU_Xreg_value_a3[31][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][11]  ( .D(
+        \CPU_Xreg_value_a3[31][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][10]  ( .D(
+        \CPU_Xreg_value_a3[31][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][9]  ( .D(
+        \CPU_Xreg_value_a3[31][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][8]  ( .D(
+        \CPU_Xreg_value_a3[31][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][7]  ( .D(
+        \CPU_Xreg_value_a3[31][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][6]  ( .D(
+        \CPU_Xreg_value_a3[31][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][5]  ( .D(
+        \CPU_Xreg_value_a3[31][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][3]  ( .D(
+        \CPU_Xreg_value_a3[16][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][2]  ( .D(
+        \CPU_Xreg_value_a3[16][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][1]  ( .D(
+        \CPU_Xreg_value_a3[16][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[16][0]  ( .D(
+        \CPU_Xreg_value_a3[16][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[16][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][3]  ( .D(
+        \CPU_Xreg_value_a3[18][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][2]  ( .D(
+        \CPU_Xreg_value_a3[18][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[18][0]  ( .D(
+        \CPU_Xreg_value_a3[18][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[18][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][1]  ( .D(
+        \CPU_Xreg_value_a3[28][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[28][0]  ( .D(
+        \CPU_Xreg_value_a3[28][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[28][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[30][0]  ( .D(
+        \CPU_Xreg_value_a3[30][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[30][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][4]  ( .D(
+        \CPU_Xreg_value_a3[17][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][0]  ( .D(
+        \CPU_Xreg_value_a3[17][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][4]  ( .D(
+        \CPU_Xreg_value_a3[19][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][1]  ( .D(
+        \CPU_Xreg_value_a3[19][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][0]  ( .D(
+        \CPU_Xreg_value_a3[19][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][4]  ( .D(
+        \CPU_Xreg_value_a3[29][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][3]  ( .D(
+        \CPU_Xreg_value_a3[29][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][2]  ( .D(
+        \CPU_Xreg_value_a3[29][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][0]  ( .D(
+        \CPU_Xreg_value_a3[29][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][4]  ( .D(
+        \CPU_Xreg_value_a3[31][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][3]  ( .D(
+        \CPU_Xreg_value_a3[31][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][2]  ( .D(
+        \CPU_Xreg_value_a3[31][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][1]  ( .D(
+        \CPU_Xreg_value_a3[31][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[31][0]  ( .D(
+        \CPU_Xreg_value_a3[31][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[31][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][3]  ( .D(
+        \CPU_Xreg_value_a3[17][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][2]  ( .D(
+        \CPU_Xreg_value_a3[17][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[17][1]  ( .D(
+        \CPU_Xreg_value_a3[17][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[17][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][3]  ( .D(
+        \CPU_Xreg_value_a3[19][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[19][2]  ( .D(
+        \CPU_Xreg_value_a3[19][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[19][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[29][1]  ( .D(
+        \CPU_Xreg_value_a3[29][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[29][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_pc_a1_reg[1]  ( .D(n5076), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_inc_pc_a1[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_pc_a1_reg[0]  ( .D(n5075), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_inc_pc_a1[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[0]  ( .D(
+        CPU_src2_value_a2[0]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[30]  ( .D(
+        CPU_src2_value_a2[30]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[30]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[27]  ( .D(
+        CPU_src2_value_a2[27]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[27]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[26]  ( .D(
+        CPU_src2_value_a2[26]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[26]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[25]  ( .D(
+        CPU_src2_value_a2[25]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[25]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[1]  ( .D(
+        CPU_src2_value_a2[1]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[10]  ( .D(
+        CPU_src2_value_a2[10]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[10]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[11]  ( .D(
+        CPU_src2_value_a2[11]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[11]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[12]  ( .D(
+        CPU_src2_value_a2[12]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[12]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[13]  ( .D(
+        CPU_src2_value_a2[13]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[13]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[14]  ( .D(
+        CPU_src2_value_a2[14]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[14]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[15]  ( .D(
+        CPU_src2_value_a2[15]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[15]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[16]  ( .D(
+        CPU_src2_value_a2[16]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[16]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[17]  ( .D(
+        CPU_src2_value_a2[17]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[17]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[18]  ( .D(
+        CPU_src2_value_a2[18]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[18]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[19]  ( .D(
+        CPU_src2_value_a2[19]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[19]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[20]  ( .D(
+        CPU_src2_value_a2[20]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[20]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[21]  ( .D(
+        CPU_src2_value_a2[21]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[21]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[22]  ( .D(
+        CPU_src2_value_a2[22]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[22]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[23]  ( .D(
+        CPU_src2_value_a2[23]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[23]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[24]  ( .D(
+        CPU_src2_value_a2[24]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[24]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][1]  ( .D(
+        \CPU_Xreg_value_a3[2][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][3]  ( .D(
+        \CPU_Xreg_value_a3[12][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][2]  ( .D(
+        \CPU_Xreg_value_a3[12][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][31]  ( .D(
+        \CPU_Xreg_value_a3[2][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][30]  ( .D(
+        \CPU_Xreg_value_a3[2][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][29]  ( .D(
+        \CPU_Xreg_value_a3[2][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][28]  ( .D(
+        \CPU_Xreg_value_a3[2][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][27]  ( .D(
+        \CPU_Xreg_value_a3[2][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][26]  ( .D(
+        \CPU_Xreg_value_a3[2][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][25]  ( .D(
+        \CPU_Xreg_value_a3[2][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][24]  ( .D(
+        \CPU_Xreg_value_a3[2][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][23]  ( .D(
+        \CPU_Xreg_value_a3[2][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][22]  ( .D(
+        \CPU_Xreg_value_a3[2][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][21]  ( .D(
+        \CPU_Xreg_value_a3[2][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][20]  ( .D(
+        \CPU_Xreg_value_a3[2][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][19]  ( .D(
+        \CPU_Xreg_value_a3[2][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][18]  ( .D(
+        \CPU_Xreg_value_a3[2][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][17]  ( .D(
+        \CPU_Xreg_value_a3[2][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][16]  ( .D(
+        \CPU_Xreg_value_a3[2][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][15]  ( .D(
+        \CPU_Xreg_value_a3[2][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][14]  ( .D(
+        \CPU_Xreg_value_a3[2][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][13]  ( .D(
+        \CPU_Xreg_value_a3[2][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][12]  ( .D(
+        \CPU_Xreg_value_a3[2][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][11]  ( .D(
+        \CPU_Xreg_value_a3[2][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][10]  ( .D(
+        \CPU_Xreg_value_a3[2][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][9]  ( .D(
+        \CPU_Xreg_value_a3[2][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][8]  ( .D(
+        \CPU_Xreg_value_a3[2][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][7]  ( .D(
+        \CPU_Xreg_value_a3[2][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][6]  ( .D(
+        \CPU_Xreg_value_a3[2][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][5]  ( .D(
+        \CPU_Xreg_value_a3[2][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][31]  ( .D(
+        \CPU_Xreg_value_a3[12][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][30]  ( .D(
+        \CPU_Xreg_value_a3[12][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][29]  ( .D(
+        \CPU_Xreg_value_a3[12][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][28]  ( .D(
+        \CPU_Xreg_value_a3[12][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][27]  ( .D(
+        \CPU_Xreg_value_a3[12][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][26]  ( .D(
+        \CPU_Xreg_value_a3[12][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][25]  ( .D(
+        \CPU_Xreg_value_a3[12][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][24]  ( .D(
+        \CPU_Xreg_value_a3[12][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][23]  ( .D(
+        \CPU_Xreg_value_a3[12][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][22]  ( .D(
+        \CPU_Xreg_value_a3[12][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][21]  ( .D(
+        \CPU_Xreg_value_a3[12][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][20]  ( .D(
+        \CPU_Xreg_value_a3[12][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][19]  ( .D(
+        \CPU_Xreg_value_a3[12][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][18]  ( .D(
+        \CPU_Xreg_value_a3[12][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][17]  ( .D(
+        \CPU_Xreg_value_a3[12][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][16]  ( .D(
+        \CPU_Xreg_value_a3[12][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][15]  ( .D(
+        \CPU_Xreg_value_a3[12][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][14]  ( .D(
+        \CPU_Xreg_value_a3[12][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][13]  ( .D(
+        \CPU_Xreg_value_a3[12][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][12]  ( .D(
+        \CPU_Xreg_value_a3[12][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][11]  ( .D(
+        \CPU_Xreg_value_a3[12][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][10]  ( .D(
+        \CPU_Xreg_value_a3[12][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][9]  ( .D(
+        \CPU_Xreg_value_a3[12][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][8]  ( .D(
+        \CPU_Xreg_value_a3[12][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][7]  ( .D(
+        \CPU_Xreg_value_a3[12][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][6]  ( .D(
+        \CPU_Xreg_value_a3[12][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][5]  ( .D(
+        \CPU_Xreg_value_a3[12][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][31]  ( .D(
+        \CPU_Xreg_value_a3[14][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][30]  ( .D(
+        \CPU_Xreg_value_a3[14][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][29]  ( .D(
+        \CPU_Xreg_value_a3[14][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][28]  ( .D(
+        \CPU_Xreg_value_a3[14][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][27]  ( .D(
+        \CPU_Xreg_value_a3[14][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][26]  ( .D(
+        \CPU_Xreg_value_a3[14][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][25]  ( .D(
+        \CPU_Xreg_value_a3[14][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][24]  ( .D(
+        \CPU_Xreg_value_a3[14][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][23]  ( .D(
+        \CPU_Xreg_value_a3[14][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][22]  ( .D(
+        \CPU_Xreg_value_a3[14][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][21]  ( .D(
+        \CPU_Xreg_value_a3[14][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][20]  ( .D(
+        \CPU_Xreg_value_a3[14][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][19]  ( .D(
+        \CPU_Xreg_value_a3[14][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][18]  ( .D(
+        \CPU_Xreg_value_a3[14][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][17]  ( .D(
+        \CPU_Xreg_value_a3[14][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][16]  ( .D(
+        \CPU_Xreg_value_a3[14][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][15]  ( .D(
+        \CPU_Xreg_value_a3[14][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][14]  ( .D(
+        \CPU_Xreg_value_a3[14][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][13]  ( .D(
+        \CPU_Xreg_value_a3[14][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][12]  ( .D(
+        \CPU_Xreg_value_a3[14][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][11]  ( .D(
+        \CPU_Xreg_value_a3[14][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][10]  ( .D(
+        \CPU_Xreg_value_a3[14][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][4]  ( .D(
+        \CPU_Xreg_value_a3[2][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][3]  ( .D(
+        \CPU_Xreg_value_a3[2][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][2]  ( .D(
+        \CPU_Xreg_value_a3[2][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[2][0]  ( .D(
+        \CPU_Xreg_value_a3[2][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[2][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][4]  ( .D(
+        \CPU_Xreg_value_a3[12][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][1]  ( .D(
+        \CPU_Xreg_value_a3[12][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[12][0]  ( .D(
+        \CPU_Xreg_value_a3[12][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[12][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[29]  ( .D(
+        CPU_src2_value_a2[29]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[29]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][31]  ( .D(
+        \CPU_Xreg_value_a3[1][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][30]  ( .D(
+        \CPU_Xreg_value_a3[1][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][29]  ( .D(
+        \CPU_Xreg_value_a3[1][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][28]  ( .D(
+        \CPU_Xreg_value_a3[1][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][27]  ( .D(
+        \CPU_Xreg_value_a3[1][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][26]  ( .D(
+        \CPU_Xreg_value_a3[1][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][25]  ( .D(
+        \CPU_Xreg_value_a3[1][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][24]  ( .D(
+        \CPU_Xreg_value_a3[1][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][23]  ( .D(
+        \CPU_Xreg_value_a3[1][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][22]  ( .D(
+        \CPU_Xreg_value_a3[1][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][21]  ( .D(
+        \CPU_Xreg_value_a3[1][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][20]  ( .D(
+        \CPU_Xreg_value_a3[1][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][19]  ( .D(
+        \CPU_Xreg_value_a3[1][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][18]  ( .D(
+        \CPU_Xreg_value_a3[1][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][17]  ( .D(
+        \CPU_Xreg_value_a3[1][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][16]  ( .D(
+        \CPU_Xreg_value_a3[1][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][15]  ( .D(
+        \CPU_Xreg_value_a3[1][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][14]  ( .D(
+        \CPU_Xreg_value_a3[1][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][13]  ( .D(
+        \CPU_Xreg_value_a3[1][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][12]  ( .D(
+        \CPU_Xreg_value_a3[1][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][11]  ( .D(
+        \CPU_Xreg_value_a3[1][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][10]  ( .D(
+        \CPU_Xreg_value_a3[1][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][9]  ( .D(
+        \CPU_Xreg_value_a3[1][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][8]  ( .D(
+        \CPU_Xreg_value_a3[1][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][7]  ( .D(
+        \CPU_Xreg_value_a3[1][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][6]  ( .D(
+        \CPU_Xreg_value_a3[1][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][5]  ( .D(
+        \CPU_Xreg_value_a3[1][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][31]  ( .D(
+        \CPU_Xreg_value_a3[3][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][30]  ( .D(
+        \CPU_Xreg_value_a3[3][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][29]  ( .D(
+        \CPU_Xreg_value_a3[3][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][28]  ( .D(
+        \CPU_Xreg_value_a3[3][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][27]  ( .D(
+        \CPU_Xreg_value_a3[3][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][26]  ( .D(
+        \CPU_Xreg_value_a3[3][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][25]  ( .D(
+        \CPU_Xreg_value_a3[3][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][24]  ( .D(
+        \CPU_Xreg_value_a3[3][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][23]  ( .D(
+        \CPU_Xreg_value_a3[3][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][22]  ( .D(
+        \CPU_Xreg_value_a3[3][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][21]  ( .D(
+        \CPU_Xreg_value_a3[3][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][20]  ( .D(
+        \CPU_Xreg_value_a3[3][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][19]  ( .D(
+        \CPU_Xreg_value_a3[3][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][18]  ( .D(
+        \CPU_Xreg_value_a3[3][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][17]  ( .D(
+        \CPU_Xreg_value_a3[3][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][16]  ( .D(
+        \CPU_Xreg_value_a3[3][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][15]  ( .D(
+        \CPU_Xreg_value_a3[3][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][14]  ( .D(
+        \CPU_Xreg_value_a3[3][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][13]  ( .D(
+        \CPU_Xreg_value_a3[3][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][12]  ( .D(
+        \CPU_Xreg_value_a3[3][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][11]  ( .D(
+        \CPU_Xreg_value_a3[3][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][10]  ( .D(
+        \CPU_Xreg_value_a3[3][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][9]  ( .D(
+        \CPU_Xreg_value_a3[3][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][8]  ( .D(
+        \CPU_Xreg_value_a3[3][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][7]  ( .D(
+        \CPU_Xreg_value_a3[3][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][6]  ( .D(
+        \CPU_Xreg_value_a3[3][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][5]  ( .D(
+        \CPU_Xreg_value_a3[3][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][31]  ( .D(
+        \CPU_Xreg_value_a3[13][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][30]  ( .D(
+        \CPU_Xreg_value_a3[13][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][29]  ( .D(
+        \CPU_Xreg_value_a3[13][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][28]  ( .D(
+        \CPU_Xreg_value_a3[13][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][27]  ( .D(
+        \CPU_Xreg_value_a3[13][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][26]  ( .D(
+        \CPU_Xreg_value_a3[13][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][25]  ( .D(
+        \CPU_Xreg_value_a3[13][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][24]  ( .D(
+        \CPU_Xreg_value_a3[13][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][23]  ( .D(
+        \CPU_Xreg_value_a3[13][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][22]  ( .D(
+        \CPU_Xreg_value_a3[13][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][21]  ( .D(
+        \CPU_Xreg_value_a3[13][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][20]  ( .D(
+        \CPU_Xreg_value_a3[13][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][19]  ( .D(
+        \CPU_Xreg_value_a3[13][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][18]  ( .D(
+        \CPU_Xreg_value_a3[13][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][17]  ( .D(
+        \CPU_Xreg_value_a3[13][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][16]  ( .D(
+        \CPU_Xreg_value_a3[13][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][15]  ( .D(
+        \CPU_Xreg_value_a3[13][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][14]  ( .D(
+        \CPU_Xreg_value_a3[13][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][13]  ( .D(
+        \CPU_Xreg_value_a3[13][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][12]  ( .D(
+        \CPU_Xreg_value_a3[13][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][11]  ( .D(
+        \CPU_Xreg_value_a3[13][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][10]  ( .D(
+        \CPU_Xreg_value_a3[13][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][9]  ( .D(
+        \CPU_Xreg_value_a3[13][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][8]  ( .D(
+        \CPU_Xreg_value_a3[13][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][7]  ( .D(
+        \CPU_Xreg_value_a3[13][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][6]  ( .D(
+        \CPU_Xreg_value_a3[13][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][5]  ( .D(
+        \CPU_Xreg_value_a3[13][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][31]  ( .D(
+        \CPU_Xreg_value_a3[15][31] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][31] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][30]  ( .D(
+        \CPU_Xreg_value_a3[15][30] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][30] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][29]  ( .D(
+        \CPU_Xreg_value_a3[15][29] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][29] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][28]  ( .D(
+        \CPU_Xreg_value_a3[15][28] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][28] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][27]  ( .D(
+        \CPU_Xreg_value_a3[15][27] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][27] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][26]  ( .D(
+        \CPU_Xreg_value_a3[15][26] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][26] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][25]  ( .D(
+        \CPU_Xreg_value_a3[15][25] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][25] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][24]  ( .D(
+        \CPU_Xreg_value_a3[15][24] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][24] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][23]  ( .D(
+        \CPU_Xreg_value_a3[15][23] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][23] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][22]  ( .D(
+        \CPU_Xreg_value_a3[15][22] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][22] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][21]  ( .D(
+        \CPU_Xreg_value_a3[15][21] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][21] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][20]  ( .D(
+        \CPU_Xreg_value_a3[15][20] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][20] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][19]  ( .D(
+        \CPU_Xreg_value_a3[15][19] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][19] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][18]  ( .D(
+        \CPU_Xreg_value_a3[15][18] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][18] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][17]  ( .D(
+        \CPU_Xreg_value_a3[15][17] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][17] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][16]  ( .D(
+        \CPU_Xreg_value_a3[15][16] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][16] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][15]  ( .D(
+        \CPU_Xreg_value_a3[15][15] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][15] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][14]  ( .D(
+        \CPU_Xreg_value_a3[15][14] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][14] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][13]  ( .D(
+        \CPU_Xreg_value_a3[15][13] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][13] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][12]  ( .D(
+        \CPU_Xreg_value_a3[15][12] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][12] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][11]  ( .D(
+        \CPU_Xreg_value_a3[15][11] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][11] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][10]  ( .D(
+        \CPU_Xreg_value_a3[15][10] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][10] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][9]  ( .D(
+        \CPU_Xreg_value_a3[15][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][8]  ( .D(
+        \CPU_Xreg_value_a3[15][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][7]  ( .D(
+        \CPU_Xreg_value_a3[15][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][6]  ( .D(
+        \CPU_Xreg_value_a3[15][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][5]  ( .D(
+        \CPU_Xreg_value_a3[15][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][0]  ( .D(
+        \CPU_Xreg_value_a3[1][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][1]  ( .D(
+        \CPU_Xreg_value_a3[3][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][0]  ( .D(
+        \CPU_Xreg_value_a3[3][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][3]  ( .D(
+        \CPU_Xreg_value_a3[13][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][2]  ( .D(
+        \CPU_Xreg_value_a3[13][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][0]  ( .D(
+        \CPU_Xreg_value_a3[13][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][3]  ( .D(
+        \CPU_Xreg_value_a3[15][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][2]  ( .D(
+        \CPU_Xreg_value_a3[15][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][1]  ( .D(
+        \CPU_Xreg_value_a3[15][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][0]  ( .D(
+        \CPU_Xreg_value_a3[15][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][4]  ( .D(
+        \CPU_Xreg_value_a3[1][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][3]  ( .D(
+        \CPU_Xreg_value_a3[1][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][2]  ( .D(
+        \CPU_Xreg_value_a3[1][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[1][1]  ( .D(
+        \CPU_Xreg_value_a3[1][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[1][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][4]  ( .D(
+        \CPU_Xreg_value_a3[3][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][3]  ( .D(
+        \CPU_Xreg_value_a3[3][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[3][2]  ( .D(
+        \CPU_Xreg_value_a3[3][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[3][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][4]  ( .D(
+        \CPU_Xreg_value_a3[13][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[13][1]  ( .D(
+        \CPU_Xreg_value_a3[13][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[13][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[15][4]  ( .D(
+        \CPU_Xreg_value_a3[15][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[15][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[3]  ( .D(
+        CPU_src2_value_a2[3]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[29]  ( .D(
+        CPU_src1_value_a2[29]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[29]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[2]  ( .D(
+        CPU_src2_value_a2[2]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[28]  ( .D(
+        CPU_src2_value_a2[28]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[28]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a2_reg[0]  ( .D(CPU_imm_a1[0]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a2[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a2_reg[1]  ( .D(n5870), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a2[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a2_reg[2]  ( .D(CPU_imm_a1[2]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a2[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a2_reg[10]  ( .D(n5109), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a2[10]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imm_a2_reg[3]  ( .D(CPU_imm_a1[5]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imm_a2[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][3]  ( .D(
+        \CPU_Xreg_value_a3[14][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][2]  ( .D(
+        \CPU_Xreg_value_a3[14][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][1]  ( .D(
+        \CPU_Xreg_value_a3[14][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][9]  ( .D(
+        \CPU_Xreg_value_a3[14][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][8]  ( .D(
+        \CPU_Xreg_value_a3[14][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][7]  ( .D(
+        \CPU_Xreg_value_a3[14][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][6]  ( .D(
+        \CPU_Xreg_value_a3[14][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][5]  ( .D(
+        \CPU_Xreg_value_a3[14][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][4]  ( .D(
+        \CPU_Xreg_value_a3[14][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a4_reg[14][0]  ( .D(
+        \CPU_Xreg_value_a3[14][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a4[14][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[1]  ( .D(
+        CPU_src1_value_a2[1]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[30]  ( .D(
+        CPU_src1_value_a2[30]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[30]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_reset_a1_reg ( .D(reset), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_reset_a1) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[0]  ( .D(
+        CPU_src1_value_a2[0]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src2_value_a3_reg[31]  ( .D(
+        CPU_src2_value_a2[31]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src2_value_a3[31]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[27]  ( .D(
+        CPU_src1_value_a2[27]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[27]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[26]  ( .D(
+        CPU_src1_value_a2[26]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[26]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[4]  ( .D(
+        CPU_src1_value_a2[4]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[4]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[6]  ( .D(
+        CPU_src1_value_a2[6]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[6]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[8]  ( .D(
+        CPU_src1_value_a2[8]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[8]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[10]  ( .D(
+        CPU_src1_value_a2[10]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[10]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[12]  ( .D(
+        CPU_src1_value_a2[12]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[12]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[14]  ( .D(
+        CPU_src1_value_a2[14]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[14]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[16]  ( .D(
+        CPU_src1_value_a2[16]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[16]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[18]  ( .D(
+        CPU_src1_value_a2[18]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[18]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[20]  ( .D(
+        CPU_src1_value_a2[20]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[20]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[22]  ( .D(
+        CPU_src1_value_a2[22]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[22]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[24]  ( .D(
+        CPU_src1_value_a2[24]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[24]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[25]  ( .D(
+        CPU_src1_value_a2[25]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[25]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[5]  ( .D(
+        CPU_src1_value_a2[5]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[5]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[7]  ( .D(
+        CPU_src1_value_a2[7]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[7]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[9]  ( .D(
+        CPU_src1_value_a2[9]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[9]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[11]  ( .D(
+        CPU_src1_value_a2[11]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[11]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[13]  ( .D(
+        CPU_src1_value_a2[13]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[13]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[15]  ( .D(
+        CPU_src1_value_a2[15]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[15]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[17]  ( .D(
+        CPU_src1_value_a2[17]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[17]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[19]  ( .D(
+        CPU_src1_value_a2[19]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[19]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[21]  ( .D(
+        CPU_src1_value_a2[21]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[21]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[23]  ( .D(
+        CPU_src1_value_a2[23]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[23]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[2]  ( .D(
+        CPU_src1_value_a2[2]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[3]  ( .D(
+        CPU_src1_value_a2[3]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[28]  ( .D(
+        CPU_src1_value_a2[28]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[28]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imem_rd_addr_a1_reg[1]  ( .D(n5078), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imem_rd_addr_a1[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_src1_value_a3_reg[31]  ( .D(
+        CPU_src1_value_a2[31]), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        CPU_src1_value_a3[31]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imem_rd_addr_a1_reg[0]  ( .D(n5077), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imem_rd_addr_a1[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rs2_a2_reg[2]  ( .D(CPU_instr_a1[23]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(N56) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rs1_a2_reg[2]  ( .D(CPU_instr_a1_18), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(N51) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a3_reg[0]  ( .D(CPU_rd_a2[0]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a3[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a3_reg[2]  ( .D(CPU_rd_a2[2]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a3[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rs2_a2_reg[0]  ( .D(CPU_instr_a1[20]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(N54) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rs1_a2_reg[0]  ( .D(CPU_instr_a1_15), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(N49) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rs2_a2_reg[1]  ( .D(n4240), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(N55) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a3_reg[3]  ( .D(CPU_rd_a2[3]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a3[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a3_reg[1]  ( .D(CPU_rd_a2[1]), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a3[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imem_rd_addr_a1_reg[3]  ( .D(n5080), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imem_rd_addr_a1[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_imem_rd_addr_a1_reg[2]  ( .D(n5079), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_imem_rd_addr_a1[2]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_blt_a2_reg ( .D(n4241), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_blt_a2) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a2_reg[2]  ( .D(CPU_instr_a1_9), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a2[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a2_reg[1]  ( .D(CPU_instr_a1_8), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a2[1]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_sub_a2_reg ( .D(n5111), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_sub_a2) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a2_reg[3]  ( .D(CPU_instr_a1_10), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a2[3]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_rd_valid_a2_reg ( .D(n5871), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_valid_a2) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_rd_a2_reg[0]  ( .D(CPU_instr_a1_7), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_rd_a2[0]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_addi_a2_reg ( .D(n1982), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_addi_a2) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_is_add_a2_reg ( .D(n1981), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_is_add_a2) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[9]  ( .D(\CPU_Xreg_value_a5[14][9] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[9]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[8]  ( .D(\CPU_Xreg_value_a5[14][8] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[8]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[7]  ( .D(\CPU_Xreg_value_a5[14][7] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[7]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[6]  ( .D(\CPU_Xreg_value_a5[14][6] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[6]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[5]  ( .D(\CPU_Xreg_value_a5[14][5] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[5]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[4]  ( .D(\CPU_Xreg_value_a5[14][4] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[4]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[3]  ( .D(\CPU_Xreg_value_a5[14][3] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[3]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[2]  ( .D(\CPU_Xreg_value_a5[14][2] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[2]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[1]  ( .D(\CPU_Xreg_value_a5[14][1] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \out_reg[0]  ( .D(\CPU_Xreg_value_a5[14][0] ), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(out[0]) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_reset_a2_reg ( .D(CPU_reset_a1), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_reset_a2) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_inc_pc_a2_reg[0]  ( .D(CPU_inc_pc_a1[0]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_inc_pc_a2[0]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_inc_pc_a2_reg[1]  ( .D(CPU_inc_pc_a1[1]), 
+        .CLK(clkP_CPU_rd_valid_a2), .Q(CPU_inc_pc_a2[1]) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][9]  ( .D(
+        \CPU_Xreg_value_a4[14][9] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][9] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][8]  ( .D(
+        \CPU_Xreg_value_a4[14][8] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][8] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][7]  ( .D(
+        \CPU_Xreg_value_a4[14][7] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][7] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][6]  ( .D(
+        \CPU_Xreg_value_a4[14][6] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][6] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][5]  ( .D(
+        \CPU_Xreg_value_a4[14][5] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][5] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][4]  ( .D(
+        \CPU_Xreg_value_a4[14][4] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][4] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][3]  ( .D(
+        \CPU_Xreg_value_a4[14][3] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][3] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][2]  ( .D(
+        \CPU_Xreg_value_a4[14][2] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][2] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][1]  ( .D(
+        \CPU_Xreg_value_a4[14][1] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][1] ) );
+  sky130_fd_sc_hd__dfxtp_1 \CPU_Xreg_value_a5_reg[14][0]  ( .D(
+        \CPU_Xreg_value_a4[14][0] ), .CLK(clkP_CPU_rd_valid_a2), .Q(
+        \CPU_Xreg_value_a5[14][0] ) );
+  sky130_fd_sc_hd__dfxtp_1 CPU_reset_a3_reg ( .D(CPU_reset_a2), .CLK(
+        clkP_CPU_rd_valid_a2), .Q(CPU_reset_a3) );
+  sky130_fd_sc_hd__fa_1 \add_158/U1_1  ( .A(CPU_inc_pc_a2[1]), .B(
+        CPU_imm_a2[1]), .CIN(\add_158/n1 ), .COUT(\add_158/carry [2]), .SUM(
+        CPU_br_tgt_pc_a2[1]) );
+  sky130_fd_sc_hd__fa_1 \add_158/U1_2  ( .A(CPU_pc_a2[2]), .B(CPU_imm_a2[2]), 
+        .CIN(\add_158/carry [2]), .COUT(\add_158/carry [3]), .SUM(
+        CPU_br_tgt_pc_a2[2]) );
+  sky130_fd_sc_hd__fa_1 \add_158/U1_3  ( .A(CPU_pc_a2[3]), .B(CPU_imm_a2[3]), 
+        .CIN(\add_158/carry [3]), .COUT(\add_158/carry [4]), .SUM(
+        CPU_br_tgt_pc_a2[3]) );
+  sky130_fd_sc_hd__fa_1 \add_158/U1_4  ( .A(CPU_pc_a2[4]), .B(CPU_imm_a2[10]), 
+        .CIN(\add_158/carry [4]), .COUT(\add_158/carry [5]), .SUM(
+        CPU_br_tgt_pc_a2[4]) );
+  sky130_fd_sc_hd__fa_1 \add_158/U1_5  ( .A(CPU_pc_a2[5]), .B(CPU_imm_a2[3]), 
+        .CIN(\add_158/carry [5]), .SUM(CPU_br_tgt_pc_a2[5]) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_7  ( .A(CPU_src1_value_a3[7]), .B(
+        \r250/B_AS [7]), .CIN(\r250/carry[7] ), .COUT(\r250/carry[8] ), .SUM(
+        N713) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_8  ( .A(CPU_src1_value_a3[8]), .B(
+        \r250/B_AS [8]), .CIN(\r250/carry[8] ), .COUT(\r250/carry[9] ), .SUM(
+        N714) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_9  ( .A(CPU_src1_value_a3[9]), .B(
+        \r250/B_AS [9]), .CIN(\r250/carry[9] ), .COUT(\r250/carry[10] ), .SUM(
+        N715) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_10  ( .A(CPU_src1_value_a3[10]), .B(
+        \r250/B_AS [10]), .CIN(\r250/carry[10] ), .COUT(\r250/carry[11] ), 
+        .SUM(N716) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_11  ( .A(CPU_src1_value_a3[11]), .B(
+        \r250/B_AS [11]), .CIN(\r250/carry[11] ), .COUT(\r250/carry[12] ), 
+        .SUM(N717) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_12  ( .A(CPU_src1_value_a3[12]), .B(
+        \r250/B_AS [12]), .CIN(\r250/carry[12] ), .COUT(\r250/carry[13] ), 
+        .SUM(N718) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_13  ( .A(CPU_src1_value_a3[13]), .B(
+        \r250/B_AS [13]), .CIN(\r250/carry[13] ), .COUT(\r250/carry[14] ), 
+        .SUM(N719) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_14  ( .A(CPU_src1_value_a3[14]), .B(
+        \r250/B_AS [14]), .CIN(\r250/carry[14] ), .COUT(\r250/carry[15] ), 
+        .SUM(N720) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_15  ( .A(CPU_src1_value_a3[15]), .B(
+        \r250/B_AS [15]), .CIN(\r250/carry[15] ), .COUT(\r250/carry[16] ), 
+        .SUM(N721) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_16  ( .A(CPU_src1_value_a3[16]), .B(
+        \r250/B_AS [16]), .CIN(\r250/carry[16] ), .COUT(\r250/carry[17] ), 
+        .SUM(N722) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_17  ( .A(CPU_src1_value_a3[17]), .B(
+        \r250/B_AS [17]), .CIN(\r250/carry[17] ), .COUT(\r250/carry[18] ), 
+        .SUM(N723) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_18  ( .A(CPU_src1_value_a3[18]), .B(
+        \r250/B_AS [18]), .CIN(\r250/carry[18] ), .COUT(\r250/carry[19] ), 
+        .SUM(N724) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_19  ( .A(CPU_src1_value_a3[19]), .B(
+        \r250/B_AS [19]), .CIN(\r250/carry[19] ), .COUT(\r250/carry[20] ), 
+        .SUM(N725) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_20  ( .A(CPU_src1_value_a3[20]), .B(
+        \r250/B_AS [20]), .CIN(\r250/carry[20] ), .COUT(\r250/carry[21] ), 
+        .SUM(N726) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_21  ( .A(CPU_src1_value_a3[21]), .B(
+        \r250/B_AS [21]), .CIN(\r250/carry[21] ), .COUT(\r250/carry[22] ), 
+        .SUM(N727) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_22  ( .A(CPU_src1_value_a3[22]), .B(
+        \r250/B_AS [22]), .CIN(\r250/carry[22] ), .COUT(\r250/carry[23] ), 
+        .SUM(N728) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_23  ( .A(CPU_src1_value_a3[23]), .B(
+        \r250/B_AS [23]), .CIN(\r250/carry[23] ), .COUT(\r250/carry[24] ), 
+        .SUM(N729) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_24  ( .A(CPU_src1_value_a3[24]), .B(
+        \r250/B_AS [24]), .CIN(\r250/carry[24] ), .COUT(\r250/carry[25] ), 
+        .SUM(N730) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_25  ( .A(CPU_src1_value_a3[25]), .B(
+        \r250/B_AS [25]), .CIN(\r250/carry[25] ), .COUT(\r250/carry[26] ), 
+        .SUM(N731) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_26  ( .A(CPU_src1_value_a3[26]), .B(
+        \r250/B_AS [26]), .CIN(\r250/carry[26] ), .COUT(\r250/carry[27] ), 
+        .SUM(N732) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_27  ( .A(CPU_src1_value_a3[27]), .B(
+        \r250/B_AS [27]), .CIN(\r250/carry[27] ), .COUT(\r250/carry[28] ), 
+        .SUM(N733) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_28  ( .A(CPU_src1_value_a3[28]), .B(
+        \r250/B_AS [28]), .CIN(\r250/carry[28] ), .COUT(\r250/carry[29] ), 
+        .SUM(N734) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_29  ( .A(CPU_src1_value_a3[29]), .B(
+        \r250/B_AS [29]), .CIN(\r250/carry[29] ), .COUT(\r250/carry[30] ), 
+        .SUM(N735) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_30  ( .A(CPU_src1_value_a3[30]), .B(
+        \r250/B_AS [30]), .CIN(\r250/carry[30] ), .COUT(\r250/carry[31] ), 
+        .SUM(N736) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_0  ( .A(CPU_src1_value_a3[0]), .B(
+        \r250/B_AS [0]), .CIN(n5869), .COUT(\r250/carry[1] ), .SUM(N706) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_1  ( .A(CPU_src1_value_a3[1]), .B(
+        \r250/B_AS [1]), .CIN(\r250/carry[1] ), .COUT(\r250/carry[2] ), .SUM(
+        N707) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_2  ( .A(CPU_src1_value_a3[2]), .B(
+        \r250/B_AS [2]), .CIN(\r250/carry[2] ), .COUT(\r250/carry[3] ), .SUM(
+        N708) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_3  ( .A(CPU_src1_value_a3[3]), .B(
+        \r250/B_AS [3]), .CIN(\r250/carry[3] ), .COUT(\r250/carry[4] ), .SUM(
+        N709) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_4  ( .A(CPU_src1_value_a3[4]), .B(
+        \r250/B_AS [4]), .CIN(\r250/carry[4] ), .COUT(\r250/carry[5] ), .SUM(
+        N710) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_5  ( .A(CPU_src1_value_a3[5]), .B(
+        \r250/B_AS [5]), .CIN(\r250/carry[5] ), .COUT(\r250/carry[6] ), .SUM(
+        N711) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_6  ( .A(CPU_src1_value_a3[6]), .B(
+        \r250/B_AS [6]), .CIN(\r250/carry[6] ), .COUT(\r250/carry[7] ), .SUM(
+        N712) );
+  sky130_fd_sc_hd__fa_1 \r250/U1_31  ( .A(CPU_src1_value_a3[31]), .B(
+        \r250/B_AS [31]), .CIN(\r250/carry[31] ), .SUM(N737) );
+  sky130_fd_sc_hd__a31oi_2 U4554 ( .A1(n5178), .A2(CPU_rd_a3[3]), .A3(n5177), 
+        .B1(CPU_reset_a3), .Y(n5859) );
+  sky130_fd_sc_hd__a31oi_2 U4555 ( .A1(n5178), .A2(n5117), .A3(n5116), .B1(
+        CPU_reset_a3), .Y(n5805) );
+  sky130_fd_sc_hd__clkinv_1 U4556 ( .A(N54), .Y(n5243) );
+  sky130_fd_sc_hd__clkinv_1 U4557 ( .A(CPU_is_addi_a3), .Y(n5179) );
+  sky130_fd_sc_hd__clkinv_1 U4558 ( .A(CPU_src2_value_a3[5]), .Y(n5192) );
+  sky130_fd_sc_hd__clkinv_1 U4559 ( .A(CPU_src2_value_a3[14]), .Y(n5218) );
+  sky130_fd_sc_hd__clkinv_1 U4560 ( .A(CPU_src2_value_a3[29]), .Y(n5201) );
+  sky130_fd_sc_hd__clkinv_1 U4561 ( .A(N55), .Y(n5236) );
+  sky130_fd_sc_hd__clkinv_1 U4562 ( .A(N49), .Y(n5627) );
+  sky130_fd_sc_hd__clkinv_1 U4563 ( .A(n5223), .Y(n5869) );
+  sky130_fd_sc_hd__clkinv_1 U4564 ( .A(CPU_is_blt_a3), .Y(n5229) );
+  sky130_fd_sc_hd__clkinv_1 U4565 ( .A(n5235), .Y(n5597) );
+  sky130_fd_sc_hd__clkinv_1 U4566 ( .A(CPU_imem_rd_addr_a1[3]), .Y(n5228) );
+  sky130_fd_sc_hd__clkinv_1 U4567 ( .A(n5778), .Y(n5771) );
+  sky130_fd_sc_hd__clkinv_1 U4568 ( .A(n5626), .Y(n5756) );
+  sky130_fd_sc_hd__clkinv_1 U4569 ( .A(n5868), .Y(n5174) );
+  sky130_fd_sc_hd__clkinv_1 U4570 ( .A(CPU_imem_rd_addr_a1[0]), .Y(n5779) );
+  sky130_fd_sc_hd__clkinv_1 U4571 ( .A(CPU_instr_a1[23]), .Y(n5780) );
+  sky130_fd_sc_hd__clkinv_1 U4572 ( .A(N706), .Y(n5856) );
+  sky130_fd_sc_hd__clkinv_1 U4573 ( .A(N718), .Y(n5557) );
+  sky130_fd_sc_hd__clkinv_1 U4574 ( .A(N733), .Y(n5381) );
+  sky130_fd_sc_hd__clkinv_1 U4575 ( .A(N707), .Y(n5850) );
+  sky130_fd_sc_hd__clkinv_1 U4576 ( .A(n5774), .Y(n5870) );
+  sky130_fd_sc_hd__clkinv_1 U4577 ( .A(n5172), .Y(n5107) );
+  sky130_fd_sc_hd__clkinv_1 U4578 ( .A(N737), .Y(n5327) );
+  sky130_fd_sc_hd__nor2_1 U4579 ( .A(CPU_rd_a3[0]), .B(CPU_is_blt_a3), .Y(
+        n5178) );
+  sky130_fd_sc_hd__clkinv_1 U4580 ( .A(CPU_rd_a3[1]), .Y(n5622) );
+  sky130_fd_sc_hd__nor2_1 U4581 ( .A(CPU_valid_taken_br_a5), .B(
+        CPU_valid_taken_br_a4), .Y(n5171) );
+  sky130_fd_sc_hd__nand2_1 U4582 ( .A(n5171), .B(CPU_rd_valid_a3), .Y(n5120)
+         );
+  sky130_fd_sc_hd__nor3_1 U4583 ( .A(CPU_rd_a3[2]), .B(n5622), .C(n5120), .Y(
+        n5117) );
+  sky130_fd_sc_hd__clkinv_1 U4584 ( .A(CPU_reset_a3), .Y(n5123) );
+  sky130_fd_sc_hd__clkinv_1 U4585 ( .A(CPU_rd_a3[3]), .Y(n5116) );
+  sky130_fd_sc_hd__nand4_1 U4586 ( .A(n5178), .B(n5117), .C(n5123), .D(n5116), 
+        .Y(n5807) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4587 ( .B1(n5327), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][31] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][31] ) );
+  sky130_fd_sc_hd__clkinv_1 U4588 ( .A(N736), .Y(n5338) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4589 ( .B1(n5338), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][30] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][30] ) );
+  sky130_fd_sc_hd__clkinv_1 U4590 ( .A(N735), .Y(n5359) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4591 ( .B1(n5359), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][29] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][29] ) );
+  sky130_fd_sc_hd__clkinv_1 U4592 ( .A(N734), .Y(n5370) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4593 ( .B1(n5370), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][28] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4594 ( .B1(n5381), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][27] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][27] ) );
+  sky130_fd_sc_hd__clkinv_1 U4595 ( .A(N732), .Y(n5392) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4596 ( .B1(n5392), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][26] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][26] ) );
+  sky130_fd_sc_hd__clkinv_1 U4597 ( .A(N731), .Y(n5403) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4598 ( .B1(n5403), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][25] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][25] ) );
+  sky130_fd_sc_hd__clkinv_1 U4599 ( .A(N730), .Y(n5414) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4600 ( .B1(n5414), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][24] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][24] ) );
+  sky130_fd_sc_hd__clkinv_1 U4601 ( .A(N729), .Y(n5425) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4602 ( .B1(n5425), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][23] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][23] ) );
+  sky130_fd_sc_hd__clkinv_1 U4603 ( .A(N728), .Y(n5436) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4604 ( .B1(n5436), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][22] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][22] ) );
+  sky130_fd_sc_hd__clkinv_1 U4605 ( .A(N727), .Y(n5447) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4606 ( .B1(n5447), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][21] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][21] ) );
+  sky130_fd_sc_hd__clkinv_1 U4607 ( .A(N726), .Y(n5458) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4608 ( .B1(n5458), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][20] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][20] ) );
+  sky130_fd_sc_hd__clkinv_1 U4609 ( .A(N725), .Y(n5479) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4610 ( .B1(n5479), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][19] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][19] ) );
+  sky130_fd_sc_hd__clkinv_1 U4611 ( .A(N724), .Y(n5490) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4612 ( .B1(n5490), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][18] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][18] ) );
+  sky130_fd_sc_hd__clkinv_1 U4613 ( .A(N723), .Y(n5501) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4614 ( .B1(n5501), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][17] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][17] ) );
+  sky130_fd_sc_hd__clkinv_1 U4615 ( .A(N722), .Y(n5512) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4616 ( .B1(n5512), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][16] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][16] ) );
+  sky130_fd_sc_hd__clkinv_1 U4617 ( .A(N721), .Y(n5524) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4618 ( .B1(n5524), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][15] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][15] ) );
+  sky130_fd_sc_hd__clkinv_1 U4619 ( .A(N720), .Y(n5535) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4620 ( .B1(n5535), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][14] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][14] ) );
+  sky130_fd_sc_hd__clkinv_1 U4621 ( .A(N719), .Y(n5546) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4622 ( .B1(n5546), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][13] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4623 ( .B1(n5557), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][12] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][12] ) );
+  sky130_fd_sc_hd__clkinv_1 U4624 ( .A(N717), .Y(n5568) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4625 ( .B1(n5568), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][11] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][11] ) );
+  sky130_fd_sc_hd__clkinv_1 U4626 ( .A(N716), .Y(n5580) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4627 ( .B1(n5580), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][10] ), .A2_N(n5805), .Y(
+        \CPU_Xreg_value_a3[2][10] ) );
+  sky130_fd_sc_hd__clkinv_1 U4628 ( .A(N715), .Y(n5241) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4629 ( .B1(n5241), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][9] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][9] ) );
+  sky130_fd_sc_hd__clkinv_1 U4630 ( .A(N714), .Y(n5263) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4631 ( .B1(n5263), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][8] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][8] ) );
+  sky130_fd_sc_hd__clkinv_1 U4632 ( .A(N713), .Y(n5274) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4633 ( .B1(n5274), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][7] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][7] ) );
+  sky130_fd_sc_hd__clkinv_1 U4634 ( .A(N712), .Y(n5285) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4635 ( .B1(n5285), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][6] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][6] ) );
+  sky130_fd_sc_hd__clkinv_1 U4636 ( .A(N711), .Y(n5296) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4637 ( .B1(n5296), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][5] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][5] ) );
+  sky130_fd_sc_hd__clkinv_1 U4638 ( .A(N710), .Y(n5838) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4639 ( .B1(n5838), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][4] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][4] ) );
+  sky130_fd_sc_hd__clkinv_1 U4640 ( .A(N709), .Y(n5858) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4641 ( .B1(n5858), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][3] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][3] ) );
+  sky130_fd_sc_hd__clkinv_1 U4642 ( .A(N708), .Y(n5862) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4643 ( .B1(n5862), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][2] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][2] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4644 ( .B1(n5856), .B2(n5807), .A1_N(
+        \CPU_Xreg_value_a4[2][0] ), .A2_N(n5805), .Y(\CPU_Xreg_value_a3[2][0] ) );
+  sky130_fd_sc_hd__nand3b_1 U4645 ( .A_N(CPU_is_add_a3), .B(CPU_is_sub_a3), 
+        .C(n5179), .Y(n5223) );
+  sky130_fd_sc_hd__clkinv_1 U4646 ( .A(CPU_rd_a3[0]), .Y(n5618) );
+  sky130_fd_sc_hd__nor2_1 U4647 ( .A(n5618), .B(n5229), .Y(n5119) );
+  sky130_fd_sc_hd__clkinv_1 U4648 ( .A(CPU_rd_a3[2]), .Y(n5617) );
+  sky130_fd_sc_hd__a31oi_1 U4649 ( .A1(n5178), .A2(n5617), .A3(n5622), .B1(
+        n5120), .Y(n5230) );
+  sky130_fd_sc_hd__nand2_1 U4650 ( .A(n5230), .B(n5622), .Y(n5114) );
+  sky130_fd_sc_hd__nor2_1 U4651 ( .A(CPU_rd_a3[2]), .B(n5114), .Y(n5115) );
+  sky130_fd_sc_hd__nand2_1 U4652 ( .A(n5116), .B(n5123), .Y(n5124) );
+  sky130_fd_sc_hd__nor2b_1 U4653 ( .B_N(n5115), .A(n5124), .Y(n5130) );
+  sky130_fd_sc_hd__nand2_1 U4654 ( .A(n5119), .B(n5130), .Y(n5834) );
+  sky130_fd_sc_hd__nor2_1 U4655 ( .A(CPU_reset_a3), .B(n5119), .Y(n5125) );
+  sky130_fd_sc_hd__nand2_1 U4656 ( .A(CPU_rd_a3[3]), .B(n5123), .Y(n5118) );
+  sky130_fd_sc_hd__o21ai_1 U4657 ( .A1(CPU_reset_a3), .A2(n5115), .B1(n5118), 
+        .Y(n5131) );
+  sky130_fd_sc_hd__or2_0 U4658 ( .A(n5125), .B(n5131), .X(n5832) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4659 ( .B1(n5501), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][17] ), .Y(\CPU_Xreg_value_a3[17][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4660 ( .B1(n5512), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][16] ), .Y(\CPU_Xreg_value_a3[17][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4661 ( .B1(n5524), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][15] ), .Y(\CPU_Xreg_value_a3[17][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4662 ( .B1(n5535), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][14] ), .Y(\CPU_Xreg_value_a3[17][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4663 ( .B1(n5546), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][13] ), .Y(\CPU_Xreg_value_a3[17][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4664 ( .B1(n5557), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][12] ), .Y(\CPU_Xreg_value_a3[17][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4665 ( .B1(n5568), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][11] ), .Y(\CPU_Xreg_value_a3[17][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4666 ( .B1(n5580), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][10] ), .Y(\CPU_Xreg_value_a3[17][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4667 ( .B1(n5241), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][9] ), .Y(\CPU_Xreg_value_a3[17][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4668 ( .B1(n5263), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][8] ), .Y(\CPU_Xreg_value_a3[17][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4669 ( .B1(n5274), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][7] ), .Y(\CPU_Xreg_value_a3[17][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4670 ( .B1(n5285), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][6] ), .Y(\CPU_Xreg_value_a3[17][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4671 ( .B1(n5296), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][5] ), .Y(\CPU_Xreg_value_a3[17][5] ) );
+  sky130_fd_sc_hd__nor2b_1 U4672 ( .B_N(n5117), .A(n5124), .Y(n5132) );
+  sky130_fd_sc_hd__nand2_1 U4673 ( .A(n5119), .B(n5132), .Y(n5826) );
+  sky130_fd_sc_hd__a21oi_1 U4674 ( .A1(n5117), .A2(n5116), .B1(CPU_reset_a3), 
+        .Y(n5134) );
+  sky130_fd_sc_hd__or2_0 U4675 ( .A(n5125), .B(n5134), .X(n5824) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4676 ( .B1(n5327), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][31] ), .Y(\CPU_Xreg_value_a3[19][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4677 ( .B1(n5338), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][30] ), .Y(\CPU_Xreg_value_a3[19][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4678 ( .B1(n5359), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][29] ), .Y(\CPU_Xreg_value_a3[19][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4679 ( .B1(n5370), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][28] ), .Y(\CPU_Xreg_value_a3[19][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4680 ( .B1(n5381), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][27] ), .Y(\CPU_Xreg_value_a3[19][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4681 ( .B1(n5392), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][26] ), .Y(\CPU_Xreg_value_a3[19][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4682 ( .B1(n5403), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][25] ), .Y(\CPU_Xreg_value_a3[19][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4683 ( .B1(n5414), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][24] ), .Y(\CPU_Xreg_value_a3[19][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4684 ( .B1(n5425), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][23] ), .Y(\CPU_Xreg_value_a3[19][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4685 ( .B1(n5436), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][22] ), .Y(\CPU_Xreg_value_a3[19][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4686 ( .B1(n5447), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][21] ), .Y(\CPU_Xreg_value_a3[19][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4687 ( .B1(n5458), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][20] ), .Y(\CPU_Xreg_value_a3[19][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4688 ( .B1(n5479), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][19] ), .Y(\CPU_Xreg_value_a3[19][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4689 ( .B1(n5490), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][18] ), .Y(\CPU_Xreg_value_a3[19][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4690 ( .B1(n5501), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][17] ), .Y(\CPU_Xreg_value_a3[19][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4691 ( .B1(n5512), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][16] ), .Y(\CPU_Xreg_value_a3[19][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4692 ( .B1(n5524), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][15] ), .Y(\CPU_Xreg_value_a3[19][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4693 ( .B1(n5535), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][14] ), .Y(\CPU_Xreg_value_a3[19][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4694 ( .B1(n5546), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][13] ), .Y(\CPU_Xreg_value_a3[19][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4695 ( .B1(n5557), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][12] ), .Y(\CPU_Xreg_value_a3[19][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4696 ( .B1(n5568), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][11] ), .Y(\CPU_Xreg_value_a3[19][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4697 ( .B1(n5580), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][10] ), .Y(\CPU_Xreg_value_a3[19][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4698 ( .B1(n5241), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][9] ), .Y(\CPU_Xreg_value_a3[19][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4699 ( .B1(n5263), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][8] ), .Y(\CPU_Xreg_value_a3[19][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4700 ( .B1(n5274), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][7] ), .Y(\CPU_Xreg_value_a3[19][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4701 ( .B1(n5285), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][6] ), .Y(\CPU_Xreg_value_a3[19][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4702 ( .B1(n5296), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][5] ), .Y(\CPU_Xreg_value_a3[19][5] ) );
+  sky130_fd_sc_hd__nor3_1 U4703 ( .A(CPU_rd_a3[1]), .B(n5617), .C(n5120), .Y(
+        n5177) );
+  sky130_fd_sc_hd__nor2b_1 U4704 ( .B_N(n5177), .A(n5118), .Y(n5176) );
+  sky130_fd_sc_hd__nand2_1 U4705 ( .A(n5119), .B(n5176), .Y(n5813) );
+  sky130_fd_sc_hd__a21oi_1 U4706 ( .A1(CPU_rd_a3[3]), .A2(n5177), .B1(
+        CPU_reset_a3), .Y(n5128) );
+  sky130_fd_sc_hd__or2_0 U4707 ( .A(n5125), .B(n5128), .X(n5811) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4708 ( .B1(n5327), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][31] ), .Y(\CPU_Xreg_value_a3[29][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4709 ( .B1(n5338), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][30] ), .Y(\CPU_Xreg_value_a3[29][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4710 ( .B1(n5359), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][29] ), .Y(\CPU_Xreg_value_a3[29][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4711 ( .B1(n5370), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][28] ), .Y(\CPU_Xreg_value_a3[29][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4712 ( .B1(n5381), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][27] ), .Y(\CPU_Xreg_value_a3[29][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4713 ( .B1(n5392), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][26] ), .Y(\CPU_Xreg_value_a3[29][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4714 ( .B1(n5403), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][25] ), .Y(\CPU_Xreg_value_a3[29][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4715 ( .B1(n5414), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][24] ), .Y(\CPU_Xreg_value_a3[29][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4716 ( .B1(n5425), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][23] ), .Y(\CPU_Xreg_value_a3[29][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4717 ( .B1(n5436), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][22] ), .Y(\CPU_Xreg_value_a3[29][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4718 ( .B1(n5447), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][21] ), .Y(\CPU_Xreg_value_a3[29][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4719 ( .B1(n5458), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][20] ), .Y(\CPU_Xreg_value_a3[29][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4720 ( .B1(n5479), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][19] ), .Y(\CPU_Xreg_value_a3[29][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4721 ( .B1(n5490), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][18] ), .Y(\CPU_Xreg_value_a3[29][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4722 ( .B1(n5501), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][17] ), .Y(\CPU_Xreg_value_a3[29][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4723 ( .B1(n5512), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][16] ), .Y(\CPU_Xreg_value_a3[29][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4724 ( .B1(n5524), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][15] ), .Y(\CPU_Xreg_value_a3[29][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4725 ( .B1(n5535), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][14] ), .Y(\CPU_Xreg_value_a3[29][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4726 ( .B1(n5546), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][13] ), .Y(\CPU_Xreg_value_a3[29][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4727 ( .B1(n5557), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][12] ), .Y(\CPU_Xreg_value_a3[29][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4728 ( .B1(n5568), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][11] ), .Y(\CPU_Xreg_value_a3[29][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4729 ( .B1(n5580), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][10] ), .Y(\CPU_Xreg_value_a3[29][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4730 ( .B1(n5241), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][9] ), .Y(\CPU_Xreg_value_a3[29][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4731 ( .B1(n5263), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][8] ), .Y(\CPU_Xreg_value_a3[29][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4732 ( .B1(n5274), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][7] ), .Y(\CPU_Xreg_value_a3[29][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4733 ( .B1(n5285), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][6] ), .Y(\CPU_Xreg_value_a3[29][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4734 ( .B1(n5296), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][5] ), .Y(\CPU_Xreg_value_a3[29][5] ) );
+  sky130_fd_sc_hd__nor4_1 U4735 ( .A(n5617), .B(n5622), .C(n5120), .D(n5118), 
+        .Y(n5136) );
+  sky130_fd_sc_hd__nand2_1 U4736 ( .A(n5119), .B(n5136), .Y(n5798) );
+  sky130_fd_sc_hd__nor2_1 U4737 ( .A(n5622), .B(n5120), .Y(n5121) );
+  sky130_fd_sc_hd__nand2_1 U4738 ( .A(CPU_rd_a3[2]), .B(n5121), .Y(n5122) );
+  sky130_fd_sc_hd__nand2_1 U4739 ( .A(n5123), .B(n5122), .Y(n5137) );
+  sky130_fd_sc_hd__nand2_1 U4740 ( .A(n5124), .B(n5137), .Y(n5129) );
+  sky130_fd_sc_hd__or2_0 U4741 ( .A(n5125), .B(n5129), .X(n5796) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4742 ( .B1(n5327), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][31] ), .Y(\CPU_Xreg_value_a3[31][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4743 ( .B1(n5338), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][30] ), .Y(\CPU_Xreg_value_a3[31][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4744 ( .B1(n5359), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][29] ), .Y(\CPU_Xreg_value_a3[31][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4745 ( .B1(n5370), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][28] ), .Y(\CPU_Xreg_value_a3[31][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4746 ( .B1(n5490), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][18] ), .Y(\CPU_Xreg_value_a3[17][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4747 ( .B1(n5381), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][27] ), .Y(\CPU_Xreg_value_a3[31][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4748 ( .B1(n5392), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][26] ), .Y(\CPU_Xreg_value_a3[31][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4749 ( .B1(n5403), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][25] ), .Y(\CPU_Xreg_value_a3[31][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4750 ( .B1(n5414), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][24] ), .Y(\CPU_Xreg_value_a3[31][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4751 ( .B1(n5425), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][23] ), .Y(\CPU_Xreg_value_a3[31][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4752 ( .B1(n5436), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][22] ), .Y(\CPU_Xreg_value_a3[31][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4753 ( .B1(n5447), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][21] ), .Y(\CPU_Xreg_value_a3[31][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4754 ( .B1(n5458), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][20] ), .Y(\CPU_Xreg_value_a3[31][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4755 ( .B1(n5479), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][19] ), .Y(\CPU_Xreg_value_a3[31][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4756 ( .B1(n5490), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][18] ), .Y(\CPU_Xreg_value_a3[31][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4757 ( .B1(n5501), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][17] ), .Y(\CPU_Xreg_value_a3[31][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4758 ( .B1(n5512), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][16] ), .Y(\CPU_Xreg_value_a3[31][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4759 ( .B1(n5524), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][15] ), .Y(\CPU_Xreg_value_a3[31][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4760 ( .B1(n5535), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][14] ), .Y(\CPU_Xreg_value_a3[31][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4761 ( .B1(n5546), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][13] ), .Y(\CPU_Xreg_value_a3[31][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4762 ( .B1(n5557), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][12] ), .Y(\CPU_Xreg_value_a3[31][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4763 ( .B1(n5568), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][11] ), .Y(\CPU_Xreg_value_a3[31][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4764 ( .B1(n5580), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][10] ), .Y(\CPU_Xreg_value_a3[31][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4765 ( .B1(n5241), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][9] ), .Y(\CPU_Xreg_value_a3[31][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4766 ( .B1(n5263), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][8] ), .Y(\CPU_Xreg_value_a3[31][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4767 ( .B1(n5274), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][7] ), .Y(\CPU_Xreg_value_a3[31][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4768 ( .B1(n5285), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][6] ), .Y(\CPU_Xreg_value_a3[31][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4769 ( .B1(n5296), .B2(n5798), .A1_N(n5796), 
+        .A2_N(\CPU_Xreg_value_a4[31][5] ), .Y(\CPU_Xreg_value_a3[31][5] ) );
+  sky130_fd_sc_hd__nor2_1 U4770 ( .A(CPU_rd_a3[0]), .B(n5229), .Y(n5126) );
+  sky130_fd_sc_hd__nand2_1 U4771 ( .A(n5126), .B(n5130), .Y(n5837) );
+  sky130_fd_sc_hd__nor2_1 U4772 ( .A(CPU_reset_a3), .B(n5126), .Y(n5127) );
+  sky130_fd_sc_hd__or2_0 U4773 ( .A(n5127), .B(n5131), .X(n5835) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4774 ( .B1(n5858), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][3] ), .Y(\CPU_Xreg_value_a3[16][3] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4775 ( .B1(n5862), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][2] ), .Y(\CPU_Xreg_value_a3[16][2] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4776 ( .B1(n5850), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][1] ), .Y(\CPU_Xreg_value_a3[16][1] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4777 ( .B1(n5856), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][0] ), .Y(\CPU_Xreg_value_a3[16][0] ) );
+  sky130_fd_sc_hd__nand2_1 U4778 ( .A(n5126), .B(n5132), .Y(n5830) );
+  sky130_fd_sc_hd__or2_0 U4779 ( .A(n5127), .B(n5134), .X(n5828) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4780 ( .B1(n5858), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][3] ), .Y(\CPU_Xreg_value_a3[18][3] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4781 ( .B1(n5862), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][2] ), .Y(\CPU_Xreg_value_a3[18][2] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4782 ( .B1(n5856), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][0] ), .Y(\CPU_Xreg_value_a3[18][0] ) );
+  sky130_fd_sc_hd__nand2_1 U4783 ( .A(n5176), .B(n5126), .Y(n5818) );
+  sky130_fd_sc_hd__or2_0 U4784 ( .A(n5127), .B(n5128), .X(n5816) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4785 ( .B1(n5850), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][1] ), .Y(\CPU_Xreg_value_a3[28][1] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4786 ( .B1(n5856), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][0] ), .Y(\CPU_Xreg_value_a3[28][0] ) );
+  sky130_fd_sc_hd__nand2_1 U4787 ( .A(n5126), .B(n5136), .Y(n5804) );
+  sky130_fd_sc_hd__or2_0 U4788 ( .A(n5127), .B(n5129), .X(n5802) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4789 ( .B1(n5856), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][0] ), .Y(\CPU_Xreg_value_a3[30][0] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4790 ( .B1(n5858), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][3] ), .Y(\CPU_Xreg_value_a3[17][3] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4791 ( .B1(n5862), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][2] ), .Y(\CPU_Xreg_value_a3[17][2] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4792 ( .B1(n5850), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][1] ), .Y(\CPU_Xreg_value_a3[17][1] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4793 ( .B1(n5858), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][3] ), .Y(\CPU_Xreg_value_a3[19][3] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4794 ( .B1(n5862), .B2(n5826), .A1_N(n5824), 
+        .A2_N(\CPU_Xreg_value_a4[19][2] ), .Y(\CPU_Xreg_value_a3[19][2] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4795 ( .B1(n5850), .B2(n5813), .A1_N(n5811), 
+        .A2_N(\CPU_Xreg_value_a4[29][1] ), .Y(\CPU_Xreg_value_a3[29][1] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4796 ( .B1(n5327), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][31] ), .Y(\CPU_Xreg_value_a3[16][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4797 ( .B1(n5338), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][30] ), .Y(\CPU_Xreg_value_a3[16][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4798 ( .B1(n5359), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][29] ), .Y(\CPU_Xreg_value_a3[16][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4799 ( .B1(n5370), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][28] ), .Y(\CPU_Xreg_value_a3[16][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4800 ( .B1(n5381), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][27] ), .Y(\CPU_Xreg_value_a3[16][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4801 ( .B1(n5392), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][26] ), .Y(\CPU_Xreg_value_a3[16][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4802 ( .B1(n5403), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][25] ), .Y(\CPU_Xreg_value_a3[16][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4803 ( .B1(n5414), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][24] ), .Y(\CPU_Xreg_value_a3[16][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4804 ( .B1(n5425), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][23] ), .Y(\CPU_Xreg_value_a3[16][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4805 ( .B1(n5436), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][22] ), .Y(\CPU_Xreg_value_a3[16][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4806 ( .B1(n5447), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][21] ), .Y(\CPU_Xreg_value_a3[16][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4807 ( .B1(n5458), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][20] ), .Y(\CPU_Xreg_value_a3[16][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4808 ( .B1(n5479), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][19] ), .Y(\CPU_Xreg_value_a3[16][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4809 ( .B1(n5490), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][18] ), .Y(\CPU_Xreg_value_a3[16][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4810 ( .B1(n5501), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][17] ), .Y(\CPU_Xreg_value_a3[16][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4811 ( .B1(n5512), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][16] ), .Y(\CPU_Xreg_value_a3[16][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4812 ( .B1(n5524), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][15] ), .Y(\CPU_Xreg_value_a3[16][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4813 ( .B1(n5535), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][14] ), .Y(\CPU_Xreg_value_a3[16][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4814 ( .B1(n5546), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][13] ), .Y(\CPU_Xreg_value_a3[16][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4815 ( .B1(n5557), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][12] ), .Y(\CPU_Xreg_value_a3[16][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4816 ( .B1(n5568), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][11] ), .Y(\CPU_Xreg_value_a3[16][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4817 ( .B1(n5580), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][10] ), .Y(\CPU_Xreg_value_a3[16][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4818 ( .B1(n5241), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][9] ), .Y(\CPU_Xreg_value_a3[16][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4819 ( .B1(n5263), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][8] ), .Y(\CPU_Xreg_value_a3[16][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4820 ( .B1(n5274), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][7] ), .Y(\CPU_Xreg_value_a3[16][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4821 ( .B1(n5285), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][6] ), .Y(\CPU_Xreg_value_a3[16][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4822 ( .B1(n5296), .B2(n5837), .A1_N(n5835), 
+        .A2_N(\CPU_Xreg_value_a4[16][5] ), .Y(\CPU_Xreg_value_a3[16][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4823 ( .B1(n5327), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][31] ), .Y(\CPU_Xreg_value_a3[18][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4824 ( .B1(n5338), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][30] ), .Y(\CPU_Xreg_value_a3[18][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4825 ( .B1(n5359), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][29] ), .Y(\CPU_Xreg_value_a3[18][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4826 ( .B1(n5370), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][28] ), .Y(\CPU_Xreg_value_a3[18][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4827 ( .B1(n5381), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][27] ), .Y(\CPU_Xreg_value_a3[18][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4828 ( .B1(n5392), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][26] ), .Y(\CPU_Xreg_value_a3[18][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4829 ( .B1(n5403), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][25] ), .Y(\CPU_Xreg_value_a3[18][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4830 ( .B1(n5414), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][24] ), .Y(\CPU_Xreg_value_a3[18][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4831 ( .B1(n5425), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][23] ), .Y(\CPU_Xreg_value_a3[18][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4832 ( .B1(n5436), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][22] ), .Y(\CPU_Xreg_value_a3[18][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4833 ( .B1(n5447), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][21] ), .Y(\CPU_Xreg_value_a3[18][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4834 ( .B1(n5458), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][20] ), .Y(\CPU_Xreg_value_a3[18][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4835 ( .B1(n5479), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][19] ), .Y(\CPU_Xreg_value_a3[18][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4836 ( .B1(n5490), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][18] ), .Y(\CPU_Xreg_value_a3[18][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4837 ( .B1(n5501), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][17] ), .Y(\CPU_Xreg_value_a3[18][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4838 ( .B1(n5512), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][16] ), .Y(\CPU_Xreg_value_a3[18][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4839 ( .B1(n5524), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][15] ), .Y(\CPU_Xreg_value_a3[18][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4840 ( .B1(n5535), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][14] ), .Y(\CPU_Xreg_value_a3[18][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4841 ( .B1(n5546), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][13] ), .Y(\CPU_Xreg_value_a3[18][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4842 ( .B1(n5557), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][12] ), .Y(\CPU_Xreg_value_a3[18][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4843 ( .B1(n5568), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][11] ), .Y(\CPU_Xreg_value_a3[18][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4844 ( .B1(n5580), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][10] ), .Y(\CPU_Xreg_value_a3[18][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4845 ( .B1(n5241), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][9] ), .Y(\CPU_Xreg_value_a3[18][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4846 ( .B1(n5263), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][8] ), .Y(\CPU_Xreg_value_a3[18][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4847 ( .B1(n5274), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][7] ), .Y(\CPU_Xreg_value_a3[18][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4848 ( .B1(n5285), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][6] ), .Y(\CPU_Xreg_value_a3[18][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4849 ( .B1(n5296), .B2(n5830), .A1_N(n5828), 
+        .A2_N(\CPU_Xreg_value_a4[18][5] ), .Y(\CPU_Xreg_value_a3[18][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4850 ( .B1(n5327), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][31] ), .Y(\CPU_Xreg_value_a3[28][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4851 ( .B1(n5338), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][30] ), .Y(\CPU_Xreg_value_a3[28][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4852 ( .B1(n5359), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][29] ), .Y(\CPU_Xreg_value_a3[28][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4853 ( .B1(n5370), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][28] ), .Y(\CPU_Xreg_value_a3[28][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4854 ( .B1(n5381), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][27] ), .Y(\CPU_Xreg_value_a3[28][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4855 ( .B1(n5392), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][26] ), .Y(\CPU_Xreg_value_a3[28][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4856 ( .B1(n5403), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][25] ), .Y(\CPU_Xreg_value_a3[28][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4857 ( .B1(n5414), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][24] ), .Y(\CPU_Xreg_value_a3[28][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4858 ( .B1(n5425), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][23] ), .Y(\CPU_Xreg_value_a3[28][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4859 ( .B1(n5436), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][22] ), .Y(\CPU_Xreg_value_a3[28][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4860 ( .B1(n5447), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][21] ), .Y(\CPU_Xreg_value_a3[28][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4861 ( .B1(n5458), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][20] ), .Y(\CPU_Xreg_value_a3[28][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4862 ( .B1(n5479), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][19] ), .Y(\CPU_Xreg_value_a3[28][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4863 ( .B1(n5490), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][18] ), .Y(\CPU_Xreg_value_a3[28][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4864 ( .B1(n5501), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][17] ), .Y(\CPU_Xreg_value_a3[28][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4865 ( .B1(n5512), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][16] ), .Y(\CPU_Xreg_value_a3[28][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4866 ( .B1(n5524), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][15] ), .Y(\CPU_Xreg_value_a3[28][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4867 ( .B1(n5535), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][14] ), .Y(\CPU_Xreg_value_a3[28][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4868 ( .B1(n5546), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][13] ), .Y(\CPU_Xreg_value_a3[28][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4869 ( .B1(n5557), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][12] ), .Y(\CPU_Xreg_value_a3[28][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4870 ( .B1(n5568), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][11] ), .Y(\CPU_Xreg_value_a3[28][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4871 ( .B1(n5580), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][10] ), .Y(\CPU_Xreg_value_a3[28][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4872 ( .B1(n5241), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][9] ), .Y(\CPU_Xreg_value_a3[28][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4873 ( .B1(n5263), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][8] ), .Y(\CPU_Xreg_value_a3[28][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4874 ( .B1(n5274), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][7] ), .Y(\CPU_Xreg_value_a3[28][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4875 ( .B1(n5285), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][6] ), .Y(\CPU_Xreg_value_a3[28][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4876 ( .B1(n5296), .B2(n5818), .A1_N(n5816), 
+        .A2_N(\CPU_Xreg_value_a4[28][5] ), .Y(\CPU_Xreg_value_a3[28][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4877 ( .B1(n5327), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][31] ), .Y(\CPU_Xreg_value_a3[30][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4878 ( .B1(n5338), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][30] ), .Y(\CPU_Xreg_value_a3[30][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4879 ( .B1(n5359), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][29] ), .Y(\CPU_Xreg_value_a3[30][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4880 ( .B1(n5370), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][28] ), .Y(\CPU_Xreg_value_a3[30][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4881 ( .B1(n5381), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][27] ), .Y(\CPU_Xreg_value_a3[30][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4882 ( .B1(n5392), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][26] ), .Y(\CPU_Xreg_value_a3[30][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4883 ( .B1(n5403), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][25] ), .Y(\CPU_Xreg_value_a3[30][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4884 ( .B1(n5414), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][24] ), .Y(\CPU_Xreg_value_a3[30][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4885 ( .B1(n5425), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][23] ), .Y(\CPU_Xreg_value_a3[30][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4886 ( .B1(n5436), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][22] ), .Y(\CPU_Xreg_value_a3[30][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4887 ( .B1(n5447), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][21] ), .Y(\CPU_Xreg_value_a3[30][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4888 ( .B1(n5458), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][20] ), .Y(\CPU_Xreg_value_a3[30][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4889 ( .B1(n5479), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][19] ), .Y(\CPU_Xreg_value_a3[30][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4890 ( .B1(n5490), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][18] ), .Y(\CPU_Xreg_value_a3[30][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4891 ( .B1(n5501), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][17] ), .Y(\CPU_Xreg_value_a3[30][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4892 ( .B1(n5512), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][16] ), .Y(\CPU_Xreg_value_a3[30][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4893 ( .B1(n5524), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][15] ), .Y(\CPU_Xreg_value_a3[30][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4894 ( .B1(n5535), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][14] ), .Y(\CPU_Xreg_value_a3[30][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4895 ( .B1(n5546), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][13] ), .Y(\CPU_Xreg_value_a3[30][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4896 ( .B1(n5557), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][12] ), .Y(\CPU_Xreg_value_a3[30][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4897 ( .B1(n5568), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][11] ), .Y(\CPU_Xreg_value_a3[30][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4898 ( .B1(n5580), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][10] ), .Y(\CPU_Xreg_value_a3[30][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4899 ( .B1(n5241), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][9] ), .Y(\CPU_Xreg_value_a3[30][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4900 ( .B1(n5263), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][8] ), .Y(\CPU_Xreg_value_a3[30][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4901 ( .B1(n5274), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][7] ), .Y(\CPU_Xreg_value_a3[30][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4902 ( .B1(n5285), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][6] ), .Y(\CPU_Xreg_value_a3[30][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4903 ( .B1(n5296), .B2(n5804), .A1_N(n5802), 
+        .A2_N(\CPU_Xreg_value_a4[30][5] ), .Y(\CPU_Xreg_value_a3[30][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4904 ( .B1(n5327), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][31] ), .Y(\CPU_Xreg_value_a3[17][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4905 ( .B1(n5338), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][30] ), .Y(\CPU_Xreg_value_a3[17][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4906 ( .B1(n5359), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][29] ), .Y(\CPU_Xreg_value_a3[17][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4907 ( .B1(n5370), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][28] ), .Y(\CPU_Xreg_value_a3[17][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4908 ( .B1(n5381), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][27] ), .Y(\CPU_Xreg_value_a3[17][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4909 ( .B1(n5392), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][26] ), .Y(\CPU_Xreg_value_a3[17][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4910 ( .B1(n5403), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][25] ), .Y(\CPU_Xreg_value_a3[17][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4911 ( .B1(n5414), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][24] ), .Y(\CPU_Xreg_value_a3[17][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4912 ( .B1(n5425), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][23] ), .Y(\CPU_Xreg_value_a3[17][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4913 ( .B1(n5436), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][22] ), .Y(\CPU_Xreg_value_a3[17][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4914 ( .B1(n5447), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][21] ), .Y(\CPU_Xreg_value_a3[17][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4915 ( .B1(n5458), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][20] ), .Y(\CPU_Xreg_value_a3[17][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4916 ( .B1(n5479), .B2(n5834), .A1_N(n5832), 
+        .A2_N(\CPU_Xreg_value_a4[17][19] ), .Y(\CPU_Xreg_value_a3[17][19] ) );
+  sky130_fd_sc_hd__nor2_1 U4917 ( .A(CPU_is_blt_a3), .B(n5618), .Y(n5133) );
+  sky130_fd_sc_hd__nand2_1 U4918 ( .A(n5176), .B(n5133), .Y(n5855) );
+  sky130_fd_sc_hd__nor2_1 U4919 ( .A(CPU_reset_a3), .B(n5133), .Y(n5135) );
+  sky130_fd_sc_hd__or2_0 U4920 ( .A(n5135), .B(n5128), .X(n5853) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4921 ( .B1(n5327), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][31] ), .Y(\CPU_Xreg_value_a3[13][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4922 ( .B1(n5338), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][30] ), .Y(\CPU_Xreg_value_a3[13][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4923 ( .B1(n5359), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][29] ), .Y(\CPU_Xreg_value_a3[13][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4924 ( .B1(n5370), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][28] ), .Y(\CPU_Xreg_value_a3[13][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4925 ( .B1(n5381), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][27] ), .Y(\CPU_Xreg_value_a3[13][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4926 ( .B1(n5392), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][26] ), .Y(\CPU_Xreg_value_a3[13][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4927 ( .B1(n5403), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][25] ), .Y(\CPU_Xreg_value_a3[13][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4928 ( .B1(n5414), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][24] ), .Y(\CPU_Xreg_value_a3[13][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4929 ( .B1(n5425), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][23] ), .Y(\CPU_Xreg_value_a3[13][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4930 ( .B1(n5436), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][22] ), .Y(\CPU_Xreg_value_a3[13][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4931 ( .B1(n5447), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][21] ), .Y(\CPU_Xreg_value_a3[13][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4932 ( .B1(n5458), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][20] ), .Y(\CPU_Xreg_value_a3[13][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4933 ( .B1(n5479), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][19] ), .Y(\CPU_Xreg_value_a3[13][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4934 ( .B1(n5490), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][18] ), .Y(\CPU_Xreg_value_a3[13][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4935 ( .B1(n5501), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][17] ), .Y(\CPU_Xreg_value_a3[13][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4936 ( .B1(n5512), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][16] ), .Y(\CPU_Xreg_value_a3[13][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4937 ( .B1(n5524), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][15] ), .Y(\CPU_Xreg_value_a3[13][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4938 ( .B1(n5535), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][14] ), .Y(\CPU_Xreg_value_a3[13][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4939 ( .B1(n5546), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][13] ), .Y(\CPU_Xreg_value_a3[13][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4940 ( .B1(n5557), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][12] ), .Y(\CPU_Xreg_value_a3[13][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4941 ( .B1(n5568), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][11] ), .Y(\CPU_Xreg_value_a3[13][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4942 ( .B1(n5580), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][10] ), .Y(\CPU_Xreg_value_a3[13][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4943 ( .B1(n5241), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][9] ), .Y(\CPU_Xreg_value_a3[13][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4944 ( .B1(n5263), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][8] ), .Y(\CPU_Xreg_value_a3[13][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4945 ( .B1(n5274), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][7] ), .Y(\CPU_Xreg_value_a3[13][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4946 ( .B1(n5285), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][6] ), .Y(\CPU_Xreg_value_a3[13][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4947 ( .B1(n5296), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][5] ), .Y(\CPU_Xreg_value_a3[13][5] ) );
+  sky130_fd_sc_hd__nand2_1 U4948 ( .A(n5133), .B(n5136), .Y(n5844) );
+  sky130_fd_sc_hd__or2_0 U4949 ( .A(n5135), .B(n5129), .X(n5842) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4950 ( .B1(n5327), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][31] ), .Y(\CPU_Xreg_value_a3[15][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4951 ( .B1(n5338), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][30] ), .Y(\CPU_Xreg_value_a3[15][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4952 ( .B1(n5359), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][29] ), .Y(\CPU_Xreg_value_a3[15][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4953 ( .B1(n5370), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][28] ), .Y(\CPU_Xreg_value_a3[15][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4954 ( .B1(n5381), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][27] ), .Y(\CPU_Xreg_value_a3[15][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4955 ( .B1(n5392), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][26] ), .Y(\CPU_Xreg_value_a3[15][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4956 ( .B1(n5403), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][25] ), .Y(\CPU_Xreg_value_a3[15][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4957 ( .B1(n5414), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][24] ), .Y(\CPU_Xreg_value_a3[15][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4958 ( .B1(n5425), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][23] ), .Y(\CPU_Xreg_value_a3[15][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4959 ( .B1(n5436), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][22] ), .Y(\CPU_Xreg_value_a3[15][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4960 ( .B1(n5447), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][21] ), .Y(\CPU_Xreg_value_a3[15][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4961 ( .B1(n5458), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][20] ), .Y(\CPU_Xreg_value_a3[15][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4962 ( .B1(n5479), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][19] ), .Y(\CPU_Xreg_value_a3[15][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4963 ( .B1(n5490), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][18] ), .Y(\CPU_Xreg_value_a3[15][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4964 ( .B1(n5501), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][17] ), .Y(\CPU_Xreg_value_a3[15][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4965 ( .B1(n5512), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][16] ), .Y(\CPU_Xreg_value_a3[15][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4966 ( .B1(n5524), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][15] ), .Y(\CPU_Xreg_value_a3[15][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4967 ( .B1(n5535), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][14] ), .Y(\CPU_Xreg_value_a3[15][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4968 ( .B1(n5546), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][13] ), .Y(\CPU_Xreg_value_a3[15][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4969 ( .B1(n5557), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][12] ), .Y(\CPU_Xreg_value_a3[15][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4970 ( .B1(n5568), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][11] ), .Y(\CPU_Xreg_value_a3[15][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4971 ( .B1(n5580), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][10] ), .Y(\CPU_Xreg_value_a3[15][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4972 ( .B1(n5241), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][9] ), .Y(\CPU_Xreg_value_a3[15][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4973 ( .B1(n5263), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][8] ), .Y(\CPU_Xreg_value_a3[15][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4974 ( .B1(n5274), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][7] ), .Y(\CPU_Xreg_value_a3[15][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4975 ( .B1(n5285), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][6] ), .Y(\CPU_Xreg_value_a3[15][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4976 ( .B1(n5296), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][5] ), .Y(\CPU_Xreg_value_a3[15][5] ) );
+  sky130_fd_sc_hd__nand2_1 U4977 ( .A(n5133), .B(n5130), .Y(n5821) );
+  sky130_fd_sc_hd__or2_0 U4978 ( .A(n5135), .B(n5131), .X(n5819) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4979 ( .B1(n5838), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][4] ), .Y(\CPU_Xreg_value_a3[1][4] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4980 ( .B1(n5858), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][3] ), .Y(\CPU_Xreg_value_a3[1][3] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4981 ( .B1(n5862), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][2] ), .Y(\CPU_Xreg_value_a3[1][2] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4982 ( .B1(n5850), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][1] ), .Y(\CPU_Xreg_value_a3[1][1] ) );
+  sky130_fd_sc_hd__nand2_1 U4983 ( .A(n5133), .B(n5132), .Y(n5791) );
+  sky130_fd_sc_hd__or2_0 U4984 ( .A(n5135), .B(n5134), .X(n5789) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4985 ( .B1(n5838), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][4] ), .Y(\CPU_Xreg_value_a3[3][4] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4986 ( .B1(n5858), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][3] ), .Y(\CPU_Xreg_value_a3[3][3] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4987 ( .B1(n5862), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][2] ), .Y(\CPU_Xreg_value_a3[3][2] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4988 ( .B1(n5296), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][5] ), .Y(\CPU_Xreg_value_a3[3][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4989 ( .B1(n5838), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][4] ), .Y(\CPU_Xreg_value_a3[13][4] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4990 ( .B1(n5850), .B2(n5855), .A1_N(n5853), 
+        .A2_N(\CPU_Xreg_value_a4[13][1] ), .Y(\CPU_Xreg_value_a3[13][1] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4991 ( .B1(n5838), .B2(n5844), .A1_N(n5842), 
+        .A2_N(\CPU_Xreg_value_a4[15][4] ), .Y(\CPU_Xreg_value_a3[15][4] ) );
+  sky130_fd_sc_hd__nand2_1 U4992 ( .A(n5178), .B(n5136), .Y(n5849) );
+  sky130_fd_sc_hd__a21o_1 U4993 ( .A1(CPU_rd_a3[3]), .A2(n5178), .B1(
+        CPU_reset_a3), .X(n5138) );
+  sky130_fd_sc_hd__nand2_1 U4994 ( .A(n5138), .B(n5137), .Y(n5847) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4995 ( .B1(n5241), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][9] ), .Y(\CPU_Xreg_value_a3[14][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4996 ( .B1(n5263), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][8] ), .Y(\CPU_Xreg_value_a3[14][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4997 ( .B1(n5274), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][7] ), .Y(\CPU_Xreg_value_a3[14][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4998 ( .B1(n5285), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][6] ), .Y(\CPU_Xreg_value_a3[14][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U4999 ( .B1(n5296), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][5] ), .Y(\CPU_Xreg_value_a3[14][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5000 ( .B1(n5838), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][4] ), .Y(\CPU_Xreg_value_a3[14][4] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5001 ( .B1(n5856), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][0] ), .Y(\CPU_Xreg_value_a3[14][0] ) );
+  sky130_fd_sc_hd__clkinv_1 U5002 ( .A(CPU_src2_value_a3[1]), .Y(n5212) );
+  sky130_fd_sc_hd__a21oi_1 U5003 ( .A1(CPU_src1_value_a3[1]), .A2(n5212), .B1(
+        CPU_src1_value_a3[0]), .Y(n5139) );
+  sky130_fd_sc_hd__a2bb2oi_1 U5004 ( .B1(n5139), .B2(CPU_src2_value_a3[0]), 
+        .A1_N(n5212), .A2_N(CPU_src1_value_a3[1]), .Y(n5140) );
+  sky130_fd_sc_hd__clkinv_1 U5005 ( .A(CPU_src2_value_a3[2]), .Y(n5200) );
+  sky130_fd_sc_hd__maj3_1 U5006 ( .A(CPU_src1_value_a3[2]), .B(n5140), .C(
+        n5200), .X(n5141) );
+  sky130_fd_sc_hd__clkinv_1 U5007 ( .A(CPU_src2_value_a3[3]), .Y(n5196) );
+  sky130_fd_sc_hd__maj3_1 U5008 ( .A(CPU_src1_value_a3[3]), .B(n5141), .C(
+        n5196), .X(n5142) );
+  sky130_fd_sc_hd__clkinv_1 U5009 ( .A(CPU_src2_value_a3[4]), .Y(n5194) );
+  sky130_fd_sc_hd__maj3_1 U5010 ( .A(CPU_src1_value_a3[4]), .B(n5142), .C(
+        n5194), .X(n5143) );
+  sky130_fd_sc_hd__maj3_1 U5011 ( .A(CPU_src1_value_a3[5]), .B(n5143), .C(
+        n5192), .X(n5144) );
+  sky130_fd_sc_hd__clkinv_1 U5012 ( .A(CPU_src2_value_a3[6]), .Y(n5190) );
+  sky130_fd_sc_hd__maj3_1 U5013 ( .A(CPU_src1_value_a3[6]), .B(n5144), .C(
+        n5190), .X(n5145) );
+  sky130_fd_sc_hd__clkinv_1 U5014 ( .A(CPU_src2_value_a3[7]), .Y(n5189) );
+  sky130_fd_sc_hd__maj3_1 U5015 ( .A(CPU_src1_value_a3[7]), .B(n5145), .C(
+        n5189), .X(n5146) );
+  sky130_fd_sc_hd__clkinv_1 U5016 ( .A(CPU_src2_value_a3[8]), .Y(n5188) );
+  sky130_fd_sc_hd__maj3_1 U5017 ( .A(CPU_src1_value_a3[8]), .B(n5146), .C(
+        n5188), .X(n5147) );
+  sky130_fd_sc_hd__clkinv_1 U5018 ( .A(CPU_src2_value_a3[9]), .Y(n5187) );
+  sky130_fd_sc_hd__maj3_1 U5019 ( .A(CPU_src1_value_a3[9]), .B(n5147), .C(
+        n5187), .X(n5148) );
+  sky130_fd_sc_hd__clkinv_1 U5020 ( .A(CPU_src2_value_a3[10]), .Y(n5227) );
+  sky130_fd_sc_hd__maj3_1 U5021 ( .A(CPU_src1_value_a3[10]), .B(n5148), .C(
+        n5227), .X(n5149) );
+  sky130_fd_sc_hd__clkinv_1 U5022 ( .A(CPU_src2_value_a3[11]), .Y(n5222) );
+  sky130_fd_sc_hd__maj3_1 U5023 ( .A(CPU_src1_value_a3[11]), .B(n5149), .C(
+        n5222), .X(n5150) );
+  sky130_fd_sc_hd__clkinv_1 U5024 ( .A(CPU_src2_value_a3[12]), .Y(n5220) );
+  sky130_fd_sc_hd__maj3_1 U5025 ( .A(CPU_src1_value_a3[12]), .B(n5150), .C(
+        n5220), .X(n5151) );
+  sky130_fd_sc_hd__clkinv_1 U5026 ( .A(CPU_src2_value_a3[13]), .Y(n5219) );
+  sky130_fd_sc_hd__maj3_1 U5027 ( .A(CPU_src1_value_a3[13]), .B(n5151), .C(
+        n5219), .X(n5152) );
+  sky130_fd_sc_hd__maj3_1 U5028 ( .A(CPU_src1_value_a3[14]), .B(n5152), .C(
+        n5218), .X(n5153) );
+  sky130_fd_sc_hd__clkinv_1 U5029 ( .A(CPU_src2_value_a3[15]), .Y(n5217) );
+  sky130_fd_sc_hd__maj3_1 U5030 ( .A(CPU_src1_value_a3[15]), .B(n5153), .C(
+        n5217), .X(n5154) );
+  sky130_fd_sc_hd__clkinv_1 U5031 ( .A(CPU_src2_value_a3[16]), .Y(n5216) );
+  sky130_fd_sc_hd__maj3_1 U5032 ( .A(CPU_src1_value_a3[16]), .B(n5154), .C(
+        n5216), .X(n5155) );
+  sky130_fd_sc_hd__clkinv_1 U5033 ( .A(CPU_src2_value_a3[17]), .Y(n5215) );
+  sky130_fd_sc_hd__maj3_1 U5034 ( .A(CPU_src1_value_a3[17]), .B(n5155), .C(
+        n5215), .X(n5156) );
+  sky130_fd_sc_hd__clkinv_1 U5035 ( .A(CPU_src2_value_a3[18]), .Y(n5214) );
+  sky130_fd_sc_hd__maj3_1 U5036 ( .A(CPU_src1_value_a3[18]), .B(n5156), .C(
+        n5214), .X(n5157) );
+  sky130_fd_sc_hd__clkinv_1 U5037 ( .A(CPU_src2_value_a3[19]), .Y(n5213) );
+  sky130_fd_sc_hd__maj3_1 U5038 ( .A(CPU_src1_value_a3[19]), .B(n5157), .C(
+        n5213), .X(n5158) );
+  sky130_fd_sc_hd__clkinv_1 U5039 ( .A(CPU_src2_value_a3[20]), .Y(n5210) );
+  sky130_fd_sc_hd__maj3_1 U5040 ( .A(CPU_src1_value_a3[20]), .B(n5158), .C(
+        n5210), .X(n5159) );
+  sky130_fd_sc_hd__clkinv_1 U5041 ( .A(CPU_src2_value_a3[21]), .Y(n5209) );
+  sky130_fd_sc_hd__maj3_1 U5042 ( .A(CPU_src1_value_a3[21]), .B(n5159), .C(
+        n5209), .X(n5160) );
+  sky130_fd_sc_hd__clkinv_1 U5043 ( .A(CPU_src2_value_a3[22]), .Y(n5208) );
+  sky130_fd_sc_hd__maj3_1 U5044 ( .A(CPU_src1_value_a3[22]), .B(n5160), .C(
+        n5208), .X(n5161) );
+  sky130_fd_sc_hd__clkinv_1 U5045 ( .A(CPU_src2_value_a3[23]), .Y(n5207) );
+  sky130_fd_sc_hd__maj3_1 U5046 ( .A(CPU_src1_value_a3[23]), .B(n5161), .C(
+        n5207), .X(n5162) );
+  sky130_fd_sc_hd__clkinv_1 U5047 ( .A(CPU_src2_value_a3[24]), .Y(n5206) );
+  sky130_fd_sc_hd__maj3_1 U5048 ( .A(CPU_src1_value_a3[24]), .B(n5162), .C(
+        n5206), .X(n5163) );
+  sky130_fd_sc_hd__clkinv_1 U5049 ( .A(CPU_src2_value_a3[25]), .Y(n5205) );
+  sky130_fd_sc_hd__maj3_1 U5050 ( .A(CPU_src1_value_a3[25]), .B(n5163), .C(
+        n5205), .X(n5164) );
+  sky130_fd_sc_hd__clkinv_1 U5051 ( .A(CPU_src2_value_a3[26]), .Y(n5204) );
+  sky130_fd_sc_hd__maj3_1 U5052 ( .A(CPU_src1_value_a3[26]), .B(n5164), .C(
+        n5204), .X(n5165) );
+  sky130_fd_sc_hd__clkinv_1 U5053 ( .A(CPU_src2_value_a3[27]), .Y(n5203) );
+  sky130_fd_sc_hd__maj3_1 U5054 ( .A(CPU_src1_value_a3[27]), .B(n5165), .C(
+        n5203), .X(n5166) );
+  sky130_fd_sc_hd__clkinv_1 U5055 ( .A(CPU_src2_value_a3[28]), .Y(n5202) );
+  sky130_fd_sc_hd__maj3_1 U5056 ( .A(CPU_src1_value_a3[28]), .B(n5166), .C(
+        n5202), .X(n5167) );
+  sky130_fd_sc_hd__maj3_1 U5057 ( .A(CPU_src1_value_a3[29]), .B(n5167), .C(
+        n5201), .X(n5168) );
+  sky130_fd_sc_hd__clkinv_1 U5058 ( .A(CPU_src2_value_a3[30]), .Y(n5198) );
+  sky130_fd_sc_hd__a222oi_1 U5059 ( .A1(CPU_src1_value_a3[30]), .A2(n5168), 
+        .B1(CPU_src1_value_a3[30]), .B2(n5198), .C1(n5168), .C2(n5198), .Y(
+        n5169) );
+  sky130_fd_sc_hd__clkinv_1 U5060 ( .A(CPU_src2_value_a3[31]), .Y(n5197) );
+  sky130_fd_sc_hd__maj3_1 U5061 ( .A(CPU_src1_value_a3[31]), .B(n5169), .C(
+        n5197), .X(n5170) );
+  sky130_fd_sc_hd__nand3_1 U5062 ( .A(n5171), .B(CPU_is_blt_a3), .C(n5170), 
+        .Y(n5172) );
+  sky130_fd_sc_hd__nor2_1 U5063 ( .A(CPU_imem_rd_addr_a1[1]), .B(n5779), .Y(
+        n5182) );
+  sky130_fd_sc_hd__a21oi_1 U5064 ( .A1(CPU_imem_rd_addr_a1[1]), .A2(n5779), 
+        .B1(n5182), .Y(n5173) );
+  sky130_fd_sc_hd__nor2_1 U5065 ( .A(CPU_reset_a1), .B(n5107), .Y(n5184) );
+  sky130_fd_sc_hd__clkinv_1 U5066 ( .A(n5184), .Y(n5866) );
+  sky130_fd_sc_hd__nor2_1 U5067 ( .A(CPU_reset_a1), .B(n5172), .Y(n5864) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5068 ( .B1(n5173), .B2(n5866), .A1_N(n5864), 
+        .A2_N(CPU_br_tgt_pc_a3[3]), .Y(n5078) );
+  sky130_fd_sc_hd__nand2_1 U5069 ( .A(CPU_imem_rd_addr_a1[0]), .B(
+        CPU_imem_rd_addr_a1[1]), .Y(n5769) );
+  sky130_fd_sc_hd__clkinv_1 U5070 ( .A(CPU_imem_rd_addr_a1[2]), .Y(n5181) );
+  sky130_fd_sc_hd__nor2_1 U5071 ( .A(n5769), .B(n5181), .Y(n5868) );
+  sky130_fd_sc_hd__nor2_1 U5072 ( .A(CPU_imem_rd_addr_a1[3]), .B(n5174), .Y(
+        n5111) );
+  sky130_fd_sc_hd__a21oi_1 U5073 ( .A1(CPU_imem_rd_addr_a1[3]), .A2(n5174), 
+        .B1(n5111), .Y(n5175) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5074 ( .B1(n5175), .B2(n5866), .A1_N(n5864), 
+        .A2_N(CPU_br_tgt_pc_a3[5]), .Y(n5080) );
+  sky130_fd_sc_hd__nand2_1 U5075 ( .A(CPU_imem_rd_addr_a1[2]), .B(n5779), .Y(
+        n5183) );
+  sky130_fd_sc_hd__nor2_1 U5076 ( .A(CPU_imem_rd_addr_a1[3]), .B(n5183), .Y(
+        CPU_imm_a1[0]) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5077 ( .B1(n5285), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][6] ), .Y(\CPU_Xreg_value_a3[3][6] ) );
+  sky130_fd_sc_hd__nand2_1 U5078 ( .A(n5178), .B(n5176), .Y(n5861) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5079 ( .B1(n5327), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][31] ), .Y(\CPU_Xreg_value_a3[12][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5080 ( .B1(n5338), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][30] ), .Y(\CPU_Xreg_value_a3[12][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5081 ( .B1(n5359), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][29] ), .Y(\CPU_Xreg_value_a3[12][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5082 ( .B1(n5370), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][28] ), .Y(\CPU_Xreg_value_a3[12][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5083 ( .B1(n5381), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][27] ), .Y(\CPU_Xreg_value_a3[12][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5084 ( .B1(n5392), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][26] ), .Y(\CPU_Xreg_value_a3[12][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5085 ( .B1(n5403), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][25] ), .Y(\CPU_Xreg_value_a3[12][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5086 ( .B1(n5414), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][24] ), .Y(\CPU_Xreg_value_a3[12][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5087 ( .B1(n5425), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][23] ), .Y(\CPU_Xreg_value_a3[12][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5088 ( .B1(n5436), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][22] ), .Y(\CPU_Xreg_value_a3[12][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5089 ( .B1(n5447), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][21] ), .Y(\CPU_Xreg_value_a3[12][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5090 ( .B1(n5458), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][20] ), .Y(\CPU_Xreg_value_a3[12][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5091 ( .B1(n5479), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][19] ), .Y(\CPU_Xreg_value_a3[12][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5092 ( .B1(n5490), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][18] ), .Y(\CPU_Xreg_value_a3[12][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5093 ( .B1(n5501), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][17] ), .Y(\CPU_Xreg_value_a3[12][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5094 ( .B1(n5512), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][16] ), .Y(\CPU_Xreg_value_a3[12][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5095 ( .B1(n5524), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][15] ), .Y(\CPU_Xreg_value_a3[12][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5096 ( .B1(n5535), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][14] ), .Y(\CPU_Xreg_value_a3[12][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5097 ( .B1(n5546), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][13] ), .Y(\CPU_Xreg_value_a3[12][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5098 ( .B1(n5557), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][12] ), .Y(\CPU_Xreg_value_a3[12][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5099 ( .B1(n5568), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][11] ), .Y(\CPU_Xreg_value_a3[12][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5100 ( .B1(n5580), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][10] ), .Y(\CPU_Xreg_value_a3[12][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5101 ( .B1(n5241), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][9] ), .Y(\CPU_Xreg_value_a3[12][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5102 ( .B1(n5263), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][8] ), .Y(\CPU_Xreg_value_a3[12][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5103 ( .B1(n5274), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][7] ), .Y(\CPU_Xreg_value_a3[12][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5104 ( .B1(n5285), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][6] ), .Y(\CPU_Xreg_value_a3[12][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5105 ( .B1(n5296), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][5] ), .Y(\CPU_Xreg_value_a3[12][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5106 ( .B1(n5327), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][31] ), .Y(\CPU_Xreg_value_a3[14][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5107 ( .B1(n5338), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][30] ), .Y(\CPU_Xreg_value_a3[14][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5108 ( .B1(n5359), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][29] ), .Y(\CPU_Xreg_value_a3[14][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5109 ( .B1(n5370), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][28] ), .Y(\CPU_Xreg_value_a3[14][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5110 ( .B1(n5381), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][27] ), .Y(\CPU_Xreg_value_a3[14][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5111 ( .B1(n5392), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][26] ), .Y(\CPU_Xreg_value_a3[14][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5112 ( .B1(n5403), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][25] ), .Y(\CPU_Xreg_value_a3[14][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5113 ( .B1(n5414), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][24] ), .Y(\CPU_Xreg_value_a3[14][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5114 ( .B1(n5425), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][23] ), .Y(\CPU_Xreg_value_a3[14][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5115 ( .B1(n5436), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][22] ), .Y(\CPU_Xreg_value_a3[14][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5116 ( .B1(n5447), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][21] ), .Y(\CPU_Xreg_value_a3[14][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5117 ( .B1(n5458), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][20] ), .Y(\CPU_Xreg_value_a3[14][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5118 ( .B1(n5479), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][19] ), .Y(\CPU_Xreg_value_a3[14][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5119 ( .B1(n5490), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][18] ), .Y(\CPU_Xreg_value_a3[14][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5120 ( .B1(n5501), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][17] ), .Y(\CPU_Xreg_value_a3[14][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5121 ( .B1(n5512), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][16] ), .Y(\CPU_Xreg_value_a3[14][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5122 ( .B1(n5524), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][15] ), .Y(\CPU_Xreg_value_a3[14][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5123 ( .B1(n5535), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][14] ), .Y(\CPU_Xreg_value_a3[14][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5124 ( .B1(n5546), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][13] ), .Y(\CPU_Xreg_value_a3[14][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5125 ( .B1(n5557), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][12] ), .Y(\CPU_Xreg_value_a3[14][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5126 ( .B1(n5568), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][11] ), .Y(\CPU_Xreg_value_a3[14][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5127 ( .B1(n5580), .B2(n5849), .A1_N(n5847), 
+        .A2_N(\CPU_Xreg_value_a4[14][10] ), .Y(\CPU_Xreg_value_a3[14][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5128 ( .B1(n5838), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][4] ), .Y(\CPU_Xreg_value_a3[12][4] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5129 ( .B1(n5850), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][1] ), .Y(\CPU_Xreg_value_a3[12][1] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5130 ( .B1(n5856), .B2(n5861), .A1_N(n5859), 
+        .A2_N(\CPU_Xreg_value_a4[12][0] ), .Y(\CPU_Xreg_value_a3[12][0] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5131 ( .B1(n5327), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][31] ), .Y(\CPU_Xreg_value_a3[1][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5132 ( .B1(n5338), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][30] ), .Y(\CPU_Xreg_value_a3[1][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5133 ( .B1(n5359), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][29] ), .Y(\CPU_Xreg_value_a3[1][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5134 ( .B1(n5370), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][28] ), .Y(\CPU_Xreg_value_a3[1][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5135 ( .B1(n5381), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][27] ), .Y(\CPU_Xreg_value_a3[1][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5136 ( .B1(n5392), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][26] ), .Y(\CPU_Xreg_value_a3[1][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5137 ( .B1(n5403), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][25] ), .Y(\CPU_Xreg_value_a3[1][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5138 ( .B1(n5414), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][24] ), .Y(\CPU_Xreg_value_a3[1][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5139 ( .B1(n5425), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][23] ), .Y(\CPU_Xreg_value_a3[1][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5140 ( .B1(n5436), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][22] ), .Y(\CPU_Xreg_value_a3[1][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5141 ( .B1(n5447), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][21] ), .Y(\CPU_Xreg_value_a3[1][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5142 ( .B1(n5458), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][20] ), .Y(\CPU_Xreg_value_a3[1][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5143 ( .B1(n5479), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][19] ), .Y(\CPU_Xreg_value_a3[1][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5144 ( .B1(n5490), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][18] ), .Y(\CPU_Xreg_value_a3[1][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5145 ( .B1(n5501), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][17] ), .Y(\CPU_Xreg_value_a3[1][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5146 ( .B1(n5512), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][16] ), .Y(\CPU_Xreg_value_a3[1][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5147 ( .B1(n5524), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][15] ), .Y(\CPU_Xreg_value_a3[1][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5148 ( .B1(n5535), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][14] ), .Y(\CPU_Xreg_value_a3[1][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5149 ( .B1(n5546), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][13] ), .Y(\CPU_Xreg_value_a3[1][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5150 ( .B1(n5557), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][12] ), .Y(\CPU_Xreg_value_a3[1][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5151 ( .B1(n5568), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][11] ), .Y(\CPU_Xreg_value_a3[1][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5152 ( .B1(n5580), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][10] ), .Y(\CPU_Xreg_value_a3[1][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5153 ( .B1(n5241), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][9] ), .Y(\CPU_Xreg_value_a3[1][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5154 ( .B1(n5263), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][8] ), .Y(\CPU_Xreg_value_a3[1][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5155 ( .B1(n5274), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][7] ), .Y(\CPU_Xreg_value_a3[1][7] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5156 ( .B1(n5285), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][6] ), .Y(\CPU_Xreg_value_a3[1][6] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5157 ( .B1(n5296), .B2(n5821), .A1_N(n5819), 
+        .A2_N(\CPU_Xreg_value_a4[1][5] ), .Y(\CPU_Xreg_value_a3[1][5] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5158 ( .B1(n5327), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][31] ), .Y(\CPU_Xreg_value_a3[3][31] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5159 ( .B1(n5338), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][30] ), .Y(\CPU_Xreg_value_a3[3][30] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5160 ( .B1(n5359), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][29] ), .Y(\CPU_Xreg_value_a3[3][29] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5161 ( .B1(n5370), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][28] ), .Y(\CPU_Xreg_value_a3[3][28] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5162 ( .B1(n5381), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][27] ), .Y(\CPU_Xreg_value_a3[3][27] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5163 ( .B1(n5392), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][26] ), .Y(\CPU_Xreg_value_a3[3][26] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5164 ( .B1(n5403), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][25] ), .Y(\CPU_Xreg_value_a3[3][25] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5165 ( .B1(n5414), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][24] ), .Y(\CPU_Xreg_value_a3[3][24] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5166 ( .B1(n5425), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][23] ), .Y(\CPU_Xreg_value_a3[3][23] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5167 ( .B1(n5436), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][22] ), .Y(\CPU_Xreg_value_a3[3][22] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5168 ( .B1(n5447), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][21] ), .Y(\CPU_Xreg_value_a3[3][21] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5169 ( .B1(n5458), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][20] ), .Y(\CPU_Xreg_value_a3[3][20] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5170 ( .B1(n5479), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][19] ), .Y(\CPU_Xreg_value_a3[3][19] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5171 ( .B1(n5490), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][18] ), .Y(\CPU_Xreg_value_a3[3][18] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5172 ( .B1(n5501), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][17] ), .Y(\CPU_Xreg_value_a3[3][17] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5173 ( .B1(n5512), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][16] ), .Y(\CPU_Xreg_value_a3[3][16] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5174 ( .B1(n5524), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][15] ), .Y(\CPU_Xreg_value_a3[3][15] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5175 ( .B1(n5535), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][14] ), .Y(\CPU_Xreg_value_a3[3][14] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5176 ( .B1(n5546), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][13] ), .Y(\CPU_Xreg_value_a3[3][13] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5177 ( .B1(n5557), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][12] ), .Y(\CPU_Xreg_value_a3[3][12] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5178 ( .B1(n5568), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][11] ), .Y(\CPU_Xreg_value_a3[3][11] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5179 ( .B1(n5580), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][10] ), .Y(\CPU_Xreg_value_a3[3][10] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5180 ( .B1(n5241), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][9] ), .Y(\CPU_Xreg_value_a3[3][9] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5181 ( .B1(n5263), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][8] ), .Y(\CPU_Xreg_value_a3[3][8] ) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5182 ( .B1(n5274), .B2(n5791), .A1_N(n5789), 
+        .A2_N(\CPU_Xreg_value_a4[3][7] ), .Y(\CPU_Xreg_value_a3[3][7] ) );
+  sky130_fd_sc_hd__and2_0 U5183 ( .A(CPU_is_add_a3), .B(n5179), .X(n5186) );
+  sky130_fd_sc_hd__o21ai_1 U5184 ( .A1(CPU_is_add_a3), .A2(CPU_is_sub_a3), 
+        .B1(n5179), .Y(n5224) );
+  sky130_fd_sc_hd__a22oi_1 U5185 ( .A1(CPU_src2_value_a3[0]), .A2(n5186), .B1(
+        CPU_imm_a3[0]), .B2(n5224), .Y(n5180) );
+  sky130_fd_sc_hd__o21ai_1 U5186 ( .A1(CPU_src2_value_a3[0]), .A2(n5223), .B1(
+        n5180), .Y(\r250/B_AS [0]) );
+  sky130_fd_sc_hd__nor2_1 U5187 ( .A(CPU_imem_rd_addr_a1[0]), .B(
+        CPU_imem_rd_addr_a1[1]), .Y(n5767) );
+  sky130_fd_sc_hd__nand2_1 U5188 ( .A(CPU_imem_rd_addr_a1[3]), .B(n5767), .Y(
+        n5786) );
+  sky130_fd_sc_hd__nand2_1 U5189 ( .A(CPU_imem_rd_addr_a1[2]), .B(n5182), .Y(
+        n5772) );
+  sky130_fd_sc_hd__nor2_1 U5190 ( .A(n5181), .B(n5228), .Y(n5787) );
+  sky130_fd_sc_hd__a21o_1 U5191 ( .A1(n5786), .A2(n5772), .B1(n5787), .X(n5775) );
+  sky130_fd_sc_hd__clkinv_1 U5192 ( .A(n5769), .Y(n5863) );
+  sky130_fd_sc_hd__nand3_1 U5193 ( .A(n5181), .B(n5863), .C(
+        CPU_imem_rd_addr_a1[3]), .Y(n5783) );
+  sky130_fd_sc_hd__nand2_1 U5194 ( .A(n5775), .B(n5783), .Y(n4241) );
+  sky130_fd_sc_hd__nand2_1 U5195 ( .A(n5181), .B(n5228), .Y(n5778) );
+  sky130_fd_sc_hd__nand2_1 U5196 ( .A(n5182), .B(n5771), .Y(n5776) );
+  sky130_fd_sc_hd__and3b_1 U5197 ( .B(n5776), .C(n5183), .A_N(n5787), .X(n5781) );
+  sky130_fd_sc_hd__a31oi_1 U5198 ( .A1(CPU_imem_rd_addr_a1[1]), .A2(
+        CPU_imem_rd_addr_a1[2]), .A3(n5228), .B1(n4241), .Y(n5777) );
+  sky130_fd_sc_hd__and2_0 U5199 ( .A(n5781), .B(n5777), .X(n1981) );
+  sky130_fd_sc_hd__a22o_1 U5200 ( .A1(n5184), .A2(CPU_inc_pc_a1[1]), .B1(n5864), .B2(CPU_br_tgt_pc_a3[1]), .X(n5076) );
+  sky130_fd_sc_hd__a22o_1 U5201 ( .A1(n5184), .A2(CPU_inc_pc_a1[0]), .B1(n5864), .B2(CPU_br_tgt_pc_a3[0]), .X(n5075) );
+  sky130_fd_sc_hd__a22o_1 U5202 ( .A1(n5184), .A2(n5779), .B1(n5864), .B2(
+        CPU_br_tgt_pc_a3[2]), .X(n5077) );
+  sky130_fd_sc_hd__and2_0 U5203 ( .A(CPU_imm_a2[0]), .B(CPU_inc_pc_a2[0]), .X(
+        \add_158/n1 ) );
+  sky130_fd_sc_hd__nand2_1 U5204 ( .A(CPU_imem_rd_addr_a1[1]), .B(
+        CPU_imm_a1[0]), .Y(n5774) );
+  sky130_fd_sc_hd__clkinv_1 U5205 ( .A(n4241), .Y(n5871) );
+  sky130_fd_sc_hd__nor2_1 U5206 ( .A(CPU_imm_a2[0]), .B(CPU_inc_pc_a2[0]), .Y(
+        n5185) );
+  sky130_fd_sc_hd__nor2_1 U5207 ( .A(\add_158/n1 ), .B(n5185), .Y(
+        CPU_br_tgt_pc_a2[0]) );
+  sky130_fd_sc_hd__clkinv_1 U5208 ( .A(n5186), .Y(n5226) );
+  sky130_fd_sc_hd__nand2_1 U5209 ( .A(CPU_imm_a3[10]), .B(n5224), .Y(n5221) );
+  sky130_fd_sc_hd__o221ai_1 U5210 ( .A1(CPU_src2_value_a3[9]), .A2(n5223), 
+        .B1(n5187), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [9]) );
+  sky130_fd_sc_hd__o221ai_1 U5211 ( .A1(CPU_src2_value_a3[8]), .A2(n5223), 
+        .B1(n5188), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [8]) );
+  sky130_fd_sc_hd__o221ai_1 U5212 ( .A1(CPU_src2_value_a3[7]), .A2(n5223), 
+        .B1(n5189), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [7]) );
+  sky130_fd_sc_hd__o221ai_1 U5213 ( .A1(CPU_src2_value_a3[6]), .A2(n5223), 
+        .B1(n5190), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [6]) );
+  sky130_fd_sc_hd__a22oi_1 U5214 ( .A1(CPU_imm_a3[5]), .A2(n5224), .B1(n5869), 
+        .B2(n5192), .Y(n5191) );
+  sky130_fd_sc_hd__o21ai_1 U5215 ( .A1(n5192), .A2(n5226), .B1(n5191), .Y(
+        \r250/B_AS [5]) );
+  sky130_fd_sc_hd__a22oi_1 U5216 ( .A1(CPU_imm_a3[10]), .A2(n5224), .B1(n5869), 
+        .B2(n5194), .Y(n5193) );
+  sky130_fd_sc_hd__o21ai_1 U5217 ( .A1(n5194), .A2(n5226), .B1(n5193), .Y(
+        \r250/B_AS [4]) );
+  sky130_fd_sc_hd__a22oi_1 U5218 ( .A1(CPU_imm_a3[3]), .A2(n5224), .B1(n5869), 
+        .B2(n5196), .Y(n5195) );
+  sky130_fd_sc_hd__o21ai_1 U5219 ( .A1(n5196), .A2(n5226), .B1(n5195), .Y(
+        \r250/B_AS [3]) );
+  sky130_fd_sc_hd__o221ai_1 U5220 ( .A1(CPU_src2_value_a3[31]), .A2(n5223), 
+        .B1(n5197), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [31]) );
+  sky130_fd_sc_hd__o221ai_1 U5221 ( .A1(CPU_src2_value_a3[30]), .A2(n5223), 
+        .B1(n5198), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [30]) );
+  sky130_fd_sc_hd__a22oi_1 U5222 ( .A1(CPU_imm_a3[2]), .A2(n5224), .B1(n5869), 
+        .B2(n5200), .Y(n5199) );
+  sky130_fd_sc_hd__o21ai_1 U5223 ( .A1(n5200), .A2(n5226), .B1(n5199), .Y(
+        \r250/B_AS [2]) );
+  sky130_fd_sc_hd__o221ai_1 U5224 ( .A1(CPU_src2_value_a3[29]), .A2(n5223), 
+        .B1(n5201), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [29]) );
+  sky130_fd_sc_hd__o221ai_1 U5225 ( .A1(CPU_src2_value_a3[28]), .A2(n5223), 
+        .B1(n5202), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [28]) );
+  sky130_fd_sc_hd__o221ai_1 U5226 ( .A1(CPU_src2_value_a3[27]), .A2(n5223), 
+        .B1(n5203), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [27]) );
+  sky130_fd_sc_hd__o221ai_1 U5227 ( .A1(CPU_src2_value_a3[26]), .A2(n5223), 
+        .B1(n5204), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [26]) );
+  sky130_fd_sc_hd__o221ai_1 U5228 ( .A1(CPU_src2_value_a3[25]), .A2(n5223), 
+        .B1(n5205), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [25]) );
+  sky130_fd_sc_hd__o221ai_1 U5229 ( .A1(CPU_src2_value_a3[24]), .A2(n5223), 
+        .B1(n5206), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [24]) );
+  sky130_fd_sc_hd__o221ai_1 U5230 ( .A1(CPU_src2_value_a3[23]), .A2(n5223), 
+        .B1(n5207), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [23]) );
+  sky130_fd_sc_hd__o221ai_1 U5231 ( .A1(CPU_src2_value_a3[22]), .A2(n5223), 
+        .B1(n5208), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [22]) );
+  sky130_fd_sc_hd__o221ai_1 U5232 ( .A1(CPU_src2_value_a3[21]), .A2(n5223), 
+        .B1(n5209), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [21]) );
+  sky130_fd_sc_hd__o221ai_1 U5233 ( .A1(CPU_src2_value_a3[20]), .A2(n5223), 
+        .B1(n5210), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [20]) );
+  sky130_fd_sc_hd__a22oi_1 U5234 ( .A1(CPU_imm_a3[1]), .A2(n5224), .B1(n5869), 
+        .B2(n5212), .Y(n5211) );
+  sky130_fd_sc_hd__o21ai_1 U5235 ( .A1(n5212), .A2(n5226), .B1(n5211), .Y(
+        \r250/B_AS [1]) );
+  sky130_fd_sc_hd__o221ai_1 U5236 ( .A1(CPU_src2_value_a3[19]), .A2(n5223), 
+        .B1(n5213), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [19]) );
+  sky130_fd_sc_hd__o221ai_1 U5237 ( .A1(CPU_src2_value_a3[18]), .A2(n5223), 
+        .B1(n5214), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [18]) );
+  sky130_fd_sc_hd__o221ai_1 U5238 ( .A1(CPU_src2_value_a3[17]), .A2(n5223), 
+        .B1(n5215), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [17]) );
+  sky130_fd_sc_hd__o221ai_1 U5239 ( .A1(CPU_src2_value_a3[16]), .A2(n5223), 
+        .B1(n5216), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [16]) );
+  sky130_fd_sc_hd__o221ai_1 U5240 ( .A1(CPU_src2_value_a3[15]), .A2(n5223), 
+        .B1(n5217), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [15]) );
+  sky130_fd_sc_hd__o221ai_1 U5241 ( .A1(CPU_src2_value_a3[14]), .A2(n5223), 
+        .B1(n5218), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [14]) );
+  sky130_fd_sc_hd__o221ai_1 U5242 ( .A1(CPU_src2_value_a3[13]), .A2(n5223), 
+        .B1(n5219), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [13]) );
+  sky130_fd_sc_hd__o221ai_1 U5243 ( .A1(CPU_src2_value_a3[12]), .A2(n5223), 
+        .B1(n5220), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [12]) );
+  sky130_fd_sc_hd__o221ai_1 U5244 ( .A1(CPU_src2_value_a3[11]), .A2(n5223), 
+        .B1(n5222), .B2(n5226), .C1(n5221), .Y(\r250/B_AS [11]) );
+  sky130_fd_sc_hd__a22oi_1 U5245 ( .A1(CPU_imm_a3[10]), .A2(n5224), .B1(n5869), 
+        .B2(n5227), .Y(n5225) );
+  sky130_fd_sc_hd__o21ai_1 U5246 ( .A1(n5227), .A2(n5226), .B1(n5225), .Y(
+        \r250/B_AS [10]) );
+  sky130_fd_sc_hd__nand2_1 U5247 ( .A(n5228), .B(n5772), .Y(n5782) );
+  sky130_fd_sc_hd__nor2_1 U5248 ( .A(n5781), .B(n5782), .Y(n1982) );
+  sky130_fd_sc_hd__clkinv_1 U5249 ( .A(N56), .Y(n5252) );
+  sky130_fd_sc_hd__nand2_1 U5250 ( .A(N54), .B(n5252), .Y(n5242) );
+  sky130_fd_sc_hd__o2bb2ai_1 U5251 ( .B1(CPU_imm_a2[1]), .B2(n5229), .A1_N(
+        CPU_imm_a2[1]), .A2_N(n5229), .Y(n5234) );
+  sky130_fd_sc_hd__o22ai_1 U5252 ( .A1(CPU_rd_a3[0]), .A2(n5243), .B1(n5618), 
+        .B2(N54), .Y(n5233) );
+  sky130_fd_sc_hd__o21ai_1 U5253 ( .A1(CPU_rd_a3[3]), .A2(n5617), .B1(n5230), 
+        .Y(n5616) );
+  sky130_fd_sc_hd__o22ai_1 U5254 ( .A1(N56), .A2(CPU_rd_a3[3]), .B1(n5252), 
+        .B2(n5617), .Y(n5231) );
+  sky130_fd_sc_hd__o221ai_1 U5255 ( .A1(N55), .A2(n5622), .B1(n5236), .B2(
+        CPU_rd_a3[1]), .C1(n5231), .Y(n5232) );
+  sky130_fd_sc_hd__nor4_1 U5256 ( .A(n5234), .B(n5233), .C(n5616), .D(n5232), 
+        .Y(n5235) );
+  sky130_fd_sc_hd__nand2_1 U5257 ( .A(n5597), .B(CPU_imm_a2[1]), .Y(n5249) );
+  sky130_fd_sc_hd__clkinv_1 U5258 ( .A(n5249), .Y(n5238) );
+  sky130_fd_sc_hd__nand2_1 U5259 ( .A(n5238), .B(n5236), .Y(n5244) );
+  sky130_fd_sc_hd__nor2_1 U5260 ( .A(n5242), .B(n5244), .Y(n5591) );
+  sky130_fd_sc_hd__nor2_1 U5261 ( .A(CPU_imm_a2[1]), .B(n5235), .Y(n5237) );
+  sky130_fd_sc_hd__nand2_1 U5262 ( .A(N55), .B(n5237), .Y(n5245) );
+  sky130_fd_sc_hd__nor2_1 U5263 ( .A(n5242), .B(n5245), .Y(n5590) );
+  sky130_fd_sc_hd__a22oi_1 U5264 ( .A1(\CPU_Xreg_value_a4[17][9] ), .A2(n5591), 
+        .B1(\CPU_Xreg_value_a4[3][9] ), .B2(n5590), .Y(n5261) );
+  sky130_fd_sc_hd__nor4_1 U5265 ( .A(N55), .B(N56), .C(N54), .D(n5249), .Y(
+        n5522) );
+  sky130_fd_sc_hd__nand2_1 U5266 ( .A(N56), .B(N54), .Y(n5246) );
+  sky130_fd_sc_hd__nand2_1 U5267 ( .A(n5237), .B(n5236), .Y(n5248) );
+  sky130_fd_sc_hd__nor2_1 U5268 ( .A(n5246), .B(n5248), .Y(n5592) );
+  sky130_fd_sc_hd__a22oi_1 U5269 ( .A1(\CPU_Xreg_value_a4[16][9] ), .A2(n5522), 
+        .B1(\CPU_Xreg_value_a4[13][9] ), .B2(n5592), .Y(n5260) );
+  sky130_fd_sc_hd__nand2_1 U5270 ( .A(N55), .B(n5238), .Y(n5239) );
+  sky130_fd_sc_hd__nor2_1 U5271 ( .A(n5239), .B(n5242), .Y(n5612) );
+  sky130_fd_sc_hd__nor2_1 U5272 ( .A(n5239), .B(n5246), .Y(n5595) );
+  sky130_fd_sc_hd__nor3_1 U5273 ( .A(N56), .B(N54), .C(n5245), .Y(n5578) );
+  sky130_fd_sc_hd__clkbuf_1 U5274 ( .A(n5578), .X(n5594) );
+  sky130_fd_sc_hd__a22oi_1 U5275 ( .A1(\CPU_Xreg_value_a4[31][9] ), .A2(n5595), 
+        .B1(\CPU_Xreg_value_a4[2][9] ), .B2(n5594), .Y(n5240) );
+  sky130_fd_sc_hd__o21ai_1 U5276 ( .A1(n5597), .A2(n5241), .B1(n5240), .Y(
+        n5258) );
+  sky130_fd_sc_hd__nor2_1 U5277 ( .A(n5242), .B(n5248), .Y(n5599) );
+  sky130_fd_sc_hd__nor2_1 U5278 ( .A(n5246), .B(n5244), .Y(n5598) );
+  sky130_fd_sc_hd__a22oi_1 U5279 ( .A1(\CPU_Xreg_value_a4[1][9] ), .A2(n5599), 
+        .B1(\CPU_Xreg_value_a4[29][9] ), .B2(n5598), .Y(n5256) );
+  sky130_fd_sc_hd__nand2_1 U5280 ( .A(N56), .B(n5243), .Y(n5247) );
+  sky130_fd_sc_hd__nor2_1 U5281 ( .A(n5244), .B(n5247), .Y(n5601) );
+  sky130_fd_sc_hd__nor2_1 U5282 ( .A(n5245), .B(n5247), .Y(n5600) );
+  sky130_fd_sc_hd__a22oi_1 U5283 ( .A1(\CPU_Xreg_value_a4[28][9] ), .A2(n5601), 
+        .B1(\CPU_Xreg_value_a4[14][9] ), .B2(n5600), .Y(n5255) );
+  sky130_fd_sc_hd__nor2_1 U5284 ( .A(n5246), .B(n5245), .Y(n5603) );
+  sky130_fd_sc_hd__nor2_1 U5285 ( .A(n5248), .B(n5247), .Y(n5602) );
+  sky130_fd_sc_hd__a22oi_1 U5286 ( .A1(\CPU_Xreg_value_a4[15][9] ), .A2(n5603), 
+        .B1(\CPU_Xreg_value_a4[12][9] ), .B2(n5602), .Y(n5254) );
+  sky130_fd_sc_hd__nor2_1 U5287 ( .A(N54), .B(n5249), .Y(n5250) );
+  sky130_fd_sc_hd__nand2_1 U5288 ( .A(N55), .B(n5250), .Y(n5251) );
+  sky130_fd_sc_hd__nor2_1 U5289 ( .A(N56), .B(n5251), .Y(n5605) );
+  sky130_fd_sc_hd__nor2_1 U5290 ( .A(n5252), .B(n5251), .Y(n5604) );
+  sky130_fd_sc_hd__a22oi_1 U5291 ( .A1(\CPU_Xreg_value_a4[18][9] ), .A2(n5605), 
+        .B1(\CPU_Xreg_value_a4[30][9] ), .B2(n5604), .Y(n5253) );
+  sky130_fd_sc_hd__nand4_1 U5292 ( .A(n5256), .B(n5255), .C(n5254), .D(n5253), 
+        .Y(n5257) );
+  sky130_fd_sc_hd__a211oi_1 U5293 ( .A1(\CPU_Xreg_value_a4[19][9] ), .A2(n5612), .B1(n5258), .C1(n5257), .Y(n5259) );
+  sky130_fd_sc_hd__nand3_1 U5294 ( .A(n5261), .B(n5260), .C(n5259), .Y(
+        CPU_src2_value_a2[9]) );
+  sky130_fd_sc_hd__a22oi_1 U5295 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][8] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][8] ), .Y(n5272) );
+  sky130_fd_sc_hd__a22oi_1 U5296 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][8] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][8] ), .Y(n5271) );
+  sky130_fd_sc_hd__a22oi_1 U5297 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][8] ), 
+        .B1(n5594), .B2(\CPU_Xreg_value_a4[2][8] ), .Y(n5262) );
+  sky130_fd_sc_hd__o21ai_1 U5298 ( .A1(n5597), .A2(n5263), .B1(n5262), .Y(
+        n5269) );
+  sky130_fd_sc_hd__a22oi_1 U5299 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][8] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][8] ), .Y(n5267) );
+  sky130_fd_sc_hd__a22oi_1 U5300 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][8] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][8] ), .Y(n5266) );
+  sky130_fd_sc_hd__a22oi_1 U5301 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][8] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][8] ), .Y(n5265) );
+  sky130_fd_sc_hd__a22oi_1 U5302 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][8] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][8] ), .Y(n5264) );
+  sky130_fd_sc_hd__nand4_1 U5303 ( .A(n5267), .B(n5266), .C(n5265), .D(n5264), 
+        .Y(n5268) );
+  sky130_fd_sc_hd__a211oi_1 U5304 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][8] ), .B1(n5269), .C1(n5268), .Y(n5270) );
+  sky130_fd_sc_hd__nand3_1 U5305 ( .A(n5272), .B(n5271), .C(n5270), .Y(
+        CPU_src2_value_a2[8]) );
+  sky130_fd_sc_hd__a22oi_1 U5306 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][7] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][7] ), .Y(n5283) );
+  sky130_fd_sc_hd__clkbuf_1 U5307 ( .A(n5522), .X(n5593) );
+  sky130_fd_sc_hd__a22oi_1 U5308 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][7] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][7] ), .Y(n5282) );
+  sky130_fd_sc_hd__a22oi_1 U5309 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][7] ), 
+        .B1(n5594), .B2(\CPU_Xreg_value_a4[2][7] ), .Y(n5273) );
+  sky130_fd_sc_hd__o21ai_1 U5310 ( .A1(n5597), .A2(n5274), .B1(n5273), .Y(
+        n5280) );
+  sky130_fd_sc_hd__a22oi_1 U5311 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][7] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][7] ), .Y(n5278) );
+  sky130_fd_sc_hd__a22oi_1 U5312 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][7] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][7] ), .Y(n5277) );
+  sky130_fd_sc_hd__a22oi_1 U5313 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][7] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][7] ), .Y(n5276) );
+  sky130_fd_sc_hd__a22oi_1 U5314 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][7] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][7] ), .Y(n5275) );
+  sky130_fd_sc_hd__nand4_1 U5315 ( .A(n5278), .B(n5277), .C(n5276), .D(n5275), 
+        .Y(n5279) );
+  sky130_fd_sc_hd__a211oi_1 U5316 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][7] ), .B1(n5280), .C1(n5279), .Y(n5281) );
+  sky130_fd_sc_hd__nand3_1 U5317 ( .A(n5283), .B(n5282), .C(n5281), .Y(
+        CPU_src2_value_a2[7]) );
+  sky130_fd_sc_hd__a22oi_1 U5318 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][6] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][6] ), .Y(n5294) );
+  sky130_fd_sc_hd__a22oi_1 U5319 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][6] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][6] ), .Y(n5293) );
+  sky130_fd_sc_hd__a22oi_1 U5320 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][6] ), 
+        .B1(n5594), .B2(\CPU_Xreg_value_a4[2][6] ), .Y(n5284) );
+  sky130_fd_sc_hd__o21ai_1 U5321 ( .A1(n5597), .A2(n5285), .B1(n5284), .Y(
+        n5291) );
+  sky130_fd_sc_hd__a22oi_1 U5322 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][6] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][6] ), .Y(n5289) );
+  sky130_fd_sc_hd__a22oi_1 U5323 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][6] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][6] ), .Y(n5288) );
+  sky130_fd_sc_hd__a22oi_1 U5324 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][6] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][6] ), .Y(n5287) );
+  sky130_fd_sc_hd__a22oi_1 U5325 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][6] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][6] ), .Y(n5286) );
+  sky130_fd_sc_hd__nand4_1 U5326 ( .A(n5289), .B(n5288), .C(n5287), .D(n5286), 
+        .Y(n5290) );
+  sky130_fd_sc_hd__a211oi_1 U5327 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][6] ), .B1(n5291), .C1(n5290), .Y(n5292) );
+  sky130_fd_sc_hd__nand3_1 U5328 ( .A(n5294), .B(n5293), .C(n5292), .Y(
+        CPU_src2_value_a2[6]) );
+  sky130_fd_sc_hd__a22oi_1 U5329 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][5] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][5] ), .Y(n5305) );
+  sky130_fd_sc_hd__a22oi_1 U5330 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][5] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][5] ), .Y(n5304) );
+  sky130_fd_sc_hd__a22oi_1 U5331 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][5] ), 
+        .B1(n5594), .B2(\CPU_Xreg_value_a4[2][5] ), .Y(n5295) );
+  sky130_fd_sc_hd__o21ai_1 U5332 ( .A1(n5597), .A2(n5296), .B1(n5295), .Y(
+        n5302) );
+  sky130_fd_sc_hd__a22oi_1 U5333 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][5] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][5] ), .Y(n5300) );
+  sky130_fd_sc_hd__a22oi_1 U5334 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][5] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][5] ), .Y(n5299) );
+  sky130_fd_sc_hd__a22oi_1 U5335 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][5] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][5] ), .Y(n5298) );
+  sky130_fd_sc_hd__a22oi_1 U5336 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][5] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][5] ), .Y(n5297) );
+  sky130_fd_sc_hd__nand4_1 U5337 ( .A(n5300), .B(n5299), .C(n5298), .D(n5297), 
+        .Y(n5301) );
+  sky130_fd_sc_hd__a211oi_1 U5338 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][5] ), .B1(n5302), .C1(n5301), .Y(n5303) );
+  sky130_fd_sc_hd__nand3_1 U5339 ( .A(n5305), .B(n5304), .C(n5303), .Y(
+        CPU_src2_value_a2[5]) );
+  sky130_fd_sc_hd__a22oi_1 U5340 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][4] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][4] ), .Y(n5315) );
+  sky130_fd_sc_hd__a22oi_1 U5341 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][4] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][4] ), .Y(n5314) );
+  sky130_fd_sc_hd__a22oi_1 U5342 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][4] ), 
+        .B1(n5594), .B2(\CPU_Xreg_value_a4[2][4] ), .Y(n5306) );
+  sky130_fd_sc_hd__o21ai_1 U5343 ( .A1(n5597), .A2(n5838), .B1(n5306), .Y(
+        n5312) );
+  sky130_fd_sc_hd__a22oi_1 U5344 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][4] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][4] ), .Y(n5310) );
+  sky130_fd_sc_hd__a22oi_1 U5345 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][4] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][4] ), .Y(n5309) );
+  sky130_fd_sc_hd__a22oi_1 U5346 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][4] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][4] ), .Y(n5308) );
+  sky130_fd_sc_hd__a22oi_1 U5347 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][4] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][4] ), .Y(n5307) );
+  sky130_fd_sc_hd__nand4_1 U5348 ( .A(n5310), .B(n5309), .C(n5308), .D(n5307), 
+        .Y(n5311) );
+  sky130_fd_sc_hd__a211oi_1 U5349 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][4] ), .B1(n5312), .C1(n5311), .Y(n5313) );
+  sky130_fd_sc_hd__nand3_1 U5350 ( .A(n5315), .B(n5314), .C(n5313), .Y(
+        CPU_src2_value_a2[4]) );
+  sky130_fd_sc_hd__a22oi_1 U5351 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][3] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][3] ), .Y(n5325) );
+  sky130_fd_sc_hd__a22oi_1 U5352 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][3] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][3] ), .Y(n5324) );
+  sky130_fd_sc_hd__a22oi_1 U5353 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][3] ), 
+        .B1(n5594), .B2(\CPU_Xreg_value_a4[2][3] ), .Y(n5316) );
+  sky130_fd_sc_hd__o21ai_1 U5354 ( .A1(n5597), .A2(n5858), .B1(n5316), .Y(
+        n5322) );
+  sky130_fd_sc_hd__a22oi_1 U5355 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][3] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][3] ), .Y(n5320) );
+  sky130_fd_sc_hd__a22oi_1 U5356 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][3] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][3] ), .Y(n5319) );
+  sky130_fd_sc_hd__a22oi_1 U5357 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][3] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][3] ), .Y(n5318) );
+  sky130_fd_sc_hd__a22oi_1 U5358 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][3] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][3] ), .Y(n5317) );
+  sky130_fd_sc_hd__nand4_1 U5359 ( .A(n5320), .B(n5319), .C(n5318), .D(n5317), 
+        .Y(n5321) );
+  sky130_fd_sc_hd__a211oi_1 U5360 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][3] ), .B1(n5322), .C1(n5321), .Y(n5323) );
+  sky130_fd_sc_hd__nand3_1 U5361 ( .A(n5325), .B(n5324), .C(n5323), .Y(
+        CPU_src2_value_a2[3]) );
+  sky130_fd_sc_hd__a22oi_1 U5362 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][31] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][31] ), .Y(n5336) );
+  sky130_fd_sc_hd__a22oi_1 U5363 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][31] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][31] ), .Y(n5335) );
+  sky130_fd_sc_hd__a22oi_1 U5364 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][31] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][31] ), .Y(n5326) );
+  sky130_fd_sc_hd__o21ai_1 U5365 ( .A1(n5597), .A2(n5327), .B1(n5326), .Y(
+        n5333) );
+  sky130_fd_sc_hd__a22oi_1 U5366 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][31] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][31] ), .Y(n5331) );
+  sky130_fd_sc_hd__a22oi_1 U5367 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][31] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][31] ), .Y(n5330) );
+  sky130_fd_sc_hd__a22oi_1 U5368 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][31] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][31] ), .Y(n5329) );
+  sky130_fd_sc_hd__a22oi_1 U5369 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][31] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][31] ), .Y(n5328) );
+  sky130_fd_sc_hd__nand4_1 U5370 ( .A(n5331), .B(n5330), .C(n5329), .D(n5328), 
+        .Y(n5332) );
+  sky130_fd_sc_hd__a211oi_1 U5371 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][31] ), .B1(n5333), .C1(n5332), .Y(n5334) );
+  sky130_fd_sc_hd__nand3_1 U5372 ( .A(n5336), .B(n5335), .C(n5334), .Y(
+        CPU_src2_value_a2[31]) );
+  sky130_fd_sc_hd__a22oi_1 U5373 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][30] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][30] ), .Y(n5347) );
+  sky130_fd_sc_hd__a22oi_1 U5374 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][30] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][30] ), .Y(n5346) );
+  sky130_fd_sc_hd__a22oi_1 U5375 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][30] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][30] ), .Y(n5337) );
+  sky130_fd_sc_hd__o21ai_1 U5376 ( .A1(n5597), .A2(n5338), .B1(n5337), .Y(
+        n5344) );
+  sky130_fd_sc_hd__a22oi_1 U5377 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][30] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][30] ), .Y(n5342) );
+  sky130_fd_sc_hd__a22oi_1 U5378 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][30] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][30] ), .Y(n5341) );
+  sky130_fd_sc_hd__a22oi_1 U5379 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][30] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][30] ), .Y(n5340) );
+  sky130_fd_sc_hd__a22oi_1 U5380 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][30] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][30] ), .Y(n5339) );
+  sky130_fd_sc_hd__nand4_1 U5381 ( .A(n5342), .B(n5341), .C(n5340), .D(n5339), 
+        .Y(n5343) );
+  sky130_fd_sc_hd__a211oi_1 U5382 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][30] ), .B1(n5344), .C1(n5343), .Y(n5345) );
+  sky130_fd_sc_hd__nand3_1 U5383 ( .A(n5347), .B(n5346), .C(n5345), .Y(
+        CPU_src2_value_a2[30]) );
+  sky130_fd_sc_hd__a22oi_1 U5384 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][2] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][2] ), .Y(n5357) );
+  sky130_fd_sc_hd__a22oi_1 U5385 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][2] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][2] ), .Y(n5356) );
+  sky130_fd_sc_hd__a22oi_1 U5386 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][2] ), 
+        .B1(n5578), .B2(\CPU_Xreg_value_a4[2][2] ), .Y(n5348) );
+  sky130_fd_sc_hd__o21ai_1 U5387 ( .A1(n5597), .A2(n5862), .B1(n5348), .Y(
+        n5354) );
+  sky130_fd_sc_hd__a22oi_1 U5388 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][2] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][2] ), .Y(n5352) );
+  sky130_fd_sc_hd__a22oi_1 U5389 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][2] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][2] ), .Y(n5351) );
+  sky130_fd_sc_hd__a22oi_1 U5390 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][2] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][2] ), .Y(n5350) );
+  sky130_fd_sc_hd__a22oi_1 U5391 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][2] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][2] ), .Y(n5349) );
+  sky130_fd_sc_hd__nand4_1 U5392 ( .A(n5352), .B(n5351), .C(n5350), .D(n5349), 
+        .Y(n5353) );
+  sky130_fd_sc_hd__a211oi_1 U5393 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][2] ), .B1(n5354), .C1(n5353), .Y(n5355) );
+  sky130_fd_sc_hd__nand3_1 U5394 ( .A(n5357), .B(n5356), .C(n5355), .Y(
+        CPU_src2_value_a2[2]) );
+  sky130_fd_sc_hd__a22oi_1 U5395 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][29] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][29] ), .Y(n5368) );
+  sky130_fd_sc_hd__a22oi_1 U5396 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][29] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][29] ), .Y(n5367) );
+  sky130_fd_sc_hd__a22oi_1 U5397 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][29] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][29] ), .Y(n5358) );
+  sky130_fd_sc_hd__o21ai_1 U5398 ( .A1(n5597), .A2(n5359), .B1(n5358), .Y(
+        n5365) );
+  sky130_fd_sc_hd__a22oi_1 U5399 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][29] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][29] ), .Y(n5363) );
+  sky130_fd_sc_hd__a22oi_1 U5400 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][29] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][29] ), .Y(n5362) );
+  sky130_fd_sc_hd__a22oi_1 U5401 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][29] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][29] ), .Y(n5361) );
+  sky130_fd_sc_hd__a22oi_1 U5402 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][29] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][29] ), .Y(n5360) );
+  sky130_fd_sc_hd__nand4_1 U5403 ( .A(n5363), .B(n5362), .C(n5361), .D(n5360), 
+        .Y(n5364) );
+  sky130_fd_sc_hd__a211oi_1 U5404 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][29] ), .B1(n5365), .C1(n5364), .Y(n5366) );
+  sky130_fd_sc_hd__nand3_1 U5405 ( .A(n5368), .B(n5367), .C(n5366), .Y(
+        CPU_src2_value_a2[29]) );
+  sky130_fd_sc_hd__a22oi_1 U5406 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][28] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][28] ), .Y(n5379) );
+  sky130_fd_sc_hd__a22oi_1 U5407 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][28] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][28] ), .Y(n5378) );
+  sky130_fd_sc_hd__a22oi_1 U5408 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][28] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][28] ), .Y(n5369) );
+  sky130_fd_sc_hd__o21ai_1 U5409 ( .A1(n5597), .A2(n5370), .B1(n5369), .Y(
+        n5376) );
+  sky130_fd_sc_hd__a22oi_1 U5410 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][28] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][28] ), .Y(n5374) );
+  sky130_fd_sc_hd__a22oi_1 U5411 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][28] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][28] ), .Y(n5373) );
+  sky130_fd_sc_hd__a22oi_1 U5412 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][28] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][28] ), .Y(n5372) );
+  sky130_fd_sc_hd__a22oi_1 U5413 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][28] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][28] ), .Y(n5371) );
+  sky130_fd_sc_hd__nand4_1 U5414 ( .A(n5374), .B(n5373), .C(n5372), .D(n5371), 
+        .Y(n5375) );
+  sky130_fd_sc_hd__a211oi_1 U5415 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][28] ), .B1(n5376), .C1(n5375), .Y(n5377) );
+  sky130_fd_sc_hd__nand3_1 U5416 ( .A(n5379), .B(n5378), .C(n5377), .Y(
+        CPU_src2_value_a2[28]) );
+  sky130_fd_sc_hd__a22oi_1 U5417 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][27] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][27] ), .Y(n5390) );
+  sky130_fd_sc_hd__a22oi_1 U5418 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][27] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][27] ), .Y(n5389) );
+  sky130_fd_sc_hd__a22oi_1 U5419 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][27] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][27] ), .Y(n5380) );
+  sky130_fd_sc_hd__o21ai_1 U5420 ( .A1(n5597), .A2(n5381), .B1(n5380), .Y(
+        n5387) );
+  sky130_fd_sc_hd__a22oi_1 U5421 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][27] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][27] ), .Y(n5385) );
+  sky130_fd_sc_hd__a22oi_1 U5422 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][27] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][27] ), .Y(n5384) );
+  sky130_fd_sc_hd__a22oi_1 U5423 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][27] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][27] ), .Y(n5383) );
+  sky130_fd_sc_hd__a22oi_1 U5424 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][27] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][27] ), .Y(n5382) );
+  sky130_fd_sc_hd__nand4_1 U5425 ( .A(n5385), .B(n5384), .C(n5383), .D(n5382), 
+        .Y(n5386) );
+  sky130_fd_sc_hd__a211oi_1 U5426 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][27] ), .B1(n5387), .C1(n5386), .Y(n5388) );
+  sky130_fd_sc_hd__nand3_1 U5427 ( .A(n5390), .B(n5389), .C(n5388), .Y(
+        CPU_src2_value_a2[27]) );
+  sky130_fd_sc_hd__a22oi_1 U5428 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][26] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][26] ), .Y(n5401) );
+  sky130_fd_sc_hd__a22oi_1 U5429 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][26] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][26] ), .Y(n5400) );
+  sky130_fd_sc_hd__a22oi_1 U5430 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][26] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][26] ), .Y(n5391) );
+  sky130_fd_sc_hd__o21ai_1 U5431 ( .A1(n5597), .A2(n5392), .B1(n5391), .Y(
+        n5398) );
+  sky130_fd_sc_hd__a22oi_1 U5432 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][26] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][26] ), .Y(n5396) );
+  sky130_fd_sc_hd__a22oi_1 U5433 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][26] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][26] ), .Y(n5395) );
+  sky130_fd_sc_hd__a22oi_1 U5434 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][26] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][26] ), .Y(n5394) );
+  sky130_fd_sc_hd__a22oi_1 U5435 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][26] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][26] ), .Y(n5393) );
+  sky130_fd_sc_hd__nand4_1 U5436 ( .A(n5396), .B(n5395), .C(n5394), .D(n5393), 
+        .Y(n5397) );
+  sky130_fd_sc_hd__a211oi_1 U5437 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][26] ), .B1(n5398), .C1(n5397), .Y(n5399) );
+  sky130_fd_sc_hd__nand3_1 U5438 ( .A(n5401), .B(n5400), .C(n5399), .Y(
+        CPU_src2_value_a2[26]) );
+  sky130_fd_sc_hd__a22oi_1 U5439 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][25] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][25] ), .Y(n5412) );
+  sky130_fd_sc_hd__a22oi_1 U5440 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][25] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][25] ), .Y(n5411) );
+  sky130_fd_sc_hd__a22oi_1 U5441 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][25] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][25] ), .Y(n5402) );
+  sky130_fd_sc_hd__o21ai_1 U5442 ( .A1(n5597), .A2(n5403), .B1(n5402), .Y(
+        n5409) );
+  sky130_fd_sc_hd__a22oi_1 U5443 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][25] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][25] ), .Y(n5407) );
+  sky130_fd_sc_hd__a22oi_1 U5444 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][25] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][25] ), .Y(n5406) );
+  sky130_fd_sc_hd__a22oi_1 U5445 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][25] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][25] ), .Y(n5405) );
+  sky130_fd_sc_hd__a22oi_1 U5446 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][25] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][25] ), .Y(n5404) );
+  sky130_fd_sc_hd__nand4_1 U5447 ( .A(n5407), .B(n5406), .C(n5405), .D(n5404), 
+        .Y(n5408) );
+  sky130_fd_sc_hd__a211oi_1 U5448 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][25] ), .B1(n5409), .C1(n5408), .Y(n5410) );
+  sky130_fd_sc_hd__nand3_1 U5449 ( .A(n5412), .B(n5411), .C(n5410), .Y(
+        CPU_src2_value_a2[25]) );
+  sky130_fd_sc_hd__a22oi_1 U5450 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][24] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][24] ), .Y(n5423) );
+  sky130_fd_sc_hd__a22oi_1 U5451 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][24] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][24] ), .Y(n5422) );
+  sky130_fd_sc_hd__a22oi_1 U5452 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][24] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][24] ), .Y(n5413) );
+  sky130_fd_sc_hd__o21ai_1 U5453 ( .A1(n5597), .A2(n5414), .B1(n5413), .Y(
+        n5420) );
+  sky130_fd_sc_hd__a22oi_1 U5454 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][24] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][24] ), .Y(n5418) );
+  sky130_fd_sc_hd__a22oi_1 U5455 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][24] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][24] ), .Y(n5417) );
+  sky130_fd_sc_hd__a22oi_1 U5456 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][24] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][24] ), .Y(n5416) );
+  sky130_fd_sc_hd__a22oi_1 U5457 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][24] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][24] ), .Y(n5415) );
+  sky130_fd_sc_hd__nand4_1 U5458 ( .A(n5418), .B(n5417), .C(n5416), .D(n5415), 
+        .Y(n5419) );
+  sky130_fd_sc_hd__a211oi_1 U5459 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][24] ), .B1(n5420), .C1(n5419), .Y(n5421) );
+  sky130_fd_sc_hd__nand3_1 U5460 ( .A(n5423), .B(n5422), .C(n5421), .Y(
+        CPU_src2_value_a2[24]) );
+  sky130_fd_sc_hd__a22oi_1 U5461 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][23] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][23] ), .Y(n5434) );
+  sky130_fd_sc_hd__a22oi_1 U5462 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][23] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][23] ), .Y(n5433) );
+  sky130_fd_sc_hd__a22oi_1 U5463 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][23] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][23] ), .Y(n5424) );
+  sky130_fd_sc_hd__o21ai_1 U5464 ( .A1(n5597), .A2(n5425), .B1(n5424), .Y(
+        n5431) );
+  sky130_fd_sc_hd__a22oi_1 U5465 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][23] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][23] ), .Y(n5429) );
+  sky130_fd_sc_hd__a22oi_1 U5466 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][23] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][23] ), .Y(n5428) );
+  sky130_fd_sc_hd__a22oi_1 U5467 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][23] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][23] ), .Y(n5427) );
+  sky130_fd_sc_hd__a22oi_1 U5468 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][23] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][23] ), .Y(n5426) );
+  sky130_fd_sc_hd__nand4_1 U5469 ( .A(n5429), .B(n5428), .C(n5427), .D(n5426), 
+        .Y(n5430) );
+  sky130_fd_sc_hd__a211oi_1 U5470 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][23] ), .B1(n5431), .C1(n5430), .Y(n5432) );
+  sky130_fd_sc_hd__nand3_1 U5471 ( .A(n5434), .B(n5433), .C(n5432), .Y(
+        CPU_src2_value_a2[23]) );
+  sky130_fd_sc_hd__a22oi_1 U5472 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][22] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][22] ), .Y(n5445) );
+  sky130_fd_sc_hd__a22oi_1 U5473 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][22] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][22] ), .Y(n5444) );
+  sky130_fd_sc_hd__a22oi_1 U5474 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][22] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][22] ), .Y(n5435) );
+  sky130_fd_sc_hd__o21ai_1 U5475 ( .A1(n5597), .A2(n5436), .B1(n5435), .Y(
+        n5442) );
+  sky130_fd_sc_hd__a22oi_1 U5476 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][22] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][22] ), .Y(n5440) );
+  sky130_fd_sc_hd__a22oi_1 U5477 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][22] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][22] ), .Y(n5439) );
+  sky130_fd_sc_hd__a22oi_1 U5478 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][22] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][22] ), .Y(n5438) );
+  sky130_fd_sc_hd__a22oi_1 U5479 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][22] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][22] ), .Y(n5437) );
+  sky130_fd_sc_hd__nand4_1 U5480 ( .A(n5440), .B(n5439), .C(n5438), .D(n5437), 
+        .Y(n5441) );
+  sky130_fd_sc_hd__a211oi_1 U5481 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][22] ), .B1(n5442), .C1(n5441), .Y(n5443) );
+  sky130_fd_sc_hd__nand3_1 U5482 ( .A(n5445), .B(n5444), .C(n5443), .Y(
+        CPU_src2_value_a2[22]) );
+  sky130_fd_sc_hd__a22oi_1 U5483 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][21] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][21] ), .Y(n5456) );
+  sky130_fd_sc_hd__a22oi_1 U5484 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][21] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][21] ), .Y(n5455) );
+  sky130_fd_sc_hd__a22oi_1 U5485 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][21] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][21] ), .Y(n5446) );
+  sky130_fd_sc_hd__o21ai_1 U5486 ( .A1(n5597), .A2(n5447), .B1(n5446), .Y(
+        n5453) );
+  sky130_fd_sc_hd__a22oi_1 U5487 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][21] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][21] ), .Y(n5451) );
+  sky130_fd_sc_hd__a22oi_1 U5488 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][21] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][21] ), .Y(n5450) );
+  sky130_fd_sc_hd__a22oi_1 U5489 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][21] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][21] ), .Y(n5449) );
+  sky130_fd_sc_hd__a22oi_1 U5490 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][21] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][21] ), .Y(n5448) );
+  sky130_fd_sc_hd__nand4_1 U5491 ( .A(n5451), .B(n5450), .C(n5449), .D(n5448), 
+        .Y(n5452) );
+  sky130_fd_sc_hd__a211oi_1 U5492 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][21] ), .B1(n5453), .C1(n5452), .Y(n5454) );
+  sky130_fd_sc_hd__nand3_1 U5493 ( .A(n5456), .B(n5455), .C(n5454), .Y(
+        CPU_src2_value_a2[21]) );
+  sky130_fd_sc_hd__a22oi_1 U5494 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][20] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][20] ), .Y(n5467) );
+  sky130_fd_sc_hd__a22oi_1 U5495 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][20] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][20] ), .Y(n5466) );
+  sky130_fd_sc_hd__a22oi_1 U5496 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][20] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][20] ), .Y(n5457) );
+  sky130_fd_sc_hd__o21ai_1 U5497 ( .A1(n5597), .A2(n5458), .B1(n5457), .Y(
+        n5464) );
+  sky130_fd_sc_hd__a22oi_1 U5498 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][20] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][20] ), .Y(n5462) );
+  sky130_fd_sc_hd__a22oi_1 U5499 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][20] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][20] ), .Y(n5461) );
+  sky130_fd_sc_hd__a22oi_1 U5500 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][20] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][20] ), .Y(n5460) );
+  sky130_fd_sc_hd__a22oi_1 U5501 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][20] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][20] ), .Y(n5459) );
+  sky130_fd_sc_hd__nand4_1 U5502 ( .A(n5462), .B(n5461), .C(n5460), .D(n5459), 
+        .Y(n5463) );
+  sky130_fd_sc_hd__a211oi_1 U5503 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][20] ), .B1(n5464), .C1(n5463), .Y(n5465) );
+  sky130_fd_sc_hd__nand3_1 U5504 ( .A(n5467), .B(n5466), .C(n5465), .Y(
+        CPU_src2_value_a2[20]) );
+  sky130_fd_sc_hd__a22oi_1 U5505 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][1] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][1] ), .Y(n5477) );
+  sky130_fd_sc_hd__a22oi_1 U5506 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][1] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][1] ), .Y(n5476) );
+  sky130_fd_sc_hd__a22oi_1 U5507 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][1] ), 
+        .B1(n5578), .B2(\CPU_Xreg_value_a4[2][1] ), .Y(n5468) );
+  sky130_fd_sc_hd__o21ai_1 U5508 ( .A1(n5597), .A2(n5850), .B1(n5468), .Y(
+        n5474) );
+  sky130_fd_sc_hd__a22oi_1 U5509 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][1] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][1] ), .Y(n5472) );
+  sky130_fd_sc_hd__a22oi_1 U5510 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][1] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][1] ), .Y(n5471) );
+  sky130_fd_sc_hd__a22oi_1 U5511 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][1] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][1] ), .Y(n5470) );
+  sky130_fd_sc_hd__a22oi_1 U5512 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][1] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][1] ), .Y(n5469) );
+  sky130_fd_sc_hd__nand4_1 U5513 ( .A(n5472), .B(n5471), .C(n5470), .D(n5469), 
+        .Y(n5473) );
+  sky130_fd_sc_hd__a211oi_1 U5514 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][1] ), .B1(n5474), .C1(n5473), .Y(n5475) );
+  sky130_fd_sc_hd__nand3_1 U5515 ( .A(n5477), .B(n5476), .C(n5475), .Y(
+        CPU_src2_value_a2[1]) );
+  sky130_fd_sc_hd__a22oi_1 U5516 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][19] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][19] ), .Y(n5488) );
+  sky130_fd_sc_hd__a22oi_1 U5517 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][19] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][19] ), .Y(n5487) );
+  sky130_fd_sc_hd__a22oi_1 U5518 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][19] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][19] ), .Y(n5478) );
+  sky130_fd_sc_hd__o21ai_1 U5519 ( .A1(n5597), .A2(n5479), .B1(n5478), .Y(
+        n5485) );
+  sky130_fd_sc_hd__a22oi_1 U5520 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][19] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][19] ), .Y(n5483) );
+  sky130_fd_sc_hd__a22oi_1 U5521 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][19] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][19] ), .Y(n5482) );
+  sky130_fd_sc_hd__a22oi_1 U5522 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][19] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][19] ), .Y(n5481) );
+  sky130_fd_sc_hd__a22oi_1 U5523 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][19] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][19] ), .Y(n5480) );
+  sky130_fd_sc_hd__nand4_1 U5524 ( .A(n5483), .B(n5482), .C(n5481), .D(n5480), 
+        .Y(n5484) );
+  sky130_fd_sc_hd__a211oi_1 U5525 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][19] ), .B1(n5485), .C1(n5484), .Y(n5486) );
+  sky130_fd_sc_hd__nand3_1 U5526 ( .A(n5488), .B(n5487), .C(n5486), .Y(
+        CPU_src2_value_a2[19]) );
+  sky130_fd_sc_hd__a22oi_1 U5527 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][18] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][18] ), .Y(n5499) );
+  sky130_fd_sc_hd__a22oi_1 U5528 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][18] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][18] ), .Y(n5498) );
+  sky130_fd_sc_hd__a22oi_1 U5529 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][18] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][18] ), .Y(n5489) );
+  sky130_fd_sc_hd__o21ai_1 U5530 ( .A1(n5597), .A2(n5490), .B1(n5489), .Y(
+        n5496) );
+  sky130_fd_sc_hd__a22oi_1 U5531 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][18] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][18] ), .Y(n5494) );
+  sky130_fd_sc_hd__a22oi_1 U5532 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][18] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][18] ), .Y(n5493) );
+  sky130_fd_sc_hd__a22oi_1 U5533 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][18] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][18] ), .Y(n5492) );
+  sky130_fd_sc_hd__a22oi_1 U5534 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][18] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][18] ), .Y(n5491) );
+  sky130_fd_sc_hd__nand4_1 U5535 ( .A(n5494), .B(n5493), .C(n5492), .D(n5491), 
+        .Y(n5495) );
+  sky130_fd_sc_hd__a211oi_1 U5536 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][18] ), .B1(n5496), .C1(n5495), .Y(n5497) );
+  sky130_fd_sc_hd__nand3_1 U5537 ( .A(n5499), .B(n5498), .C(n5497), .Y(
+        CPU_src2_value_a2[18]) );
+  sky130_fd_sc_hd__a22oi_1 U5538 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][17] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][17] ), .Y(n5510) );
+  sky130_fd_sc_hd__a22oi_1 U5539 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][17] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][17] ), .Y(n5509) );
+  sky130_fd_sc_hd__a22oi_1 U5540 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][17] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][17] ), .Y(n5500) );
+  sky130_fd_sc_hd__o21ai_1 U5541 ( .A1(n5597), .A2(n5501), .B1(n5500), .Y(
+        n5507) );
+  sky130_fd_sc_hd__a22oi_1 U5542 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][17] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][17] ), .Y(n5505) );
+  sky130_fd_sc_hd__a22oi_1 U5543 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][17] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][17] ), .Y(n5504) );
+  sky130_fd_sc_hd__a22oi_1 U5544 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][17] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][17] ), .Y(n5503) );
+  sky130_fd_sc_hd__a22oi_1 U5545 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][17] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][17] ), .Y(n5502) );
+  sky130_fd_sc_hd__nand4_1 U5546 ( .A(n5505), .B(n5504), .C(n5503), .D(n5502), 
+        .Y(n5506) );
+  sky130_fd_sc_hd__a211oi_1 U5547 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][17] ), .B1(n5507), .C1(n5506), .Y(n5508) );
+  sky130_fd_sc_hd__nand3_1 U5548 ( .A(n5510), .B(n5509), .C(n5508), .Y(
+        CPU_src2_value_a2[17]) );
+  sky130_fd_sc_hd__a22oi_1 U5549 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][16] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][16] ), .Y(n5521) );
+  sky130_fd_sc_hd__a22oi_1 U5550 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][16] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][16] ), .Y(n5520) );
+  sky130_fd_sc_hd__a22oi_1 U5551 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][16] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][16] ), .Y(n5511) );
+  sky130_fd_sc_hd__o21ai_1 U5552 ( .A1(n5597), .A2(n5512), .B1(n5511), .Y(
+        n5518) );
+  sky130_fd_sc_hd__a22oi_1 U5553 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][16] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][16] ), .Y(n5516) );
+  sky130_fd_sc_hd__a22oi_1 U5554 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][16] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][16] ), .Y(n5515) );
+  sky130_fd_sc_hd__a22oi_1 U5555 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][16] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][16] ), .Y(n5514) );
+  sky130_fd_sc_hd__a22oi_1 U5556 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][16] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][16] ), .Y(n5513) );
+  sky130_fd_sc_hd__nand4_1 U5557 ( .A(n5516), .B(n5515), .C(n5514), .D(n5513), 
+        .Y(n5517) );
+  sky130_fd_sc_hd__a211oi_1 U5558 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][16] ), .B1(n5518), .C1(n5517), .Y(n5519) );
+  sky130_fd_sc_hd__nand3_1 U5559 ( .A(n5521), .B(n5520), .C(n5519), .Y(
+        CPU_src2_value_a2[16]) );
+  sky130_fd_sc_hd__a22oi_1 U5560 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][15] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][15] ), .Y(n5533) );
+  sky130_fd_sc_hd__a22oi_1 U5561 ( .A1(n5522), .A2(\CPU_Xreg_value_a4[16][15] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][15] ), .Y(n5532) );
+  sky130_fd_sc_hd__a22oi_1 U5562 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][15] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][15] ), .Y(n5523) );
+  sky130_fd_sc_hd__o21ai_1 U5563 ( .A1(n5597), .A2(n5524), .B1(n5523), .Y(
+        n5530) );
+  sky130_fd_sc_hd__a22oi_1 U5564 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][15] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][15] ), .Y(n5528) );
+  sky130_fd_sc_hd__a22oi_1 U5565 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][15] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][15] ), .Y(n5527) );
+  sky130_fd_sc_hd__a22oi_1 U5566 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][15] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][15] ), .Y(n5526) );
+  sky130_fd_sc_hd__a22oi_1 U5567 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][15] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][15] ), .Y(n5525) );
+  sky130_fd_sc_hd__nand4_1 U5568 ( .A(n5528), .B(n5527), .C(n5526), .D(n5525), 
+        .Y(n5529) );
+  sky130_fd_sc_hd__a211oi_1 U5569 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][15] ), .B1(n5530), .C1(n5529), .Y(n5531) );
+  sky130_fd_sc_hd__nand3_1 U5570 ( .A(n5533), .B(n5532), .C(n5531), .Y(
+        CPU_src2_value_a2[15]) );
+  sky130_fd_sc_hd__a22oi_1 U5571 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][14] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][14] ), .Y(n5544) );
+  sky130_fd_sc_hd__a22oi_1 U5572 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][14] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][14] ), .Y(n5543) );
+  sky130_fd_sc_hd__a22oi_1 U5573 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][14] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][14] ), .Y(n5534) );
+  sky130_fd_sc_hd__o21ai_1 U5574 ( .A1(n5597), .A2(n5535), .B1(n5534), .Y(
+        n5541) );
+  sky130_fd_sc_hd__a22oi_1 U5575 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][14] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][14] ), .Y(n5539) );
+  sky130_fd_sc_hd__a22oi_1 U5576 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][14] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][14] ), .Y(n5538) );
+  sky130_fd_sc_hd__a22oi_1 U5577 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][14] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][14] ), .Y(n5537) );
+  sky130_fd_sc_hd__a22oi_1 U5578 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][14] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][14] ), .Y(n5536) );
+  sky130_fd_sc_hd__nand4_1 U5579 ( .A(n5539), .B(n5538), .C(n5537), .D(n5536), 
+        .Y(n5540) );
+  sky130_fd_sc_hd__a211oi_1 U5580 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][14] ), .B1(n5541), .C1(n5540), .Y(n5542) );
+  sky130_fd_sc_hd__nand3_1 U5581 ( .A(n5544), .B(n5543), .C(n5542), .Y(
+        CPU_src2_value_a2[14]) );
+  sky130_fd_sc_hd__a22oi_1 U5582 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][13] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][13] ), .Y(n5555) );
+  sky130_fd_sc_hd__a22oi_1 U5583 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][13] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][13] ), .Y(n5554) );
+  sky130_fd_sc_hd__a22oi_1 U5584 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][13] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][13] ), .Y(n5545) );
+  sky130_fd_sc_hd__o21ai_1 U5585 ( .A1(n5597), .A2(n5546), .B1(n5545), .Y(
+        n5552) );
+  sky130_fd_sc_hd__a22oi_1 U5586 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][13] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][13] ), .Y(n5550) );
+  sky130_fd_sc_hd__a22oi_1 U5587 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][13] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][13] ), .Y(n5549) );
+  sky130_fd_sc_hd__a22oi_1 U5588 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][13] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][13] ), .Y(n5548) );
+  sky130_fd_sc_hd__a22oi_1 U5589 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][13] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][13] ), .Y(n5547) );
+  sky130_fd_sc_hd__nand4_1 U5590 ( .A(n5550), .B(n5549), .C(n5548), .D(n5547), 
+        .Y(n5551) );
+  sky130_fd_sc_hd__a211oi_1 U5591 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][13] ), .B1(n5552), .C1(n5551), .Y(n5553) );
+  sky130_fd_sc_hd__nand3_1 U5592 ( .A(n5555), .B(n5554), .C(n5553), .Y(
+        CPU_src2_value_a2[13]) );
+  sky130_fd_sc_hd__a22oi_1 U5593 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][12] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][12] ), .Y(n5566) );
+  sky130_fd_sc_hd__a22oi_1 U5594 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][12] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][12] ), .Y(n5565) );
+  sky130_fd_sc_hd__a22oi_1 U5595 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][12] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][12] ), .Y(n5556) );
+  sky130_fd_sc_hd__o21ai_1 U5596 ( .A1(n5597), .A2(n5557), .B1(n5556), .Y(
+        n5563) );
+  sky130_fd_sc_hd__a22oi_1 U5597 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][12] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][12] ), .Y(n5561) );
+  sky130_fd_sc_hd__a22oi_1 U5598 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][12] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][12] ), .Y(n5560) );
+  sky130_fd_sc_hd__a22oi_1 U5599 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][12] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][12] ), .Y(n5559) );
+  sky130_fd_sc_hd__a22oi_1 U5600 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][12] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][12] ), .Y(n5558) );
+  sky130_fd_sc_hd__nand4_1 U5601 ( .A(n5561), .B(n5560), .C(n5559), .D(n5558), 
+        .Y(n5562) );
+  sky130_fd_sc_hd__a211oi_1 U5602 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][12] ), .B1(n5563), .C1(n5562), .Y(n5564) );
+  sky130_fd_sc_hd__nand3_1 U5603 ( .A(n5566), .B(n5565), .C(n5564), .Y(
+        CPU_src2_value_a2[12]) );
+  sky130_fd_sc_hd__a22oi_1 U5604 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][11] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][11] ), .Y(n5577) );
+  sky130_fd_sc_hd__a22oi_1 U5605 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][11] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][11] ), .Y(n5576) );
+  sky130_fd_sc_hd__a22oi_1 U5606 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][11] ), .B1(n5594), .B2(\CPU_Xreg_value_a4[2][11] ), .Y(n5567) );
+  sky130_fd_sc_hd__o21ai_1 U5607 ( .A1(n5597), .A2(n5568), .B1(n5567), .Y(
+        n5574) );
+  sky130_fd_sc_hd__a22oi_1 U5608 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][11] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][11] ), .Y(n5572) );
+  sky130_fd_sc_hd__a22oi_1 U5609 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][11] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][11] ), .Y(n5571) );
+  sky130_fd_sc_hd__a22oi_1 U5610 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][11] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][11] ), .Y(n5570) );
+  sky130_fd_sc_hd__a22oi_1 U5611 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][11] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][11] ), .Y(n5569) );
+  sky130_fd_sc_hd__nand4_1 U5612 ( .A(n5572), .B(n5571), .C(n5570), .D(n5569), 
+        .Y(n5573) );
+  sky130_fd_sc_hd__a211oi_1 U5613 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][11] ), .B1(n5574), .C1(n5573), .Y(n5575) );
+  sky130_fd_sc_hd__nand3_1 U5614 ( .A(n5577), .B(n5576), .C(n5575), .Y(
+        CPU_src2_value_a2[11]) );
+  sky130_fd_sc_hd__a22oi_1 U5615 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][10] ), .B1(n5590), .B2(\CPU_Xreg_value_a4[3][10] ), .Y(n5589) );
+  sky130_fd_sc_hd__a22oi_1 U5616 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][10] ), .B1(n5592), .B2(\CPU_Xreg_value_a4[13][10] ), .Y(n5588) );
+  sky130_fd_sc_hd__a22oi_1 U5617 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][10] ), .B1(n5578), .B2(\CPU_Xreg_value_a4[2][10] ), .Y(n5579) );
+  sky130_fd_sc_hd__o21ai_1 U5618 ( .A1(n5597), .A2(n5580), .B1(n5579), .Y(
+        n5586) );
+  sky130_fd_sc_hd__a22oi_1 U5619 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][10] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][10] ), .Y(n5584) );
+  sky130_fd_sc_hd__a22oi_1 U5620 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][10] ), .B1(n5600), .B2(\CPU_Xreg_value_a4[14][10] ), .Y(n5583) );
+  sky130_fd_sc_hd__a22oi_1 U5621 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][10] ), .B1(n5602), .B2(\CPU_Xreg_value_a4[12][10] ), .Y(n5582) );
+  sky130_fd_sc_hd__a22oi_1 U5622 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][10] ), .B1(n5604), .B2(\CPU_Xreg_value_a4[30][10] ), .Y(n5581) );
+  sky130_fd_sc_hd__nand4_1 U5623 ( .A(n5584), .B(n5583), .C(n5582), .D(n5581), 
+        .Y(n5585) );
+  sky130_fd_sc_hd__a211oi_1 U5624 ( .A1(n5612), .A2(
+        \CPU_Xreg_value_a4[19][10] ), .B1(n5586), .C1(n5585), .Y(n5587) );
+  sky130_fd_sc_hd__nand3_1 U5625 ( .A(n5589), .B(n5588), .C(n5587), .Y(
+        CPU_src2_value_a2[10]) );
+  sky130_fd_sc_hd__a22oi_1 U5626 ( .A1(n5591), .A2(\CPU_Xreg_value_a4[17][0] ), 
+        .B1(n5590), .B2(\CPU_Xreg_value_a4[3][0] ), .Y(n5615) );
+  sky130_fd_sc_hd__a22oi_1 U5627 ( .A1(n5593), .A2(\CPU_Xreg_value_a4[16][0] ), 
+        .B1(n5592), .B2(\CPU_Xreg_value_a4[13][0] ), .Y(n5614) );
+  sky130_fd_sc_hd__a22oi_1 U5628 ( .A1(n5595), .A2(\CPU_Xreg_value_a4[31][0] ), 
+        .B1(n5594), .B2(\CPU_Xreg_value_a4[2][0] ), .Y(n5596) );
+  sky130_fd_sc_hd__o21ai_1 U5629 ( .A1(n5597), .A2(n5856), .B1(n5596), .Y(
+        n5611) );
+  sky130_fd_sc_hd__a22oi_1 U5630 ( .A1(n5599), .A2(\CPU_Xreg_value_a4[1][0] ), 
+        .B1(n5598), .B2(\CPU_Xreg_value_a4[29][0] ), .Y(n5609) );
+  sky130_fd_sc_hd__a22oi_1 U5631 ( .A1(n5601), .A2(\CPU_Xreg_value_a4[28][0] ), 
+        .B1(n5600), .B2(\CPU_Xreg_value_a4[14][0] ), .Y(n5608) );
+  sky130_fd_sc_hd__a22oi_1 U5632 ( .A1(n5603), .A2(\CPU_Xreg_value_a4[15][0] ), 
+        .B1(n5602), .B2(\CPU_Xreg_value_a4[12][0] ), .Y(n5607) );
+  sky130_fd_sc_hd__a22oi_1 U5633 ( .A1(n5605), .A2(\CPU_Xreg_value_a4[18][0] ), 
+        .B1(n5604), .B2(\CPU_Xreg_value_a4[30][0] ), .Y(n5606) );
+  sky130_fd_sc_hd__nand4_1 U5634 ( .A(n5609), .B(n5608), .C(n5607), .D(n5606), 
+        .Y(n5610) );
+  sky130_fd_sc_hd__a211oi_1 U5635 ( .A1(n5612), .A2(\CPU_Xreg_value_a4[19][0] ), .B1(n5611), .C1(n5610), .Y(n5613) );
+  sky130_fd_sc_hd__nand3_1 U5636 ( .A(n5615), .B(n5614), .C(n5613), .Y(
+        CPU_src2_value_a2[0]) );
+  sky130_fd_sc_hd__a211oi_1 U5637 ( .A1(N51), .A2(n5617), .B1(CPU_is_blt_a3), 
+        .C1(n5616), .Y(n5620) );
+  sky130_fd_sc_hd__clkinv_1 U5638 ( .A(N51), .Y(n5625) );
+  sky130_fd_sc_hd__a222oi_1 U5639 ( .A1(CPU_rd_a3[0]), .A2(n5627), .B1(
+        CPU_rd_a3[3]), .B2(n5625), .C1(n5618), .C2(N49), .Y(n5619) );
+  sky130_fd_sc_hd__o211ai_1 U5640 ( .A1(n5622), .A2(CPU_is_sub_a2), .B1(n5620), 
+        .C1(n5619), .Y(n5621) );
+  sky130_fd_sc_hd__a21o_1 U5641 ( .A1(n5622), .A2(CPU_is_sub_a2), .B1(n5621), 
+        .X(n5626) );
+  sky130_fd_sc_hd__nor4_1 U5642 ( .A(N49), .B(CPU_is_sub_a2), .C(n5756), .D(
+        n5625), .Y(n5730) );
+  sky130_fd_sc_hd__a22oi_1 U5643 ( .A1(N715), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][9] ), .B2(n5730), .Y(n5633) );
+  sky130_fd_sc_hd__nand3_1 U5644 ( .A(CPU_is_sub_a2), .B(n5625), .C(n5626), 
+        .Y(n5628) );
+  sky130_fd_sc_hd__nor2_1 U5645 ( .A(n5627), .B(n5628), .Y(n5758) );
+  sky130_fd_sc_hd__nor2_1 U5646 ( .A(CPU_is_sub_a2), .B(n5756), .Y(n5623) );
+  sky130_fd_sc_hd__nand2_1 U5647 ( .A(N49), .B(n5623), .Y(n5624) );
+  sky130_fd_sc_hd__nor2_1 U5648 ( .A(N51), .B(n5624), .Y(n5757) );
+  sky130_fd_sc_hd__a22oi_1 U5649 ( .A1(\CPU_Xreg_value_a4[3][9] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][9] ), .B2(n5757), .Y(n5632) );
+  sky130_fd_sc_hd__nor2_1 U5650 ( .A(n5625), .B(n5624), .Y(n5760) );
+  sky130_fd_sc_hd__nand3_1 U5651 ( .A(CPU_is_sub_a2), .B(N51), .C(n5626), .Y(
+        n5629) );
+  sky130_fd_sc_hd__nor2_1 U5652 ( .A(n5627), .B(n5629), .Y(n5759) );
+  sky130_fd_sc_hd__a22oi_1 U5653 ( .A1(\CPU_Xreg_value_a4[13][9] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][9] ), .B2(n5759), .Y(n5631) );
+  sky130_fd_sc_hd__nor2_1 U5654 ( .A(N49), .B(n5628), .Y(n5762) );
+  sky130_fd_sc_hd__nor2_1 U5655 ( .A(N49), .B(n5629), .Y(n5761) );
+  sky130_fd_sc_hd__a22oi_1 U5656 ( .A1(\CPU_Xreg_value_a4[2][9] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][9] ), .B2(n5761), .Y(n5630) );
+  sky130_fd_sc_hd__nand4_1 U5657 ( .A(n5633), .B(n5632), .C(n5631), .D(n5630), 
+        .Y(CPU_src1_value_a2[9]) );
+  sky130_fd_sc_hd__clkbuf_1 U5658 ( .A(n5730), .X(n5755) );
+  sky130_fd_sc_hd__a22oi_1 U5659 ( .A1(N714), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][8] ), .B2(n5755), .Y(n5637) );
+  sky130_fd_sc_hd__a22oi_1 U5660 ( .A1(\CPU_Xreg_value_a4[3][8] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][8] ), .B2(n5757), .Y(n5636) );
+  sky130_fd_sc_hd__a22oi_1 U5661 ( .A1(\CPU_Xreg_value_a4[13][8] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][8] ), .B2(n5759), .Y(n5635) );
+  sky130_fd_sc_hd__a22oi_1 U5662 ( .A1(\CPU_Xreg_value_a4[2][8] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][8] ), .B2(n5761), .Y(n5634) );
+  sky130_fd_sc_hd__nand4_1 U5663 ( .A(n5637), .B(n5636), .C(n5635), .D(n5634), 
+        .Y(CPU_src1_value_a2[8]) );
+  sky130_fd_sc_hd__a22oi_1 U5664 ( .A1(N713), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][7] ), .B2(n5730), .Y(n5641) );
+  sky130_fd_sc_hd__a22oi_1 U5665 ( .A1(\CPU_Xreg_value_a4[3][7] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][7] ), .B2(n5757), .Y(n5640) );
+  sky130_fd_sc_hd__a22oi_1 U5666 ( .A1(\CPU_Xreg_value_a4[13][7] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][7] ), .B2(n5759), .Y(n5639) );
+  sky130_fd_sc_hd__a22oi_1 U5667 ( .A1(\CPU_Xreg_value_a4[2][7] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][7] ), .B2(n5761), .Y(n5638) );
+  sky130_fd_sc_hd__nand4_1 U5668 ( .A(n5641), .B(n5640), .C(n5639), .D(n5638), 
+        .Y(CPU_src1_value_a2[7]) );
+  sky130_fd_sc_hd__a22oi_1 U5669 ( .A1(N712), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][6] ), .B2(n5755), .Y(n5645) );
+  sky130_fd_sc_hd__a22oi_1 U5670 ( .A1(\CPU_Xreg_value_a4[3][6] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][6] ), .B2(n5757), .Y(n5644) );
+  sky130_fd_sc_hd__a22oi_1 U5671 ( .A1(\CPU_Xreg_value_a4[13][6] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][6] ), .B2(n5759), .Y(n5643) );
+  sky130_fd_sc_hd__a22oi_1 U5672 ( .A1(\CPU_Xreg_value_a4[2][6] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][6] ), .B2(n5761), .Y(n5642) );
+  sky130_fd_sc_hd__nand4_1 U5673 ( .A(n5645), .B(n5644), .C(n5643), .D(n5642), 
+        .Y(CPU_src1_value_a2[6]) );
+  sky130_fd_sc_hd__a22oi_1 U5674 ( .A1(N711), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][5] ), .B2(n5730), .Y(n5649) );
+  sky130_fd_sc_hd__a22oi_1 U5675 ( .A1(\CPU_Xreg_value_a4[3][5] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][5] ), .B2(n5757), .Y(n5648) );
+  sky130_fd_sc_hd__a22oi_1 U5676 ( .A1(\CPU_Xreg_value_a4[13][5] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][5] ), .B2(n5759), .Y(n5647) );
+  sky130_fd_sc_hd__a22oi_1 U5677 ( .A1(\CPU_Xreg_value_a4[2][5] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][5] ), .B2(n5761), .Y(n5646) );
+  sky130_fd_sc_hd__nand4_1 U5678 ( .A(n5649), .B(n5648), .C(n5647), .D(n5646), 
+        .Y(CPU_src1_value_a2[5]) );
+  sky130_fd_sc_hd__a22oi_1 U5679 ( .A1(N710), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][4] ), .B2(n5755), .Y(n5653) );
+  sky130_fd_sc_hd__a22oi_1 U5680 ( .A1(\CPU_Xreg_value_a4[3][4] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][4] ), .B2(n5757), .Y(n5652) );
+  sky130_fd_sc_hd__a22oi_1 U5681 ( .A1(\CPU_Xreg_value_a4[13][4] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][4] ), .B2(n5759), .Y(n5651) );
+  sky130_fd_sc_hd__a22oi_1 U5682 ( .A1(\CPU_Xreg_value_a4[2][4] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][4] ), .B2(n5761), .Y(n5650) );
+  sky130_fd_sc_hd__nand4_1 U5683 ( .A(n5653), .B(n5652), .C(n5651), .D(n5650), 
+        .Y(CPU_src1_value_a2[4]) );
+  sky130_fd_sc_hd__a22oi_1 U5684 ( .A1(N709), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][3] ), .B2(n5730), .Y(n5657) );
+  sky130_fd_sc_hd__a22oi_1 U5685 ( .A1(\CPU_Xreg_value_a4[3][3] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][3] ), .B2(n5757), .Y(n5656) );
+  sky130_fd_sc_hd__a22oi_1 U5686 ( .A1(\CPU_Xreg_value_a4[13][3] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][3] ), .B2(n5759), .Y(n5655) );
+  sky130_fd_sc_hd__a22oi_1 U5687 ( .A1(\CPU_Xreg_value_a4[2][3] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][3] ), .B2(n5761), .Y(n5654) );
+  sky130_fd_sc_hd__nand4_1 U5688 ( .A(n5657), .B(n5656), .C(n5655), .D(n5654), 
+        .Y(CPU_src1_value_a2[3]) );
+  sky130_fd_sc_hd__a22oi_1 U5689 ( .A1(N737), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][31] ), .B2(n5755), .Y(n5661) );
+  sky130_fd_sc_hd__a22oi_1 U5690 ( .A1(\CPU_Xreg_value_a4[3][31] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][31] ), .B2(n5757), .Y(n5660) );
+  sky130_fd_sc_hd__a22oi_1 U5691 ( .A1(\CPU_Xreg_value_a4[13][31] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][31] ), .B2(n5759), .Y(n5659) );
+  sky130_fd_sc_hd__a22oi_1 U5692 ( .A1(\CPU_Xreg_value_a4[2][31] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][31] ), .B2(n5761), .Y(n5658) );
+  sky130_fd_sc_hd__nand4_1 U5693 ( .A(n5661), .B(n5660), .C(n5659), .D(n5658), 
+        .Y(CPU_src1_value_a2[31]) );
+  sky130_fd_sc_hd__a22oi_1 U5694 ( .A1(N736), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][30] ), .B2(n5730), .Y(n5665) );
+  sky130_fd_sc_hd__a22oi_1 U5695 ( .A1(\CPU_Xreg_value_a4[3][30] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][30] ), .B2(n5757), .Y(n5664) );
+  sky130_fd_sc_hd__a22oi_1 U5696 ( .A1(\CPU_Xreg_value_a4[13][30] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][30] ), .B2(n5759), .Y(n5663) );
+  sky130_fd_sc_hd__a22oi_1 U5697 ( .A1(\CPU_Xreg_value_a4[2][30] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][30] ), .B2(n5761), .Y(n5662) );
+  sky130_fd_sc_hd__nand4_1 U5698 ( .A(n5665), .B(n5664), .C(n5663), .D(n5662), 
+        .Y(CPU_src1_value_a2[30]) );
+  sky130_fd_sc_hd__a22oi_1 U5699 ( .A1(N708), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][2] ), .B2(n5730), .Y(n5669) );
+  sky130_fd_sc_hd__a22oi_1 U5700 ( .A1(\CPU_Xreg_value_a4[3][2] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][2] ), .B2(n5757), .Y(n5668) );
+  sky130_fd_sc_hd__a22oi_1 U5701 ( .A1(\CPU_Xreg_value_a4[13][2] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][2] ), .B2(n5759), .Y(n5667) );
+  sky130_fd_sc_hd__a22oi_1 U5702 ( .A1(\CPU_Xreg_value_a4[2][2] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][2] ), .B2(n5761), .Y(n5666) );
+  sky130_fd_sc_hd__nand4_1 U5703 ( .A(n5669), .B(n5668), .C(n5667), .D(n5666), 
+        .Y(CPU_src1_value_a2[2]) );
+  sky130_fd_sc_hd__a22oi_1 U5704 ( .A1(N735), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][29] ), .B2(n5730), .Y(n5673) );
+  sky130_fd_sc_hd__a22oi_1 U5705 ( .A1(\CPU_Xreg_value_a4[3][29] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][29] ), .B2(n5757), .Y(n5672) );
+  sky130_fd_sc_hd__a22oi_1 U5706 ( .A1(\CPU_Xreg_value_a4[13][29] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][29] ), .B2(n5759), .Y(n5671) );
+  sky130_fd_sc_hd__a22oi_1 U5707 ( .A1(\CPU_Xreg_value_a4[2][29] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][29] ), .B2(n5761), .Y(n5670) );
+  sky130_fd_sc_hd__nand4_1 U5708 ( .A(n5673), .B(n5672), .C(n5671), .D(n5670), 
+        .Y(CPU_src1_value_a2[29]) );
+  sky130_fd_sc_hd__a22oi_1 U5709 ( .A1(N734), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][28] ), .B2(n5730), .Y(n5677) );
+  sky130_fd_sc_hd__a22oi_1 U5710 ( .A1(\CPU_Xreg_value_a4[3][28] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][28] ), .B2(n5757), .Y(n5676) );
+  sky130_fd_sc_hd__a22oi_1 U5711 ( .A1(\CPU_Xreg_value_a4[13][28] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][28] ), .B2(n5759), .Y(n5675) );
+  sky130_fd_sc_hd__a22oi_1 U5712 ( .A1(\CPU_Xreg_value_a4[2][28] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][28] ), .B2(n5761), .Y(n5674) );
+  sky130_fd_sc_hd__nand4_1 U5713 ( .A(n5677), .B(n5676), .C(n5675), .D(n5674), 
+        .Y(CPU_src1_value_a2[28]) );
+  sky130_fd_sc_hd__a22oi_1 U5714 ( .A1(N733), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][27] ), .B2(n5730), .Y(n5681) );
+  sky130_fd_sc_hd__a22oi_1 U5715 ( .A1(\CPU_Xreg_value_a4[3][27] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][27] ), .B2(n5757), .Y(n5680) );
+  sky130_fd_sc_hd__a22oi_1 U5716 ( .A1(\CPU_Xreg_value_a4[13][27] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][27] ), .B2(n5759), .Y(n5679) );
+  sky130_fd_sc_hd__a22oi_1 U5717 ( .A1(\CPU_Xreg_value_a4[2][27] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][27] ), .B2(n5761), .Y(n5678) );
+  sky130_fd_sc_hd__nand4_1 U5718 ( .A(n5681), .B(n5680), .C(n5679), .D(n5678), 
+        .Y(CPU_src1_value_a2[27]) );
+  sky130_fd_sc_hd__a22oi_1 U5719 ( .A1(N732), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][26] ), .B2(n5755), .Y(n5685) );
+  sky130_fd_sc_hd__a22oi_1 U5720 ( .A1(\CPU_Xreg_value_a4[3][26] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][26] ), .B2(n5757), .Y(n5684) );
+  sky130_fd_sc_hd__a22oi_1 U5721 ( .A1(\CPU_Xreg_value_a4[13][26] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][26] ), .B2(n5759), .Y(n5683) );
+  sky130_fd_sc_hd__a22oi_1 U5722 ( .A1(\CPU_Xreg_value_a4[2][26] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][26] ), .B2(n5761), .Y(n5682) );
+  sky130_fd_sc_hd__nand4_1 U5723 ( .A(n5685), .B(n5684), .C(n5683), .D(n5682), 
+        .Y(CPU_src1_value_a2[26]) );
+  sky130_fd_sc_hd__a22oi_1 U5724 ( .A1(N731), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][25] ), .B2(n5755), .Y(n5689) );
+  sky130_fd_sc_hd__a22oi_1 U5725 ( .A1(\CPU_Xreg_value_a4[3][25] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][25] ), .B2(n5757), .Y(n5688) );
+  sky130_fd_sc_hd__a22oi_1 U5726 ( .A1(\CPU_Xreg_value_a4[13][25] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][25] ), .B2(n5759), .Y(n5687) );
+  sky130_fd_sc_hd__a22oi_1 U5727 ( .A1(\CPU_Xreg_value_a4[2][25] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][25] ), .B2(n5761), .Y(n5686) );
+  sky130_fd_sc_hd__nand4_1 U5728 ( .A(n5689), .B(n5688), .C(n5687), .D(n5686), 
+        .Y(CPU_src1_value_a2[25]) );
+  sky130_fd_sc_hd__a22oi_1 U5729 ( .A1(N730), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][24] ), .B2(n5755), .Y(n5693) );
+  sky130_fd_sc_hd__a22oi_1 U5730 ( .A1(\CPU_Xreg_value_a4[3][24] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][24] ), .B2(n5757), .Y(n5692) );
+  sky130_fd_sc_hd__a22oi_1 U5731 ( .A1(\CPU_Xreg_value_a4[13][24] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][24] ), .B2(n5759), .Y(n5691) );
+  sky130_fd_sc_hd__a22oi_1 U5732 ( .A1(\CPU_Xreg_value_a4[2][24] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][24] ), .B2(n5761), .Y(n5690) );
+  sky130_fd_sc_hd__nand4_1 U5733 ( .A(n5693), .B(n5692), .C(n5691), .D(n5690), 
+        .Y(CPU_src1_value_a2[24]) );
+  sky130_fd_sc_hd__a22oi_1 U5734 ( .A1(N729), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][23] ), .B2(n5755), .Y(n5697) );
+  sky130_fd_sc_hd__a22oi_1 U5735 ( .A1(\CPU_Xreg_value_a4[3][23] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][23] ), .B2(n5757), .Y(n5696) );
+  sky130_fd_sc_hd__a22oi_1 U5736 ( .A1(\CPU_Xreg_value_a4[13][23] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][23] ), .B2(n5759), .Y(n5695) );
+  sky130_fd_sc_hd__a22oi_1 U5737 ( .A1(\CPU_Xreg_value_a4[2][23] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][23] ), .B2(n5761), .Y(n5694) );
+  sky130_fd_sc_hd__nand4_1 U5738 ( .A(n5697), .B(n5696), .C(n5695), .D(n5694), 
+        .Y(CPU_src1_value_a2[23]) );
+  sky130_fd_sc_hd__a22oi_1 U5739 ( .A1(N728), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][22] ), .B2(n5730), .Y(n5701) );
+  sky130_fd_sc_hd__a22oi_1 U5740 ( .A1(\CPU_Xreg_value_a4[3][22] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][22] ), .B2(n5757), .Y(n5700) );
+  sky130_fd_sc_hd__a22oi_1 U5741 ( .A1(\CPU_Xreg_value_a4[13][22] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][22] ), .B2(n5759), .Y(n5699) );
+  sky130_fd_sc_hd__a22oi_1 U5742 ( .A1(\CPU_Xreg_value_a4[2][22] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][22] ), .B2(n5761), .Y(n5698) );
+  sky130_fd_sc_hd__nand4_1 U5743 ( .A(n5701), .B(n5700), .C(n5699), .D(n5698), 
+        .Y(CPU_src1_value_a2[22]) );
+  sky130_fd_sc_hd__a22oi_1 U5744 ( .A1(N727), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][21] ), .B2(n5755), .Y(n5705) );
+  sky130_fd_sc_hd__a22oi_1 U5745 ( .A1(\CPU_Xreg_value_a4[3][21] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][21] ), .B2(n5757), .Y(n5704) );
+  sky130_fd_sc_hd__a22oi_1 U5746 ( .A1(\CPU_Xreg_value_a4[13][21] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][21] ), .B2(n5759), .Y(n5703) );
+  sky130_fd_sc_hd__a22oi_1 U5747 ( .A1(\CPU_Xreg_value_a4[2][21] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][21] ), .B2(n5761), .Y(n5702) );
+  sky130_fd_sc_hd__nand4_1 U5748 ( .A(n5705), .B(n5704), .C(n5703), .D(n5702), 
+        .Y(CPU_src1_value_a2[21]) );
+  sky130_fd_sc_hd__a22oi_1 U5749 ( .A1(N726), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][20] ), .B2(n5730), .Y(n5709) );
+  sky130_fd_sc_hd__a22oi_1 U5750 ( .A1(\CPU_Xreg_value_a4[3][20] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][20] ), .B2(n5757), .Y(n5708) );
+  sky130_fd_sc_hd__a22oi_1 U5751 ( .A1(\CPU_Xreg_value_a4[13][20] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][20] ), .B2(n5759), .Y(n5707) );
+  sky130_fd_sc_hd__a22oi_1 U5752 ( .A1(\CPU_Xreg_value_a4[2][20] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][20] ), .B2(n5761), .Y(n5706) );
+  sky130_fd_sc_hd__nand4_1 U5753 ( .A(n5709), .B(n5708), .C(n5707), .D(n5706), 
+        .Y(CPU_src1_value_a2[20]) );
+  sky130_fd_sc_hd__a22oi_1 U5754 ( .A1(N707), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][1] ), .B2(n5755), .Y(n5713) );
+  sky130_fd_sc_hd__a22oi_1 U5755 ( .A1(\CPU_Xreg_value_a4[3][1] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][1] ), .B2(n5757), .Y(n5712) );
+  sky130_fd_sc_hd__a22oi_1 U5756 ( .A1(\CPU_Xreg_value_a4[13][1] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][1] ), .B2(n5759), .Y(n5711) );
+  sky130_fd_sc_hd__a22oi_1 U5757 ( .A1(\CPU_Xreg_value_a4[2][1] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][1] ), .B2(n5761), .Y(n5710) );
+  sky130_fd_sc_hd__nand4_1 U5758 ( .A(n5713), .B(n5712), .C(n5711), .D(n5710), 
+        .Y(CPU_src1_value_a2[1]) );
+  sky130_fd_sc_hd__a22oi_1 U5759 ( .A1(N725), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][19] ), .B2(n5730), .Y(n5717) );
+  sky130_fd_sc_hd__a22oi_1 U5760 ( .A1(\CPU_Xreg_value_a4[3][19] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][19] ), .B2(n5757), .Y(n5716) );
+  sky130_fd_sc_hd__a22oi_1 U5761 ( .A1(\CPU_Xreg_value_a4[13][19] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][19] ), .B2(n5759), .Y(n5715) );
+  sky130_fd_sc_hd__a22oi_1 U5762 ( .A1(\CPU_Xreg_value_a4[2][19] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][19] ), .B2(n5761), .Y(n5714) );
+  sky130_fd_sc_hd__nand4_1 U5763 ( .A(n5717), .B(n5716), .C(n5715), .D(n5714), 
+        .Y(CPU_src1_value_a2[19]) );
+  sky130_fd_sc_hd__a22oi_1 U5764 ( .A1(N724), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][18] ), .B2(n5755), .Y(n5721) );
+  sky130_fd_sc_hd__a22oi_1 U5765 ( .A1(\CPU_Xreg_value_a4[3][18] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][18] ), .B2(n5757), .Y(n5720) );
+  sky130_fd_sc_hd__a22oi_1 U5766 ( .A1(\CPU_Xreg_value_a4[13][18] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][18] ), .B2(n5759), .Y(n5719) );
+  sky130_fd_sc_hd__a22oi_1 U5767 ( .A1(\CPU_Xreg_value_a4[2][18] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][18] ), .B2(n5761), .Y(n5718) );
+  sky130_fd_sc_hd__nand4_1 U5768 ( .A(n5721), .B(n5720), .C(n5719), .D(n5718), 
+        .Y(CPU_src1_value_a2[18]) );
+  sky130_fd_sc_hd__a22oi_1 U5769 ( .A1(N723), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][17] ), .B2(n5730), .Y(n5725) );
+  sky130_fd_sc_hd__a22oi_1 U5770 ( .A1(\CPU_Xreg_value_a4[3][17] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][17] ), .B2(n5757), .Y(n5724) );
+  sky130_fd_sc_hd__a22oi_1 U5771 ( .A1(\CPU_Xreg_value_a4[13][17] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][17] ), .B2(n5759), .Y(n5723) );
+  sky130_fd_sc_hd__a22oi_1 U5772 ( .A1(\CPU_Xreg_value_a4[2][17] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][17] ), .B2(n5761), .Y(n5722) );
+  sky130_fd_sc_hd__nand4_1 U5773 ( .A(n5725), .B(n5724), .C(n5723), .D(n5722), 
+        .Y(CPU_src1_value_a2[17]) );
+  sky130_fd_sc_hd__a22oi_1 U5774 ( .A1(N722), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][16] ), .B2(n5755), .Y(n5729) );
+  sky130_fd_sc_hd__a22oi_1 U5775 ( .A1(\CPU_Xreg_value_a4[3][16] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][16] ), .B2(n5757), .Y(n5728) );
+  sky130_fd_sc_hd__a22oi_1 U5776 ( .A1(\CPU_Xreg_value_a4[13][16] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][16] ), .B2(n5759), .Y(n5727) );
+  sky130_fd_sc_hd__a22oi_1 U5777 ( .A1(\CPU_Xreg_value_a4[2][16] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][16] ), .B2(n5761), .Y(n5726) );
+  sky130_fd_sc_hd__nand4_1 U5778 ( .A(n5729), .B(n5728), .C(n5727), .D(n5726), 
+        .Y(CPU_src1_value_a2[16]) );
+  sky130_fd_sc_hd__a22oi_1 U5779 ( .A1(N721), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][15] ), .B2(n5730), .Y(n5734) );
+  sky130_fd_sc_hd__a22oi_1 U5780 ( .A1(\CPU_Xreg_value_a4[3][15] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][15] ), .B2(n5757), .Y(n5733) );
+  sky130_fd_sc_hd__a22oi_1 U5781 ( .A1(\CPU_Xreg_value_a4[13][15] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][15] ), .B2(n5759), .Y(n5732) );
+  sky130_fd_sc_hd__a22oi_1 U5782 ( .A1(\CPU_Xreg_value_a4[2][15] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][15] ), .B2(n5761), .Y(n5731) );
+  sky130_fd_sc_hd__nand4_1 U5783 ( .A(n5734), .B(n5733), .C(n5732), .D(n5731), 
+        .Y(CPU_src1_value_a2[15]) );
+  sky130_fd_sc_hd__a22oi_1 U5784 ( .A1(N720), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][14] ), .B2(n5755), .Y(n5738) );
+  sky130_fd_sc_hd__a22oi_1 U5785 ( .A1(\CPU_Xreg_value_a4[3][14] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][14] ), .B2(n5757), .Y(n5737) );
+  sky130_fd_sc_hd__a22oi_1 U5786 ( .A1(\CPU_Xreg_value_a4[13][14] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][14] ), .B2(n5759), .Y(n5736) );
+  sky130_fd_sc_hd__a22oi_1 U5787 ( .A1(\CPU_Xreg_value_a4[2][14] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][14] ), .B2(n5761), .Y(n5735) );
+  sky130_fd_sc_hd__nand4_1 U5788 ( .A(n5738), .B(n5737), .C(n5736), .D(n5735), 
+        .Y(CPU_src1_value_a2[14]) );
+  sky130_fd_sc_hd__a22oi_1 U5789 ( .A1(N719), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][13] ), .B2(n5755), .Y(n5742) );
+  sky130_fd_sc_hd__a22oi_1 U5790 ( .A1(\CPU_Xreg_value_a4[3][13] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][13] ), .B2(n5757), .Y(n5741) );
+  sky130_fd_sc_hd__a22oi_1 U5791 ( .A1(\CPU_Xreg_value_a4[13][13] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][13] ), .B2(n5759), .Y(n5740) );
+  sky130_fd_sc_hd__a22oi_1 U5792 ( .A1(\CPU_Xreg_value_a4[2][13] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][13] ), .B2(n5761), .Y(n5739) );
+  sky130_fd_sc_hd__nand4_1 U5793 ( .A(n5742), .B(n5741), .C(n5740), .D(n5739), 
+        .Y(CPU_src1_value_a2[13]) );
+  sky130_fd_sc_hd__a22oi_1 U5794 ( .A1(N718), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][12] ), .B2(n5755), .Y(n5746) );
+  sky130_fd_sc_hd__a22oi_1 U5795 ( .A1(\CPU_Xreg_value_a4[3][12] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][12] ), .B2(n5757), .Y(n5745) );
+  sky130_fd_sc_hd__a22oi_1 U5796 ( .A1(\CPU_Xreg_value_a4[13][12] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][12] ), .B2(n5759), .Y(n5744) );
+  sky130_fd_sc_hd__a22oi_1 U5797 ( .A1(\CPU_Xreg_value_a4[2][12] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][12] ), .B2(n5761), .Y(n5743) );
+  sky130_fd_sc_hd__nand4_1 U5798 ( .A(n5746), .B(n5745), .C(n5744), .D(n5743), 
+        .Y(CPU_src1_value_a2[12]) );
+  sky130_fd_sc_hd__a22oi_1 U5799 ( .A1(N717), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][11] ), .B2(n5755), .Y(n5750) );
+  sky130_fd_sc_hd__a22oi_1 U5800 ( .A1(\CPU_Xreg_value_a4[3][11] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][11] ), .B2(n5757), .Y(n5749) );
+  sky130_fd_sc_hd__a22oi_1 U5801 ( .A1(\CPU_Xreg_value_a4[13][11] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][11] ), .B2(n5759), .Y(n5748) );
+  sky130_fd_sc_hd__a22oi_1 U5802 ( .A1(\CPU_Xreg_value_a4[2][11] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][11] ), .B2(n5761), .Y(n5747) );
+  sky130_fd_sc_hd__nand4_1 U5803 ( .A(n5750), .B(n5749), .C(n5748), .D(n5747), 
+        .Y(CPU_src1_value_a2[11]) );
+  sky130_fd_sc_hd__a22oi_1 U5804 ( .A1(N716), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][10] ), .B2(n5755), .Y(n5754) );
+  sky130_fd_sc_hd__a22oi_1 U5805 ( .A1(\CPU_Xreg_value_a4[3][10] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][10] ), .B2(n5757), .Y(n5753) );
+  sky130_fd_sc_hd__a22oi_1 U5806 ( .A1(\CPU_Xreg_value_a4[13][10] ), .A2(n5760), .B1(\CPU_Xreg_value_a4[15][10] ), .B2(n5759), .Y(n5752) );
+  sky130_fd_sc_hd__a22oi_1 U5807 ( .A1(\CPU_Xreg_value_a4[2][10] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][10] ), .B2(n5761), .Y(n5751) );
+  sky130_fd_sc_hd__nand4_1 U5808 ( .A(n5754), .B(n5753), .C(n5752), .D(n5751), 
+        .Y(CPU_src1_value_a2[10]) );
+  sky130_fd_sc_hd__a22oi_1 U5809 ( .A1(N706), .A2(n5756), .B1(
+        \CPU_Xreg_value_a4[12][0] ), .B2(n5755), .Y(n5766) );
+  sky130_fd_sc_hd__a22oi_1 U5810 ( .A1(\CPU_Xreg_value_a4[3][0] ), .A2(n5758), 
+        .B1(\CPU_Xreg_value_a4[1][0] ), .B2(n5757), .Y(n5765) );
+  sky130_fd_sc_hd__a22oi_1 U5811 ( .A1(\CPU_Xreg_value_a4[13][0] ), .A2(n5760), 
+        .B1(\CPU_Xreg_value_a4[15][0] ), .B2(n5759), .Y(n5764) );
+  sky130_fd_sc_hd__a22oi_1 U5812 ( .A1(\CPU_Xreg_value_a4[2][0] ), .A2(n5762), 
+        .B1(\CPU_Xreg_value_a4[14][0] ), .B2(n5761), .Y(n5763) );
+  sky130_fd_sc_hd__nand4_1 U5813 ( .A(n5766), .B(n5765), .C(n5764), .D(n5763), 
+        .Y(CPU_src1_value_a2[0]) );
+  sky130_fd_sc_hd__clkinv_1 U5814 ( .A(n5767), .Y(n5768) );
+  sky130_fd_sc_hd__o22ai_1 U5815 ( .A1(CPU_imem_rd_addr_a1[3]), .A2(n5769), 
+        .B1(n5778), .B2(n5768), .Y(CPU_instr_a1_8) );
+  sky130_fd_sc_hd__nand2_1 U5816 ( .A(n5871), .B(n5774), .Y(n5109) );
+  sky130_fd_sc_hd__nand2_1 U5817 ( .A(CPU_imem_rd_addr_a1[1]), .B(n5779), .Y(
+        n5770) );
+  sky130_fd_sc_hd__clkinv_1 U5818 ( .A(CPU_imm_a1[0]), .Y(n5784) );
+  sky130_fd_sc_hd__o211ai_1 U5819 ( .A1(n5778), .A2(n5770), .B1(n5871), .C1(
+        n5784), .Y(CPU_instr_a1_7) );
+  sky130_fd_sc_hd__nand2_1 U5820 ( .A(n5863), .B(n5771), .Y(n5773) );
+  sky130_fd_sc_hd__o211ai_1 U5821 ( .A1(n5787), .A2(n5772), .B1(n5773), .C1(
+        n5784), .Y(CPU_instr_a1_15) );
+  sky130_fd_sc_hd__or2_0 U5822 ( .A(CPU_instr_a1_15), .B(n5111), .X(
+        CPU_instr_a1_18) );
+  sky130_fd_sc_hd__nand2_1 U5823 ( .A(n5774), .B(n5773), .Y(n4240) );
+  sky130_fd_sc_hd__nand3_1 U5824 ( .A(n5776), .B(n5775), .C(n5774), .Y(
+        CPU_imm_a1[5]) );
+  sky130_fd_sc_hd__o21ai_1 U5825 ( .A1(n5779), .A2(n5778), .B1(n5777), .Y(
+        CPU_instr_a1[23]) );
+  sky130_fd_sc_hd__o21ai_1 U5826 ( .A1(CPU_imem_rd_addr_a1[2]), .A2(n5786), 
+        .B1(CPU_imem_rd_addr_a1[3]), .Y(CPU_instr_a1_10) );
+  sky130_fd_sc_hd__o21ai_1 U5827 ( .A1(n5781), .A2(n5780), .B1(n5783), .Y(
+        CPU_imm_a1[2]) );
+  sky130_fd_sc_hd__nand2_1 U5828 ( .A(n5783), .B(n5782), .Y(CPU_instr_a1_9) );
+  sky130_fd_sc_hd__clkinv_1 U5829 ( .A(n5111), .Y(n5785) );
+  sky130_fd_sc_hd__o211ai_1 U5830 ( .A1(n5787), .A2(n5786), .B1(n5785), .C1(
+        n5784), .Y(CPU_instr_a1[20]) );
+  sky130_fd_sc_hd__a21oi_1 U5831 ( .A1(\CPU_Xreg_value_a4[3][1] ), .A2(n5789), 
+        .B1(CPU_reset_a3), .Y(n5788) );
+  sky130_fd_sc_hd__o21ai_1 U5832 ( .A1(n5850), .A2(n5791), .B1(n5788), .Y(
+        \CPU_Xreg_value_a3[3][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5833 ( .A1(\CPU_Xreg_value_a4[3][0] ), .A2(n5789), 
+        .B1(CPU_reset_a3), .Y(n5790) );
+  sky130_fd_sc_hd__o21ai_1 U5834 ( .A1(n5856), .A2(n5791), .B1(n5790), .Y(
+        \CPU_Xreg_value_a3[3][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5835 ( .A1(\CPU_Xreg_value_a4[31][4] ), .A2(n5796), 
+        .B1(CPU_reset_a3), .Y(n5792) );
+  sky130_fd_sc_hd__o21ai_1 U5836 ( .A1(n5838), .A2(n5798), .B1(n5792), .Y(
+        \CPU_Xreg_value_a3[31][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5837 ( .A1(\CPU_Xreg_value_a4[31][3] ), .A2(n5796), 
+        .B1(CPU_reset_a3), .Y(n5793) );
+  sky130_fd_sc_hd__o21ai_1 U5838 ( .A1(n5858), .A2(n5798), .B1(n5793), .Y(
+        \CPU_Xreg_value_a3[31][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5839 ( .A1(\CPU_Xreg_value_a4[31][2] ), .A2(n5796), 
+        .B1(CPU_reset_a3), .Y(n5794) );
+  sky130_fd_sc_hd__o21ai_1 U5840 ( .A1(n5862), .A2(n5798), .B1(n5794), .Y(
+        \CPU_Xreg_value_a3[31][2] ) );
+  sky130_fd_sc_hd__a21oi_1 U5841 ( .A1(\CPU_Xreg_value_a4[31][1] ), .A2(n5796), 
+        .B1(CPU_reset_a3), .Y(n5795) );
+  sky130_fd_sc_hd__o21ai_1 U5842 ( .A1(n5850), .A2(n5798), .B1(n5795), .Y(
+        \CPU_Xreg_value_a3[31][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5843 ( .A1(\CPU_Xreg_value_a4[31][0] ), .A2(n5796), 
+        .B1(CPU_reset_a3), .Y(n5797) );
+  sky130_fd_sc_hd__o21ai_1 U5844 ( .A1(n5856), .A2(n5798), .B1(n5797), .Y(
+        \CPU_Xreg_value_a3[31][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5845 ( .A1(\CPU_Xreg_value_a4[30][4] ), .A2(n5802), 
+        .B1(CPU_reset_a3), .Y(n5799) );
+  sky130_fd_sc_hd__o21ai_1 U5846 ( .A1(n5838), .A2(n5804), .B1(n5799), .Y(
+        \CPU_Xreg_value_a3[30][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5847 ( .A1(\CPU_Xreg_value_a4[30][3] ), .A2(n5802), 
+        .B1(CPU_reset_a3), .Y(n5800) );
+  sky130_fd_sc_hd__o21ai_1 U5848 ( .A1(n5858), .A2(n5804), .B1(n5800), .Y(
+        \CPU_Xreg_value_a3[30][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5849 ( .A1(\CPU_Xreg_value_a4[30][2] ), .A2(n5802), 
+        .B1(CPU_reset_a3), .Y(n5801) );
+  sky130_fd_sc_hd__o21ai_1 U5850 ( .A1(n5862), .A2(n5804), .B1(n5801), .Y(
+        \CPU_Xreg_value_a3[30][2] ) );
+  sky130_fd_sc_hd__a21oi_1 U5851 ( .A1(\CPU_Xreg_value_a4[30][1] ), .A2(n5802), 
+        .B1(CPU_reset_a3), .Y(n5803) );
+  sky130_fd_sc_hd__o21ai_1 U5852 ( .A1(n5850), .A2(n5804), .B1(n5803), .Y(
+        \CPU_Xreg_value_a3[30][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5853 ( .A1(\CPU_Xreg_value_a4[2][1] ), .A2(n5805), 
+        .B1(CPU_reset_a3), .Y(n5806) );
+  sky130_fd_sc_hd__o21ai_1 U5854 ( .A1(n5850), .A2(n5807), .B1(n5806), .Y(
+        \CPU_Xreg_value_a3[2][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5855 ( .A1(\CPU_Xreg_value_a4[29][4] ), .A2(n5811), 
+        .B1(CPU_reset_a3), .Y(n5808) );
+  sky130_fd_sc_hd__o21ai_1 U5856 ( .A1(n5838), .A2(n5813), .B1(n5808), .Y(
+        \CPU_Xreg_value_a3[29][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5857 ( .A1(\CPU_Xreg_value_a4[29][3] ), .A2(n5811), 
+        .B1(CPU_reset_a3), .Y(n5809) );
+  sky130_fd_sc_hd__o21ai_1 U5858 ( .A1(n5858), .A2(n5813), .B1(n5809), .Y(
+        \CPU_Xreg_value_a3[29][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5859 ( .A1(\CPU_Xreg_value_a4[29][2] ), .A2(n5811), 
+        .B1(CPU_reset_a3), .Y(n5810) );
+  sky130_fd_sc_hd__o21ai_1 U5860 ( .A1(n5862), .A2(n5813), .B1(n5810), .Y(
+        \CPU_Xreg_value_a3[29][2] ) );
+  sky130_fd_sc_hd__a21oi_1 U5861 ( .A1(\CPU_Xreg_value_a4[29][0] ), .A2(n5811), 
+        .B1(CPU_reset_a3), .Y(n5812) );
+  sky130_fd_sc_hd__o21ai_1 U5862 ( .A1(n5856), .A2(n5813), .B1(n5812), .Y(
+        \CPU_Xreg_value_a3[29][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5863 ( .A1(\CPU_Xreg_value_a4[28][4] ), .A2(n5816), 
+        .B1(CPU_reset_a3), .Y(n5814) );
+  sky130_fd_sc_hd__o21ai_1 U5864 ( .A1(n5838), .A2(n5818), .B1(n5814), .Y(
+        \CPU_Xreg_value_a3[28][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5865 ( .A1(\CPU_Xreg_value_a4[28][3] ), .A2(n5816), 
+        .B1(CPU_reset_a3), .Y(n5815) );
+  sky130_fd_sc_hd__o21ai_1 U5866 ( .A1(n5858), .A2(n5818), .B1(n5815), .Y(
+        \CPU_Xreg_value_a3[28][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5867 ( .A1(\CPU_Xreg_value_a4[28][2] ), .A2(n5816), 
+        .B1(CPU_reset_a3), .Y(n5817) );
+  sky130_fd_sc_hd__o21ai_1 U5868 ( .A1(n5862), .A2(n5818), .B1(n5817), .Y(
+        \CPU_Xreg_value_a3[28][2] ) );
+  sky130_fd_sc_hd__a21oi_1 U5869 ( .A1(\CPU_Xreg_value_a4[1][0] ), .A2(n5819), 
+        .B1(CPU_reset_a3), .Y(n5820) );
+  sky130_fd_sc_hd__o21ai_1 U5870 ( .A1(n5856), .A2(n5821), .B1(n5820), .Y(
+        \CPU_Xreg_value_a3[1][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5871 ( .A1(\CPU_Xreg_value_a4[19][4] ), .A2(n5824), 
+        .B1(CPU_reset_a3), .Y(n5822) );
+  sky130_fd_sc_hd__o21ai_1 U5872 ( .A1(n5838), .A2(n5826), .B1(n5822), .Y(
+        \CPU_Xreg_value_a3[19][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5873 ( .A1(\CPU_Xreg_value_a4[19][1] ), .A2(n5824), 
+        .B1(CPU_reset_a3), .Y(n5823) );
+  sky130_fd_sc_hd__o21ai_1 U5874 ( .A1(n5850), .A2(n5826), .B1(n5823), .Y(
+        \CPU_Xreg_value_a3[19][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5875 ( .A1(\CPU_Xreg_value_a4[19][0] ), .A2(n5824), 
+        .B1(CPU_reset_a3), .Y(n5825) );
+  sky130_fd_sc_hd__o21ai_1 U5876 ( .A1(n5856), .A2(n5826), .B1(n5825), .Y(
+        \CPU_Xreg_value_a3[19][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5877 ( .A1(\CPU_Xreg_value_a4[18][4] ), .A2(n5828), 
+        .B1(CPU_reset_a3), .Y(n5827) );
+  sky130_fd_sc_hd__o21ai_1 U5878 ( .A1(n5838), .A2(n5830), .B1(n5827), .Y(
+        \CPU_Xreg_value_a3[18][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5879 ( .A1(\CPU_Xreg_value_a4[18][1] ), .A2(n5828), 
+        .B1(CPU_reset_a3), .Y(n5829) );
+  sky130_fd_sc_hd__o21ai_1 U5880 ( .A1(n5850), .A2(n5830), .B1(n5829), .Y(
+        \CPU_Xreg_value_a3[18][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5881 ( .A1(\CPU_Xreg_value_a4[17][4] ), .A2(n5832), 
+        .B1(CPU_reset_a3), .Y(n5831) );
+  sky130_fd_sc_hd__o21ai_1 U5882 ( .A1(n5838), .A2(n5834), .B1(n5831), .Y(
+        \CPU_Xreg_value_a3[17][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5883 ( .A1(\CPU_Xreg_value_a4[17][0] ), .A2(n5832), 
+        .B1(CPU_reset_a3), .Y(n5833) );
+  sky130_fd_sc_hd__o21ai_1 U5884 ( .A1(n5856), .A2(n5834), .B1(n5833), .Y(
+        \CPU_Xreg_value_a3[17][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5885 ( .A1(\CPU_Xreg_value_a4[16][4] ), .A2(n5835), 
+        .B1(CPU_reset_a3), .Y(n5836) );
+  sky130_fd_sc_hd__o21ai_1 U5886 ( .A1(n5838), .A2(n5837), .B1(n5836), .Y(
+        \CPU_Xreg_value_a3[16][4] ) );
+  sky130_fd_sc_hd__a21oi_1 U5887 ( .A1(\CPU_Xreg_value_a4[15][3] ), .A2(n5842), 
+        .B1(CPU_reset_a3), .Y(n5839) );
+  sky130_fd_sc_hd__o21ai_1 U5888 ( .A1(n5858), .A2(n5844), .B1(n5839), .Y(
+        \CPU_Xreg_value_a3[15][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5889 ( .A1(\CPU_Xreg_value_a4[15][2] ), .A2(n5842), 
+        .B1(CPU_reset_a3), .Y(n5840) );
+  sky130_fd_sc_hd__o21ai_1 U5890 ( .A1(n5862), .A2(n5844), .B1(n5840), .Y(
+        \CPU_Xreg_value_a3[15][2] ) );
+  sky130_fd_sc_hd__a21oi_1 U5891 ( .A1(\CPU_Xreg_value_a4[15][1] ), .A2(n5842), 
+        .B1(CPU_reset_a3), .Y(n5841) );
+  sky130_fd_sc_hd__o21ai_1 U5892 ( .A1(n5850), .A2(n5844), .B1(n5841), .Y(
+        \CPU_Xreg_value_a3[15][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5893 ( .A1(\CPU_Xreg_value_a4[15][0] ), .A2(n5842), 
+        .B1(CPU_reset_a3), .Y(n5843) );
+  sky130_fd_sc_hd__o21ai_1 U5894 ( .A1(n5856), .A2(n5844), .B1(n5843), .Y(
+        \CPU_Xreg_value_a3[15][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5895 ( .A1(\CPU_Xreg_value_a4[14][3] ), .A2(n5847), 
+        .B1(CPU_reset_a3), .Y(n5845) );
+  sky130_fd_sc_hd__o21ai_1 U5896 ( .A1(n5858), .A2(n5849), .B1(n5845), .Y(
+        \CPU_Xreg_value_a3[14][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5897 ( .A1(\CPU_Xreg_value_a4[14][2] ), .A2(n5847), 
+        .B1(CPU_reset_a3), .Y(n5846) );
+  sky130_fd_sc_hd__o21ai_1 U5898 ( .A1(n5862), .A2(n5849), .B1(n5846), .Y(
+        \CPU_Xreg_value_a3[14][2] ) );
+  sky130_fd_sc_hd__a21oi_1 U5899 ( .A1(\CPU_Xreg_value_a4[14][1] ), .A2(n5847), 
+        .B1(CPU_reset_a3), .Y(n5848) );
+  sky130_fd_sc_hd__o21ai_1 U5900 ( .A1(n5850), .A2(n5849), .B1(n5848), .Y(
+        \CPU_Xreg_value_a3[14][1] ) );
+  sky130_fd_sc_hd__a21oi_1 U5901 ( .A1(\CPU_Xreg_value_a4[13][3] ), .A2(n5853), 
+        .B1(CPU_reset_a3), .Y(n5851) );
+  sky130_fd_sc_hd__o21ai_1 U5902 ( .A1(n5858), .A2(n5855), .B1(n5851), .Y(
+        \CPU_Xreg_value_a3[13][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5903 ( .A1(\CPU_Xreg_value_a4[13][2] ), .A2(n5853), 
+        .B1(CPU_reset_a3), .Y(n5852) );
+  sky130_fd_sc_hd__o21ai_1 U5904 ( .A1(n5862), .A2(n5855), .B1(n5852), .Y(
+        \CPU_Xreg_value_a3[13][2] ) );
+  sky130_fd_sc_hd__a21oi_1 U5905 ( .A1(\CPU_Xreg_value_a4[13][0] ), .A2(n5853), 
+        .B1(CPU_reset_a3), .Y(n5854) );
+  sky130_fd_sc_hd__o21ai_1 U5906 ( .A1(n5856), .A2(n5855), .B1(n5854), .Y(
+        \CPU_Xreg_value_a3[13][0] ) );
+  sky130_fd_sc_hd__a21oi_1 U5907 ( .A1(\CPU_Xreg_value_a4[12][3] ), .A2(n5859), 
+        .B1(CPU_reset_a3), .Y(n5857) );
+  sky130_fd_sc_hd__o21ai_1 U5908 ( .A1(n5858), .A2(n5861), .B1(n5857), .Y(
+        \CPU_Xreg_value_a3[12][3] ) );
+  sky130_fd_sc_hd__a21oi_1 U5909 ( .A1(\CPU_Xreg_value_a4[12][2] ), .A2(n5859), 
+        .B1(CPU_reset_a3), .Y(n5860) );
+  sky130_fd_sc_hd__o21ai_1 U5910 ( .A1(n5862), .A2(n5861), .B1(n5860), .Y(
+        \CPU_Xreg_value_a3[12][2] ) );
+  sky130_fd_sc_hd__nor2_1 U5911 ( .A(n5863), .B(CPU_imem_rd_addr_a1[2]), .Y(
+        n5867) );
+  sky130_fd_sc_hd__nand2_1 U5912 ( .A(n5864), .B(CPU_br_tgt_pc_a3[4]), .Y(
+        n5865) );
+  sky130_fd_sc_hd__o31ai_1 U5913 ( .A1(n5868), .A2(n5867), .A3(n5866), .B1(
+        n5865), .Y(n5079) );
 endmodule
 ```
+
+GTKwave :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/31fbaf995e4de0688ce0ef095ba78c6cf26344cf/PD%23day13/mythcore_gtkwave_net.png">
+
+Netlist Gui :
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/31fbaf995e4de0688ce0ef095ba78c6cf26344cf/PD%23day13/myth_core_sche.png">
+
+**4 bit Adder Example**
+Commands:
+*Setting target and link library*
+Make vim file by name .synopsys_dc.setup, inside that vim file write :
+```ruby
+set target_library { /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db }
+
+set link_library {* /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db}
+```
+Writing .v file :
+```
+dc_shell> read_verilog adder4.v
+dc_shell> link
+
+  Linking design 'fulladd'
+  Using the following designs and libraries:
+  --------------------------------------------------------------------------
+  * (2 designs)               /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/fulladd.db, etc
+  avsdpll (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db
+  avsddac (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db
+  sky130_fd_sc_hd__tt_025C_1v80 (library) /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
+dc_shell> dc_shell> compile_ultra
+dc_shell> write -f verilog -out adder4_net.v
+Writing verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/adder4_net.v'.
+```
+Netlist GUI before compile:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/31fbaf995e4de0688ce0ef095ba78c6cf26344cf/PD%23day13/adder_sche_before_compile.png">
+
+GLS based Simulation:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/31fbaf995e4de0688ce0ef095ba78c6cf26344cf/PD%23day13/adder4_after_compile.png">
+
+Netlist GUI before compile:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/31fbaf995e4de0688ce0ef095ba78c6cf26344cf/PD%23day13/adder4_gtkwave_postsyn.png">
 
