@@ -10141,7 +10141,7 @@ dc_shell> link
   avsdpll (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db
   avsddac (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db
   sky130_fd_sc_hd__tt_025C_1v80 (library) /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
-dc_shell> dc_shell> compile_ultra
+dc_shell> compile_ultra
 dc_shell> write -f verilog -out adder4_net.v
 Writing verilog file '/home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/adder4_net.v'.
 ```
@@ -10151,6 +10151,46 @@ Netlist GUI before compile:
 GLS based Simulation:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/31fbaf995e4de0688ce0ef095ba78c6cf26344cf/PD%23day13/adder4_after_compile.png">
 
-Netlist GUI before compile:
+Netlist GUI after compile:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/31fbaf995e4de0688ce0ef095ba78c6cf26344cf/PD%23day13/adder4_gtkwave_postsyn.png">
 
+**Combined Modules**
+
+In this we run post systhesis of vsdbabysoc. Which includes module rvmyth , pll and dac.
+
+Commands:
+```
+dc_shell> read_verilog vsdbabysoc.v 
+dc_shell> link
+
+  Linking design 'vsdbabysoc'
+  Using the following designs and libraries:
+  --------------------------------------------------------------------------
+  * (3 designs)               /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/vsdbabysoc.db, etc
+  avsdpll (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsdpll.db
+  avsddac (library)           /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/avsddac.db
+  sky130_fd_sc_hd__tt_025C_1v80 (library)
+                              /home/prakhar.g2/Samsung-PD-Training-/VSDBabySoC/src/module/libs/sky130_fd_sc_hd__tt_025C_1v80.db
+
+dc_shell> compile_ultra 
+```
+Generated Nelist:
+``` ruby
+module vsdbabysoc ( OUT, reset, VCO_IN, ENb_CP, ENb_VCO, REF, VREFH );
+  input reset, VCO_IN, ENb_CP, ENb_VCO, REF, VREFH;
+  output OUT;
+  wire   CLK, net8;
+  wire   [9:0] RV_TO_DAC;
+
+  core core1 ( .clk(CLK), .reset(reset), .out(RV_TO_DAC) );
+  avsdpll pll ( .ENb_CP(ENb_CP), .ENb_VCO(ENb_VCO), 
+        .REF(REF), .VCO_IN(VCO_IN), .CLK(CLK) );
+  avsddac dac ( .D(RV_TO_DAC), .OUT(OUT), .VREFH(VREFH) );
+endmodule
+```
+Netlist GUI after compile:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/62c986d5de1eca23b76fc2f17ea1669b07c0d35d/PD%23day13/combined_sche.png">
+
+
+GLS based Simulation:
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/62c986d5de1eca23b76fc2f17ea1669b07c0d35d/PD%23day13/vsdbabysoc_gtk.png">
