@@ -5296,3 +5296,46 @@ Netlist GUI after compile:
 
 GLS based Simulation:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/62c986d5de1eca23b76fc2f17ea1669b07c0d35d/PD%23day13/vsdbabysoc_gtk.png">
+
+## Day-14-Synopsys DC and timing analysis
+
+<details>
+<summary> Process,Voltage andTemperature (PVT) </summary>
+
+
+    - Process variations are caused by changes in manufacturing conditions such as temperature, pressure, and dopant concentrations. Deviations in the semiconductor fabrication process are accounted for by this variance.
+    - Integrated circuits are designed in such away that they can function in a wide variety of temperatures and voltages,rather than a single temperature and voltage.
+
+*How is PVT data measured?*
+Gammadot measures PvT behaviour using a high pressure indirect dilatometry system developed by Rapra Technology Ltd. The technique employs a stainless steel bellows test cell with Mercury as the containing fluid. Volume changes related to changes in temperature & pressure are monitored via a displacement transducer.
+
+**Process**
+
+    Variations in the process parameters can be impurity concentration densities, oxide thicknesses and diffusion depths.
+    These are caused bye non uniform conditions during depositions and/or during diffusions of the impurities.
+    This introduces variations in the sheet resistance and transistor parameters such as threshold voltage.
+    Variations are in the dimensions of the devices, mainly resulting from the limited resolution of the photolithographic process. This causes (W/L) variations     in MOS transistors.
+
+**Voltage**
+
+    As we are going to the lower nodes the supply voltage for a chip is also going to less.
+
+    Let’s say the chip is operating at 1.2V. So, there are chances that at certain instances of time this voltage may vary. It can go to 1.5V or 0.8V. To take       care of this scenario, we consider voltage variation.
+        There are multiple reasons for voltage variation.
+            IR drop is caused by the current flow over the power grid network.
+            Supply noise caused by parasitic inductance in combination with resistance and capacitance. when the current is flowing through parasitic inductance             (L) it will causes the voltage bounce.
+
+**Temperature**
+
+    Effects on performance caused by temperature fluctuations are most often handled as linear scaling effects, but some submicron silicon processes require         nonlinear calculations.
+    This is due to the power dissipation in the MOS-transistors.
+    The power consumption is mainly due to switching, short-circuit and leakage power consumption.
+
+<details>
+<summary> LABs </summary>
+
+1. Get all the .lib files in the work directory: git clone https://github.com/Geetima2021/vsdpcvrd.g
+2. Delete the line from the .lib with the error stated. (REPEAT THIS FOR ALL THE .LIB)
+3. After done editing the file: Load lc_shell and read_lib, the write the lib into db.
+4. read_verilog vsdbabysoc.v (current_design is clk_gate)
+5. read_file {vsdbabysoc.v avsd_pll_1v8.v avsddac.v mythcore_test.v} -autoread -format verilog -top vsdbabysoc 
