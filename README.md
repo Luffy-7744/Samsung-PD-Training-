@@ -5297,6 +5297,9 @@ Netlist GUI after compile:
 GLS based Simulation:
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/62c986d5de1eca23b76fc2f17ea1669b07c0d35d/PD%23day13/vsdbabysoc_gtk.png">
 
+</details>
+
+
 ## Day-14-Synopsys DC and timing analysis
 
 <details>
@@ -5332,10 +5335,264 @@ Gammadot measures PvT behaviour using a high pressure indirect dilatometry syste
     The power consumption is mainly due to switching, short-circuit and leakage power consumption.
 
 <details>
-<summary> LABs </summary>
+<summary> LABs(pt_shell) </summary>
 
+Used primetime (pt_shell) for analysis:
 1. Get all the .lib files in the work directory: git clone https://github.com/Geetima2021/vsdpcvrd.g
 2. Delete the line from the .lib with the error stated. (REPEAT THIS FOR ALL THE .LIB)
 3. After done editing the file: Load lc_shell and read_lib, the write the lib into db.
 4. read_verilog vsdbabysoc.v (current_design is clk_gate)
-5. read_file {vsdbabysoc.v avsd_pll_1v8.v avsddac.v mythcore_test.v} -autoread -format verilog -top vsdbabysoc 
+5. read_file {vsdbabysoc.v avsd_pll_1v8.v avsddac.v mythcore_test.v} -autoread -format verilog -top vsdbabysoc
+6. link
+7. report_global_timing
+
+We created one tcl file to  generate report_timing for both min and max delay types and also generate report_global_timing inside pt_shell.First it sorts all the .db files beforing running loop then we exclude all All the corner report are saved inside the report2 folder:
+
+TCL script :
+```ruby
+set db_files [glob -directory "./" -types f -tails *.db]
+set exclude_files {"avsddac.db" "avsdpll.db"}
+set sky_db {}
+foreach db $db_files {
+    if {$db ni $exclude_files} {
+        lappend sky_db $db
+    }
+}
+    
+foreach file_name $sky_db {
+    set target_library [concat $file_name " avsddac.db avsdpll.db "]
+    set link_library [concat " * " $file_name " avsddac.db avsdpll.db "]
+    echo $file_name
+   ## read_file {vsdbabysoc.v mythcore_test.v} -autoread -format verilog -top vsdbabysoc
+    read_file { ../../../../VSDBabySoC/src/module/myth_core_net3.v ../../../../VSDBabySoC/src/module/vsdbabysoc_net.v} -format verilog
+    #set current_design core
+    source cons.tcl
+    link
+    ##compile_ultra
+    report_timing -delay_type min >> reports2/$file_name.rptmin
+    report_timing -delay_type max >> reports2/$file_name.rptmax
+    report_global_timing >> reports2/$file_name.rptglobal
+     
+}
+```
+
+The design given to us is unconstrained, we write the constraints for the design :
+```ruby
+## set_units -time ns
+create_clock -name MYCLK -per 2 [get_pins {pll/CLK}];
+
+set_clock_latency -source 1 [get_clocks MYCLK]
+set_clock_uncertainty -setup 0.5 [get_clocks MYCLK]; 
+set_clock_uncertainty -hold 0.4 [get_clocks MYCLK]; 
+
+set_input_delay -max 1 -clock [get_clocks MYCLK] [all_inputs];
+set_input_delay -min 0.5 -clock [get_clocks MYCLK] [all_inputs];
+set_output_delay -max 1 -clock [get_clocks MYCLK] [all_outputs];
+set_output_delay -min 0.5 -clock [get_clocks MYCLK] [all_outputs];
+
+set_input_transition -max 0.2 [all_inputs];
+set_input_transition -min 0.1 [all_inputs];
+
+set_max_area  800;
+
+set_load -max 0.2 [all_outputs];
+set_load -min 0.1 [all_outputs];
+```
+
+**1. For sky130_fd_sc_hd__ff_100C_1v65**
+
+Report_global_timing :
+```
+Setup violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS      -9.90     -9.90      0.00      0.00      0.00
+TNS   -6250.73  -6250.73      0.00      0.00      0.00
+NUM       1065      1065         0         0         0
+---------------------------------------------------------
+
+
+Hold violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS      -0.15     -0.15      0.00      0.00      0.00
+TNS     -66.14    -66.14      0.00      0.00      0.00
+NUM       1139      1139         0         0         0
+---------------------------------------------------------
+```
+**2. sky130_fd_sc_hd__ff_100C_1v95**
+Report_global_timing :
+
+```
+No setup violations found.
+
+No hold violations found.
+1
+```
+**3. sky130_fd_sc_hd__ff_n40C_1v56**
+
+Report_global_timing :
+
+```
+Setup violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS     -13.02    -13.02      0.00      0.00      0.00
+TNS   -8290.76  -8290.76      0.00      0.00      0.00
+NUM       1094      1094         0         0         0
+---------------------------------------------------------
+
+
+Hold violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS      -0.11     -0.11      0.00      0.00      0.00
+TNS     -10.63    -10.63      0.00      0.00      0.00
+NUM        524       524         0         0         0
+---------------------------------------------------------
+
+1
+```
+**4. sky130_fd_sc_hd__ff_n40C_1v65**
+
+Report_global_timing :
+```
+No setup violations found.
+
+No hold violations found.
+1
+```
+**5. sky130_fd_sc_hd__ff_n40C_1v76**
+
+Report_global_timing :
+```
+Setup violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS      -9.33     -9.33      0.00      0.00      0.00
+TNS   -5820.90  -5820.90      0.00      0.00      0.00
+NUM       1064      1064         0         0         0
+---------------------------------------------------------
+
+
+Hold violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS      -0.18     -0.18      0.00      0.00      0.00
+TNS     -97.53    -97.53      0.00      0.00      0.00
+NUM       1145      1145         0         0         0
+---------------------------------------------------------
+
+1
+```
+**6. sky130_fd_sc_hd__ss_100C_1v40**
+Report_global_timing :
+```
+No setup violations found.
+
+No hold violations found.
+1
+```
+**7. sky130_fd_sc_hd__ss_100C_1v60**
+Report_global_timing :
+```
+Setup violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS     -32.60    -32.60      0.00      0.00      0.00
+TNS  -21164.23 -21164.23      0.00      0.00      0.00
+NUM       1119      1119         0         0         0
+---------------------------------------------------------
+
+
+No hold violations found.
+1
+```
+**8. sky130_fd_sc_hd__ss_n40C_1v28**
+Report_global_timing :
+```
+No setup violations found.
+
+No hold violations found.
+1
+```
+**9. sky130_fd_sc_hd__ss_n40C_1v35**
+
+Report_global_timing :
+```
+No setup violations found.
+
+No hold violations found.
+1
+```
+**10. sky130_fd_sc_hd__ss_n40C_1v40.db.rptglobal**
+Report_global_timing :
+```
+Setup violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS     -75.16    -75.16     -0.40      0.00      0.00
+TNS  -49114.48 -49114.08     -0.40      0.00      0.00
+NUM       1192      1191         1         0         0
+---------------------------------------------------------
+
+
+No hold violations found.
+1
+```
+**11. sky130_fd_sc_hd__ss_n40C_1v44**
+Report_global_timing :
+```
+No setup violations found.
+
+No hold violations found.
+1
+```
+**12. sky130_fd_sc_hd__ss_n40C_1v76**
+Report_global_timing :
+```
+Setup violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS     -25.84    -25.84      0.00      0.00      0.00
+TNS  -16864.05 -16864.05      0.00      0.00      0.00
+NUM       1117      1117         0         0         0
+---------------------------------------------------------
+
+
+No hold violations found.
+1
+```
+**13. sky130_fd_sc_hd__tt_025C_1v80**
+Report_global_timing :
+```
+Setup violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS     -14.10    -14.10      0.00      0.00      0.00
+TNS   -8972.77  -8972.77      0.00      0.00      0.00
+NUM       1098      1098         0         0         0
+---------------------------------------------------------
+
+
+Hold violations
+---------------------------------------------------------
+         Total  reg->reg   in->reg  reg->out   in->out
+---------------------------------------------------------
+WNS      -0.09     -0.09      0.00      0.00      0.00
+TNS      -5.20     -5.20      0.00      0.00      0.00
+NUM         69        69         0         0         0
+---------------------------------------------------------
+
+1
+```
