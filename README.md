@@ -5313,26 +5313,21 @@ GLS based Simulation:
 Gammadot measures PvT behaviour using a high pressure indirect dilatometry system developed by Rapra Technology Ltd. The technique employs a stainless steel bellows test cell with Mercury as the containing fluid. Volume changes related to changes in temperature & pressure are monitored via a displacement transducer.
 
 **Process**
-
-    Variations in the process parameters can be impurity concentration densities, oxide thicknesses and diffusion depths.
-    These are caused bye non uniform conditions during depositions and/or during diffusions of the impurities.
-    This introduces variations in the sheet resistance and transistor parameters such as threshold voltage.
-    Variations are in the dimensions of the devices, mainly resulting from the limited resolution of the photolithographic process. This causes (W/L) variations     in MOS transistors.
+Variations in the process parameters can be impurity concentration densities, oxide thicknesses and diffusion depths. These are caused bye non uniform conditions during depositions and/or during diffusions of the impurities. This introduces variations in the sheet resistance and transistor parameters such as threshold voltage. Variations are in the dimensions of the devices, mainly resulting from the limited resolution of the photolithographic process. This causes (W/L) variations in MOS transistors.
 
 **Voltage**
 
-    As we are going to the lower nodes the supply voltage for a chip is also going to less.
-
+As we are going to the lower nodes the supply voltage for a chip is also going to less.
     Let’s say the chip is operating at 1.2V. So, there are chances that at certain instances of time this voltage may vary. It can go to 1.5V or 0.8V. To take       care of this scenario, we consider voltage variation.
-        There are multiple reasons for voltage variation.
-            IR drop is caused by the current flow over the power grid network.
-            Supply noise caused by parasitic inductance in combination with resistance and capacitance. when the current is flowing through parasitic inductance             (L) it will causes the voltage bounce.
+There are multiple reasons for voltage variation.
+IR drop is caused by the current flow over the power grid network. Supply noise caused by parasitic inductance in combination with resistance and capacitance. when the current is flowing through parasitic inductance (L) it will causes the voltage bounce.
 
 **Temperature**
 
-    Effects on performance caused by temperature fluctuations are most often handled as linear scaling effects, but some submicron silicon processes require         nonlinear calculations.
-    This is due to the power dissipation in the MOS-transistors.
-    The power consumption is mainly due to switching, short-circuit and leakage power consumption.
+Effects on performance caused by temperature fluctuations are most often handled as linear scaling effects, but some submicron silicon processes require         nonlinear calculations. This is due to the power dissipation in the MOS-transistors.The power consumption is mainly due to switching, short-circuit and leakage power consumption.
+</details>
+
+
 
 <details>
 <summary> LABs(pt_shell) </summary>
