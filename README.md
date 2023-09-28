@@ -5646,4 +5646,6 @@ Graph for Hold:
 
 <img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0e9e722776d778f8ca831cab639a26ac34dd07e3/PD%23day14/hold_pvt_plot.PNG">
 
+**Observation**
+Hold violations are more prone in faster cells and setup is more prone in slower cells.
 </details>
