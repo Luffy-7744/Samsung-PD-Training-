@@ -5487,6 +5487,7 @@ NUM       1145      1145         0         0         0
 1
 ```
 **6. sky130_fd_sc_hd__ss_100C_1v40**
+
 Report_global_timing :
 ```
 No setup violations found.
@@ -5495,6 +5496,7 @@ No hold violations found.
 1
 ```
 **7. sky130_fd_sc_hd__ss_100C_1v60**
+
 Report_global_timing :
 ```
 Setup violations
@@ -5511,6 +5513,7 @@ No hold violations found.
 1
 ```
 **8. sky130_fd_sc_hd__ss_n40C_1v28**
+
 Report_global_timing :
 ```
 No setup violations found.
@@ -5527,7 +5530,8 @@ No setup violations found.
 No hold violations found.
 1
 ```
-**10. sky130_fd_sc_hd__ss_n40C_1v40.db.rptglobal**
+**10. sky130_fd_sc_hd__ss_n40C_1v40**
+
 Report_global_timing :
 ```
 Setup violations
@@ -5544,6 +5548,7 @@ No hold violations found.
 1
 ```
 **11. sky130_fd_sc_hd__ss_n40C_1v44**
+
 Report_global_timing :
 ```
 No setup violations found.
@@ -5552,6 +5557,7 @@ No hold violations found.
 1
 ```
 **12. sky130_fd_sc_hd__ss_n40C_1v76**
+
 Report_global_timing :
 ```
 Setup violations
@@ -5568,6 +5574,7 @@ No hold violations found.
 1
 ```
 **13. sky130_fd_sc_hd__tt_025C_1v80**
+
 Report_global_timing :
 ```
 Setup violations
@@ -5591,3 +5598,4 @@ NUM         69        69         0         0         0
 
 1
 ```
+
