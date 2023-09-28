@@ -5598,8 +5598,9 @@ NUM         69        69         0         0         0
 
 1
 ```
+
 Table for Setup :
-'''
+```
 Corners 	WNS	TNS
 ff_100C_1v65	9.9	6250.73
 ff_100C_1v95	0	0
@@ -5614,16 +5615,18 @@ ss_n40C_1v40	75.16	49114.08
 ss_n40C_1v44	0	0
 ss_n40C_1v76	25.84	16864.05
 tt_025C_1v80	14.1	8972.77
-'''
+```
 
+Graph for Setup:
 
+<img width="1085" alt="lib1" src="">
 
 
 
 
 Table for Hold:
 
-'''
+```
 Corners 	WNS	TNS
 ff_100C_1v65	0.15	66.14
 ff_100C_1v95	0	0
@@ -5638,6 +5641,8 @@ ss_n40C_1v40	0	0
 ss_n40C_1v44	0	0
 ss_n40C_1v76	0	0
 tt_025C_1v80	0.09	5.2
-'''
-		
+```
+Graph for Hold:
+
+<img width="1085" alt="lib1" src="">
 
