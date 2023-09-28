@@ -5619,7 +5619,7 @@ tt_025C_1v80	14.1	8972.77
 
 Graph for Setup:
 
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0e9e722776d778f8ca831cab639a26ac34dd07e3/PD%23day14/setup_pvt_graph.PNG">
 
 
 
@@ -5644,5 +5644,6 @@ tt_025C_1v80	0.09	5.2
 ```
 Graph for Hold:
 
-<img width="1085" alt="lib1" src="">
+<img width="1085" alt="lib1" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0e9e722776d778f8ca831cab639a26ac34dd07e3/PD%23day14/hold_pvt_plot.PNG">
 
+</details>
