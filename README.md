@@ -5634,7 +5634,7 @@ ff_n40C_1v56	0.11	10.63
 ff_n40C_1v65	0	0
 ff_n40C_1v76	0.18	97.53
 ss_100C_1v40	0	0
-ss_100C_1v60	0	0
+sDAY-15 Inception of EDA and PDKs_100C_1v60	0	0
 ss_n40C_1v28	0	0
 ss_n40C_1v35	0	0
 ss_n40C_1v40	0	0
@@ -5650,8 +5650,19 @@ Graph for Hold:
 Hold violations are more prone in faster cells and setup is more prone in slower cells.
 </details>
 
+## DAY-15 Inception of EDA and PDK
 
-periphery of the die, pads facilitate soldering or wire connections to the SoC, playing a pivotal role in establishing and expanding the SoC's connectivity.<br>
+<details>
+<summary> Intro </summary>
+
+An integrated circuit (IC), often referred to as simply an IC, is a comprehensive assembly of electronic circuits situated on a single, compact flat component—commonly recognized as a "chip." This chip primarily consists of semiconductor material, predominantly silicon. The customary arrangement involves mounting the integrated circuit onto a printed circuit board (PCB), thereby giving rise to a fully operational electronic system.
+
+-->Core
+A "core" in the context of integrated circuit (IC) design denotes a fundamental functional block or module. Cores are meticulously crafted to execute precise tasks or functions, and their integration with other cores and components allows for the creation of intricate ICs with diverse functionalities to serve various purposes.
+-->Die
+A "die" stands as a distinctive component within the context of silicon wafer intricacies, encapsulating an individual integrated circuit (IC) or chip. The silicon wafer undergoes meticulous division into multiple smaller sections, and within each of these sections resides a replicated version of the identical integrated circuit design. These segmented portions, aptly named "dies," represent miniature entities. It's noteworthy that each die, functioning as an independent entity, can operate autonomously once surgically separated from the wafer, embodying the essence of an individualized and self-sufficient chip.
+-->Pads
+Pads serve as the tangible external connections or terminals on the SoC. These crucial points act as the interface between the SoC and the external environment, encompassing input and output pins for linking with other electronic components, power supply pins, ground pins, and more. Positioned along the periphery of the die, pads facilitate soldering or wire connections to the SoC, playing a pivotal role in establishing and expanding the SoC's connectivity.<br>
      
 *- Varieties of Pads* <br>
 
@@ -5686,15 +5697,15 @@ During this intricate process, standard cells emerge as fundamental building blo
 **->Floorplan:-**
 Floor planning, a pivotal early-stage process in VLSI design, entails defining the physical layout and strategic placement of functional blocks, modules, and components within an integrated circuit (IC). This meticulous planning is crucial for optimizing various factors such as chip area, signal routing, power distribution, and thermal management.<br>
 
-*- Chip Floorplan:*<br>
+*Chip Floorplan:*<br>
 
 The term "Chip Floorplan" specifically refers to the meticulously designed layout for an integrated circuit (IC) or semiconductor chip. This layout, presented as a diagram, intricately details the physical arrangement and placement of diverse components, functional blocks, and critical elements within the silicon area of the chip.<br><br>
 
-*- Macro Floorplan:*<br>
+*Macro Floorplan:*<br>
 
 In semiconductor and integrated circuit (IC) design, a "Macro Floorplan" stands as a distinct type of floorplan. This is particularly utilized in the context of macros, which are predefined and pre-characterized functional blocks or modules within an IC, each performing a specific function. Macros can encompass anything from processor cores to memory blocks, representing complex building blocks strategically positioned within the IC.<br><br>
 
-*- Power Planning :*<br>
+*Power Planning :*<br>
 
 Power planning in VLSI design is a critical facet of semiconductor chip design, focusing on the management and distribution of electrical power within the IC. Effective power planning is indispensable for achieving reliable and efficient operation while minimizing power consumption. This aspect plays a crucial role in the overall success of the VLSI design by ensuring optimal power delivery and consumption throughout the integrated circuit.<br><br>
 
@@ -5702,7 +5713,7 @@ Power planning in VLSI design is a critical facet of semiconductor chip design, 
 
 Placement emerges as a pivotal step in the physical design process of crafting integrated circuits (ICs). This intricate phase revolves around strategically determining the optimal locations for each logical cell, commonly known as standard cells, within the silicon area of the chip. The effectiveness of this placement profoundly influences critical factors such as performance, power consumption, and chip area utilization.<br>
 
-*- Objectives of Placement:*
+*Objectives of Placement:*
 
 The primary goal of the placement process is to orchestrate standard cells in a configuration that achieves multiple objectives. These include minimizing the total wirelength, which refers to the aggregate length of wires connecting the cells. Additionally, effective placement aims to optimize chip area utilization and adhere to various design constraints, encompassing crucial aspects such as timing, power, and manufacturability.<br>
 
@@ -5713,13 +5724,13 @@ In summary, placement is a meticulous and strategic endeavor in the IC design jo
 
 CTS, an acronym for "Clock Tree Synthesis," holds a pivotal role in the intricate process of physically designing integrated circuits (ICs). It specifically focuses on the generation and optimization of the clock distribution network within the chip.<br>
 
-*- Primary Objective of CTS:* <br>
+*Primary Objective of CTS:* <br>
 The primary goal of CTS is to ensure the efficient and reliable distribution of clock signals to all flip-flops and sequential elements within the IC. This involves minimizing clock skew, the variation in arrival times of clock signals at different points, and meeting the stringent timing constraints crucial for the synchronized operation of the chip.<br>
 
-*- Significance in VLSI Design:*<br>
+*Significance in VLSI Design:*<br>
 Clock Tree Synthesis is deemed a critical step in VLSI design due to its profound impact on the overall performance, power consumption, and reliability of integrated circuits. A well-designed clock distribution network enhances the chip's efficiency and mitigates issues related to timing discrepancies.<br>
 
-*- Automation and Optimization:*<br>
+*Automation and Optimization:*<br>
 To tackle the complexities of modern and high-performance ICs, advanced algorithms and tools are employed to automate and optimize the CTS process. These tools play a key role in achieving precision and efficiency in the distribution of clock signals, contributing to the success of the overall VLSI design.<br>
 
 In essence, Clock Tree Synthesis stands as a fundamental and meticulous phase in VLSI design, ensuring that the heartbeat of the chip—the clock signals—is orchestrated with precision, impacting its performance, power efficiency, and reliability.<br><br>
@@ -5728,13 +5739,13 @@ In essence, Clock Tree Synthesis stands as a fundamental and meticulous phase in
 **-> Routing:-**
 Routing, within the context of Very Large Scale Integration (VLSI) design, stands as a foundational step in the intricate process of physically crafting integrated circuits (ICs). This critical phase involves the strategic generation of physical connections, employing metal traces or wires, that interlink the diverse components and logic elements situated on the chip.
 
-*- Efficient Signal and Power Routing:* <br>
+*Efficient Signal and Power Routing:* <br>
 The core objective of routing is to establish efficient pathways for the transmission of data signals, control signals, and power throughout the IC. This meticulous interconnection process ensures that the intricate web of signals and power distribution adheres to design constraints, such as timing, power consumption, and manufacturability.<br>
 
-*- Impact on IC Performance:* <br>
+*Impact on IC Performance:* <br>
 Routing's significance reverberates in its critical role in determining the overall performance of the IC. The efficiency of data transmission, the accuracy of control signal propagation, and the reliability of power distribution are all contingent on the effectiveness of the routing strategy implemented.<br>
 
-*- Key Determinants:* <br>
+*Key Determinants:* <br>
 Routing, being a linchpin of the VLSI design process, significantly influences the power consumption, performance metrics, and overall functionality of the IC. The intricacies of the routing decisions made during this phase ripple through the entirety of the IC's design and functionality.<br>
 
 In conclusion, routing in VLSI design is not merely the physical connection of components; it is a strategic and pivotal phase that intricately weaves the pathways for signals and power, shaping the backbone of an efficiently functioning integrated circuit.<br><br>
@@ -5744,13 +5755,13 @@ In conclusion, routing in VLSI design is not merely the physical connection of c
 
 Sign Off marks the conclusive stage in the design process just before the design is dispatched for fabrication or manufacturing. This pivotal phase involves an exhaustive set of checks, analyses, and validations to guarantee that the integrated circuit (IC) design aligns with all requisite criteria, constraints, and specifications before proceeding to the foundry for manufacturing. <br>
 
-*- Comprehensive Validation Process:* <br>
+*Comprehensive Validation Process:* <br>
 At Sign Off, the design undergoes a meticulous validation process encompassing checks for functionality, performance, and adherence to design constraints. This all-encompassing examination ensures that every facet of the IC design is thoroughly reviewed and approved before transitioning to the manufacturing phase. <br>
 
-*- Critical Nature of Sign Off:* <br>
+*Critical Nature of Sign Off:* <br>
 The Sign Off stage assumes paramount importance as any undetected design errors or issues at this juncture can potentially lead to costly and time-consuming problems. These issues might manifest during subsequent phases of the manufacturing process or even after the ICs are in operation, underscoring the critical nature of a rigorous and comprehensive Sign Off. <br>
 
-*- Preventing Future Complications:* <br>
+*Preventing Future Complications:* <br>
 By addressing potential design discrepancies and ensuring alignment with specifications, Sign Off serves as a preventive measure. It aims to circumvent complications that could arise in the manufacturing process or during the operational life of the ICs, safeguarding against disruptions and optimizing the overall efficiency and reliability of the integrated circuits. <br>
 
 In conclusion, Sign Off is not just a procedural formality; it is the last line of defense against design anomalies, offering assurance that the integrated circuit is ready for the next stages of manufacturing and operational deployment. <br><br>
@@ -5760,25 +5771,25 @@ In conclusion, Sign Off is not just a procedural formality; it is the last line 
 
 Physical Verification stands as a crucial phase in the design process of integrated circuits (ICs), involving a meticulous series of checks and analyses. Its primary objective is to confirm that the physical layout of the IC aligns with specified design rules, constraints, and manufacturing prerequisites. This scrutiny is essential for ensuring the manufacturability, functionality, and reliability of the IC design before it advances to the fabrication stage. <br>
 
-*-->Design Rule Checking (DRC):* <br>
+*Design Rule Checking (DRC):* <br>
 
-*- Geometry Checks:* <br>
+*Geometry Checks:* <br>
 DRC meticulously validates that the layout strictly adheres to the design rules set by the foundry. This encompasses scrutinizing minimum feature sizes, spacing requirements, and the width and spacing of metal layers, along with other geometric constraints. <br>
-*- Layer-Specific Rules:* <br>
+*Layer-Specific Rules:* <br>
 Different layers within the IC come with specific design rules. DRC conducts comprehensive checks to ensure compliance across all layers, including metal, polysilicon, diffusion, and more. <br><br>
 
 
-*-->Electrical Rule Checking (ERC):* <br>
-*- Electrical Connectivity:* <br>
+*Electrical Rule Checking (ERC):* <br>
+*Electrical Connectivity:* <br>
 ERC ensures the absence of electrical shorts or opens in the layout, verifying that the actual connections align with the intended connectivity outlined in the schematic.<br>
-*- Antenna Checking:* <br>
+*Antenna Checking:* <br>
 ERC extends its scrutiny to charge buildup issues, known as antenna effects, which may arise during the manufacturing processes of deposition and etching. <br><br>
 
 
-*- Layout Versus Schematic (LVS) Verification:* <br>
-*- Netlist Consistency:* <br>
+*Layout Versus Schematic (LVS) Verification:* <br>
+*Netlist Consistency:* <br>
 LVS performs a meticulous comparison between the layout netlist and the schematic netlist, ensuring their equivalence. Any disparities are flagged for resolution.<br>
-*- Parasitic Extraction:* <br>
+*Parasitic Extraction:* <br>
 Parasitic elements like capacitance and resistance are extracted from the layout and cross-referenced with the schematic to verify electrical equivalence.<br>
 In summary, Physical Verification acts as the gatekeeper, validating the precision and compliance of the IC design with stringent rules and requirements. By addressing geometric, electrical, and schematic considerations, this phase plays a pivotal role in fortifying the IC's journey from design to fabrication.
 
@@ -5843,3 +5854,8 @@ run_synthesis
 
 
 </details>
+
+## DAY-15 Inception of EDA and PDK
+
+<details>
+<summary> Intro </summary>
