@@ -5649,3 +5649,197 @@ Graph for Hold:
 **Observation**
 Hold violations are more prone in faster cells and setup is more prone in slower cells.
 </details>
+
+
+periphery of the die, pads facilitate soldering or wire connections to the SoC, playing a pivotal role in establishing and expanding the SoC's connectivity.<br>
+     
+*- Varieties of Pads* <br>
+
+- Input Pads: <br>
+These serve as conduits for external signals entering the IC. For instance, they might receive data inputs from sensors or user interfaces, facilitating the integration of external information.<br>
+
+- Output Pads: <br>
+Designed for transmitting signals generated within the IC to external devices or other segments of a circuit. An example includes the use of output pads to send data to a display or transmit information to another IC.<br>
+- Power Pads: <br>
+Essential for providing power to the IC, these pads are typically linked to the power supply voltage (VDD) and ground (GND), ensuring the energy requirements of the IC are met.<br>
+
+- Ground Pads: <br>
+Connected to the ground reference voltage (GND), ground pads play a critical role in maintaining proper functionality and reducing noise within the circuit.<br>
+
+- No-Connect Pads: <br>
+Some pads intentionally remain unconnected and are designated as "no-connect" to prevent unintended connections, ensuring the integrity and stability of the circuit.<br>
+
+ <img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/I3.PNG"> <br>
+ Contained within a QFN-48 package, denoting Quad Flat No Leads with 48 pins, this specific component boasts a dimension of 7mm by 7mm. Each of the 48 pins serves as a vital connection point, establishing interfaces with various components or packages integrated onto the design board. The central focal point within this package is typically occupied by a microchip. The pins situated on the periphery, commonly termed "outbounds," play a pivotal role in orchestrating the seamless exchange of data between the external world and the encapsulated chip, thus contributing significantly to the functionality of the entire package.
+</details>
+
+
+<details>
+	<summary> RTL to GDS</summary>
+	 <img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/RTL%20to%20GDS.PNG"> <br>
+	
+ **->Synthesis:-**
+ synthesis is a critical step that involves the transformation of a high-level hardware description of a digital circuit, often articulated in a hardware description language (HDL) like VHDL or Verilog. This transformation leads to the creation of a netlist, a representation encompassing both the logical and physical components essential for shaping the actual integrated circuit.<br>
+
+During this intricate process, standard cells emerge as fundamental building blocks. These cells boast a consistent layout, and each one is depicted in various perspectives, including electrical, HDL, and SPICE models. Notably, standard cells offer both abstract and detailed layout views. These versatile components play a pivotal role in the synthesis journey, contributing significantly to the construction of the final layout of the integrated circuit. Their regularity and adaptability make them indispensable in achieving optimal functionality and efficiency in the overall design. <br><br>
+
+**->Floorplan:-**
+Floor planning, a pivotal early-stage process in VLSI design, entails defining the physical layout and strategic placement of functional blocks, modules, and components within an integrated circuit (IC). This meticulous planning is crucial for optimizing various factors such as chip area, signal routing, power distribution, and thermal management.<br>
+
+*- Chip Floorplan:*<br>
+
+The term "Chip Floorplan" specifically refers to the meticulously designed layout for an integrated circuit (IC) or semiconductor chip. This layout, presented as a diagram, intricately details the physical arrangement and placement of diverse components, functional blocks, and critical elements within the silicon area of the chip.<br><br>
+
+*- Macro Floorplan:*<br>
+
+In semiconductor and integrated circuit (IC) design, a "Macro Floorplan" stands as a distinct type of floorplan. This is particularly utilized in the context of macros, which are predefined and pre-characterized functional blocks or modules within an IC, each performing a specific function. Macros can encompass anything from processor cores to memory blocks, representing complex building blocks strategically positioned within the IC.<br><br>
+
+*- Power Planning :*<br>
+
+Power planning in VLSI design is a critical facet of semiconductor chip design, focusing on the management and distribution of electrical power within the IC. Effective power planning is indispensable for achieving reliable and efficient operation while minimizing power consumption. This aspect plays a crucial role in the overall success of the VLSI design by ensuring optimal power delivery and consumption throughout the integrated circuit.<br><br>
+
+**->Placement:-**
+
+Placement emerges as a pivotal step in the physical design process of crafting integrated circuits (ICs). This intricate phase revolves around strategically determining the optimal locations for each logical cell, commonly known as standard cells, within the silicon area of the chip. The effectiveness of this placement profoundly influences critical factors such as performance, power consumption, and chip area utilization.<br>
+
+*- Objectives of Placement:*
+
+The primary goal of the placement process is to orchestrate standard cells in a configuration that achieves multiple objectives. These include minimizing the total wirelength, which refers to the aggregate length of wires connecting the cells. Additionally, effective placement aims to optimize chip area utilization and adhere to various design constraints, encompassing crucial aspects such as timing, power, and manufacturability.<br>
+
+In summary, placement is a meticulous and strategic endeavor in the IC design journey, aiming to strike a delicate balance that enhances performance, reduces power consumption, optimizes chip area utilization, and meets stringent design constraints to ensure the overall success and efficiency of the integrated circuit.<br><br>
+
+
+**-> Clock Tree Synthesis (CTS):-** 
+
+CTS, an acronym for "Clock Tree Synthesis," holds a pivotal role in the intricate process of physically designing integrated circuits (ICs). It specifically focuses on the generation and optimization of the clock distribution network within the chip.<br>
+
+*- Primary Objective of CTS:* <br>
+The primary goal of CTS is to ensure the efficient and reliable distribution of clock signals to all flip-flops and sequential elements within the IC. This involves minimizing clock skew, the variation in arrival times of clock signals at different points, and meeting the stringent timing constraints crucial for the synchronized operation of the chip.<br>
+
+*- Significance in VLSI Design:*<br>
+Clock Tree Synthesis is deemed a critical step in VLSI design due to its profound impact on the overall performance, power consumption, and reliability of integrated circuits. A well-designed clock distribution network enhances the chip's efficiency and mitigates issues related to timing discrepancies.<br>
+
+*- Automation and Optimization:*<br>
+To tackle the complexities of modern and high-performance ICs, advanced algorithms and tools are employed to automate and optimize the CTS process. These tools play a key role in achieving precision and efficiency in the distribution of clock signals, contributing to the success of the overall VLSI design.<br>
+
+In essence, Clock Tree Synthesis stands as a fundamental and meticulous phase in VLSI design, ensuring that the heartbeat of the chip—the clock signals—is orchestrated with precision, impacting its performance, power efficiency, and reliability.<br><br>
+
+
+**-> Routing:-**
+Routing, within the context of Very Large Scale Integration (VLSI) design, stands as a foundational step in the intricate process of physically crafting integrated circuits (ICs). This critical phase involves the strategic generation of physical connections, employing metal traces or wires, that interlink the diverse components and logic elements situated on the chip.
+
+*- Efficient Signal and Power Routing:* <br>
+The core objective of routing is to establish efficient pathways for the transmission of data signals, control signals, and power throughout the IC. This meticulous interconnection process ensures that the intricate web of signals and power distribution adheres to design constraints, such as timing, power consumption, and manufacturability.<br>
+
+*- Impact on IC Performance:* <br>
+Routing's significance reverberates in its critical role in determining the overall performance of the IC. The efficiency of data transmission, the accuracy of control signal propagation, and the reliability of power distribution are all contingent on the effectiveness of the routing strategy implemented.<br>
+
+*- Key Determinants:* <br>
+Routing, being a linchpin of the VLSI design process, significantly influences the power consumption, performance metrics, and overall functionality of the IC. The intricacies of the routing decisions made during this phase ripple through the entirety of the IC's design and functionality.<br>
+
+In conclusion, routing in VLSI design is not merely the physical connection of components; it is a strategic and pivotal phase that intricately weaves the pathways for signals and power, shaping the backbone of an efficiently functioning integrated circuit.<br><br>
+
+
+**-> Signoff:-**
+
+Sign Off marks the conclusive stage in the design process just before the design is dispatched for fabrication or manufacturing. This pivotal phase involves an exhaustive set of checks, analyses, and validations to guarantee that the integrated circuit (IC) design aligns with all requisite criteria, constraints, and specifications before proceeding to the foundry for manufacturing. <br>
+
+*- Comprehensive Validation Process:* <br>
+At Sign Off, the design undergoes a meticulous validation process encompassing checks for functionality, performance, and adherence to design constraints. This all-encompassing examination ensures that every facet of the IC design is thoroughly reviewed and approved before transitioning to the manufacturing phase. <br>
+
+*- Critical Nature of Sign Off:* <br>
+The Sign Off stage assumes paramount importance as any undetected design errors or issues at this juncture can potentially lead to costly and time-consuming problems. These issues might manifest during subsequent phases of the manufacturing process or even after the ICs are in operation, underscoring the critical nature of a rigorous and comprehensive Sign Off. <br>
+
+*- Preventing Future Complications:* <br>
+By addressing potential design discrepancies and ensuring alignment with specifications, Sign Off serves as a preventive measure. It aims to circumvent complications that could arise in the manufacturing process or during the operational life of the ICs, safeguarding against disruptions and optimizing the overall efficiency and reliability of the integrated circuits. <br>
+
+In conclusion, Sign Off is not just a procedural formality; it is the last line of defense against design anomalies, offering assurance that the integrated circuit is ready for the next stages of manufacturing and operational deployment. <br><br>
+
+
+**-> Pysical verification:-**
+
+Physical Verification stands as a crucial phase in the design process of integrated circuits (ICs), involving a meticulous series of checks and analyses. Its primary objective is to confirm that the physical layout of the IC aligns with specified design rules, constraints, and manufacturing prerequisites. This scrutiny is essential for ensuring the manufacturability, functionality, and reliability of the IC design before it advances to the fabrication stage. <br>
+
+*-->Design Rule Checking (DRC):* <br>
+
+*- Geometry Checks:* <br>
+DRC meticulously validates that the layout strictly adheres to the design rules set by the foundry. This encompasses scrutinizing minimum feature sizes, spacing requirements, and the width and spacing of metal layers, along with other geometric constraints. <br>
+*- Layer-Specific Rules:* <br>
+Different layers within the IC come with specific design rules. DRC conducts comprehensive checks to ensure compliance across all layers, including metal, polysilicon, diffusion, and more. <br><br>
+
+
+*-->Electrical Rule Checking (ERC):* <br>
+*- Electrical Connectivity:* <br>
+ERC ensures the absence of electrical shorts or opens in the layout, verifying that the actual connections align with the intended connectivity outlined in the schematic.<br>
+*- Antenna Checking:* <br>
+ERC extends its scrutiny to charge buildup issues, known as antenna effects, which may arise during the manufacturing processes of deposition and etching. <br><br>
+
+
+*- Layout Versus Schematic (LVS) Verification:* <br>
+*- Netlist Consistency:* <br>
+LVS performs a meticulous comparison between the layout netlist and the schematic netlist, ensuring their equivalence. Any disparities are flagged for resolution.<br>
+*- Parasitic Extraction:* <br>
+Parasitic elements like capacitance and resistance are extracted from the layout and cross-referenced with the schematic to verify electrical equivalence.<br>
+In summary, Physical Verification acts as the gatekeeper, validating the precision and compliance of the IC design with stringent rules and requirements. By addressing geometric, electrical, and schematic considerations, this phase plays a pivotal role in fortifying the IC's journey from design to fabrication.
+
+</details>
+
+
+<details> 
+	<summary>LAB</summary>
+	
+**OpenLane :-**
+OpenLane stands out as a trailblazing and open-source toolchain, empowering the creation of custom Application-Specific Integrated Circuits (ASICs). Widely recognized in the semiconductor realm, it's celebrated for making chip design accessible to all. OpenLane boasts a comprehensive suite of EDA (Electronic Design Automation) tools and scripts, smoothing the journey from RTL (Register Transfer Level) to GDSII (Graphic Design System II) in ASIC design. It's not just a tool—it's a movement, championing accessibility, collaboration, and personalized circuit creation. This tool gives developers, from hobbyists to seasoned pros, the keys to design and produce custom chips tailored to their unique specifications. OpenLane's transparent, community-driven ethos is a breath of fresh air, propelling ASIC design forward and breaking down the traditionally high barriers to entry in this field.<br>
+
+--> Commands:- <br>
+
+```ruby
+/flow.tcl -interactive
+package require openlane 0.9
+prep -design picorv32a
+run_synthesis
+```
+<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/1."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/2."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/3."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/4."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/5."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/6."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/7."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/8."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/9."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/9.b"> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/10."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/11."> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/12.png"> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/e9b787e91e6822ef6b2309a60409e738b1915e83/DAY-15/12."> <br>
+-> before we run synthesis we can see runs is created here after setting up the design,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/13%20before%20we%20run%20synthesis%20we%20can%20see%20runs%20is%20created%20here%20after%20setting%20up%20the%20design.png"> <br>
+-> we can see in runs just now one file is created wrt to current time,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/14%20we%20can%20see%20in%20runs%20just%20now%20one%20file%20is%20created%20wrt%20to%20current%20time.png"> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/15.png"> <br>
+-> by commanding less merged.lef we can see all the content which is about metal layer,vias,etc,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/16.%20by%20commandinf%20less%20merged.lef%20we%20can%20see%20all%20the%20content%20which%20is%20about%20metal%20layer%2Cvias%2Cetc.png"> <br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/16.png"> <br>
+-->  since we havn't done synthesis yet so we can see every othere info is empty,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/18.%20since%20we%20havn't%20done%20synthesis%20yet%20so%20we%20can%20every%20othere%20info%20is%20empty.png"> <br>
+ --> we haven't done synthesis yet so we can see all the other result and stage reports and synthesis reports are empty,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/19.%20we%20haven't%20done%20synthesis%20yet%20so%20we%20can%20all%20the%20other%20reports%20and%20synthesis%20reports%20are%20empty.png"> <br>
+--> config.tcl,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/8f17441d40f6e37b18b22a7ba532803dcabcb5a1/DAY-15/20.%20config.tcl%20.png"> <br>
+--> Giving the commands to run synthesis,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/32609b61099912cfe7897f3f52793314fc779b53/DAY-15/22.%20giving%20the%20command%20to%20run%20synthesis.png"> <br>
+--> Can see, synthesis is done,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/32609b61099912cfe7897f3f52793314fc779b53/DAY-15/23.%20synthesis%20done.png"> <br>
+--> From synthesis report, we can calculate flop ratio by the use of no. of DFF and total no. of cells,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/32609b61099912cfe7897f3f52793314fc779b53/DAY-15/24.%20from%20synthesis%20report%20calculate%20flop%20ratio%20by%20the%20use%20of%20no.%20of%20DFF%20and%20total%20no.%20of%20cells.png"> <br>
+--> Earlier it was empty but now after synthesis we can see the netlist is generated,<br>
+<img width="800"  alt="netlist" src="https://github.com/gohilnihar07/Samsungpdtraining/blob/32609b61099912cfe7897f3f52793314fc779b53/DAY-15/25.%20earlier%20it%20was%20empty%20but%20now%20after%20synthesis%20we%20can%20see%20the%20netlist%20is%20generated.png"> <br><br>
+
+- The number of d flip flops = 1613 <br> 
+- Total Number of cells = 14876 <br> 
+- *D flip flop ratio* = 1613/14876 => **0.108429** or In percentage **10.8429%** <br> 
+
+
+</details>
