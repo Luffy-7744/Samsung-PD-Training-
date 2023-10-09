@@ -5855,14 +5855,8 @@ run_synthesis
 
 </details>
 
-## DAY-15 Inception of EDA and PDK
+## DAY-16 Introduction to Library cells
 
-<details>
-<summary> Intro </summary>
-
-
-
-Introduction to Library cells
 <details>
  <summary>Chip Floorplanning Considerations </summary>
  
