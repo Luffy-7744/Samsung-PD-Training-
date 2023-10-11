@@ -6167,15 +6167,15 @@ Note: For A; and Y in locali while for VPWR and VGND in metal1
 ```
 In tkcon
 
-save sky130A_vsdinv.mag
+save sky130A_prakhar_inv.mag
 ```
 Checking saved file:
 ```
 cd ~/Desktop/work/tools/openlane_working_dir/openlane/vsdstdcelldesign
 ls
-magic -T sky130A.tech sky130_vsdinv.mag
+magic -T sky130A.tech sky130_prakhar_inv.mag
 lef write
-vim sky130_vsdinv.lef
+vim sky130_prakhar_inv.lef
 ```
 Prakha_inv:
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/inv_prakhar.png">
