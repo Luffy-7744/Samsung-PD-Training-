@@ -5964,7 +5964,123 @@ From above figure we can see that picorv32a.placement.def file is generated.
 <img width="600" alt="place_layout2" src="https://github.com/Sidv005/Samsung-PD-Training/blob/8841b8b03e9e0e49635d432c8ffa36e086c33d00/SamsungPD_training/day2_openlane/place_layout2.png"><br>
 </details>
 
-## DAY-17 Design and Characterise 
+## DAY-17 Design and Characterise Std Cell
 
 <details>
- <summary>Chip Floorplanning Considerations </summary>
+ <summary>IO placer revised </summary>
+ We can change the allignment of the Input/output pins by the changing the FP_IO_MODE. By Default it is set to 1. This can be changed by using the below command:
+ ```ruby
+ set ::env(FP_IO_MODE) 2
+ ```
+ Before changing the mode the layout in magic
+ 
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a2c63fc23a95a6da513314375dcf6e950291c53d/day17/fp_pin_uneven2.png">
+
+After changing the mode 2
+
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a2c63fc23a95a6da513314375dcf6e950291c53d/day17/fp_pin_uneven_zoom.png">
+</details>
+
+<details>
+ <summary>Spice Simulation for CMOS Inverter </summary>
+
+- The First task is to create a SPICE Deck file which contains the connectivity information of netlist ,inputs provided, tap points to view outputs.The SPICE is created by defining component connectivity, component values, identifying the nodes and naming them.
+- A substrate is a component or pin that requires connectivity information and can be used to adjust the threshold voltages of NMOS and PMOS transistors. The orientation of the substrate pin differs between NMOS and PMOS symbols. Determining the value of output load capacitance involves extensive computational analysis.
+- To define the component values for PMOS and NMOS, specifically the W/L ratios (e.g., 0.375μ/0.25μ), it is often assumed that they share the same values, even though PMOS should ideally be twice the size of NMOS. The specified output capacitance is typically 10fF, and the applied gate voltage is commonly a multiple of the channel length, such as 2.5V. A node is identified when a component is positioned between two nodes.
+
+The defination of components f an CMOS Inverter is as below:
+```
+M1 out in vdd vdd pmos W=0.375u L=0.25u
+M2 out in 0 0 nmos W=0.375u W=0.25u
+cload out 0 10f
+Vdd vdd 0 2.5
+Vin in 0 2.5
+```
+- M1 component is the PMOS whose drain is connected to OUT , Gate is connected to IN , Substrate and Source are connected to vdd.It also contains the W/L ratio.
+- M2 component is the NMOS whose drain is connected to OUT , Gate is connected to IN , Substrate and Source are connected to 0.It also contains the W/L ratio.
+- The load capacitance is connected between out port and ground and the value is 10fF. Similarly, the supply voltages are connected between groud and respective nodes and the voltage is 2.5V.
+
+
+The Simulation commands are as follows:
+```
+.op
+.dc Vin 0 2.5 0.05
+.LIB "tsmc_025um_model.mod" CMOS_MODELS
+.end
+```
+This command implies that gate voltage is varied from 0 to 2.5V in steps of 0.05V. This is done to note the output characteristics with respect to input voltage. The model file must be described as follows that contains the complete model description of NMOS and PMOS of the length.
+
+The layout of the CMOS inverter is as follows:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8d6281eb94f7a00dbf29eca8f6ab5fe148d1644c/day17/layout_inv.png">
+
+Below image shows that poly is connected to PMOS and NMOS:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8d6281eb94f7a00dbf29eca8f6ab5fe148d1644c/day17/layout_tckon(n%2Cp).png">
+
+Following commands are runned in tckon Main window:
+```
+extract all
+ext2spice cthresh 0 rthresh 0
+ext2spice
+```
+The spice netlist generated as shown below.
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8d6281eb94f7a00dbf29eca8f6ab5fe148d1644c/day17/spice_gen.png">
+</details>
+
+<details>
+ <summary>16 Mask CMOS Fabricaion </summary>
+
+ The manufacturing process involves several key steps:
+
+1.Substrate Preparation: Commences with a silicon wafer as the initial material, which undergoes rigorous cleaning and pre-processing to prepare it for further stages.
+
+2.Gate Oxide Formation (Mask 1): A thin layer of silicon dioxide (SiO2) is either grown or deposited onto the silicon wafer. This layer functions as the gate dielectric.
+
+3.Polysilicon Gate Formation (Mask 2): Polysilicon is deposited and precisely patterned to create gate electrodes for both NMOS and PMOS transistors.
+
+4.N-Well and P-Well Formation (Mask 3): The creation of regions for NMOS and PMOS transistors involves the use of n-type and p-type ion implantation processes.
+
+5.Source and Drain Formation (Masks 4 and 5): Ion implantation, followed by annealing processes, is employed to define the source and drain regions of the transistors.
+
+6.Gate Spacer and Silicidation (Masks 6 and 7): Insulating spacers are introduced around the gate structures, and metal silicide is formed on the source and drain regions to reduce contact resistance.
+
+7.Interlayer Dielectric (ILD) Deposition (Mask 8): A layer of insulating material, typically silicon dioxide, is deposited and planarized to create a level surface for metal interconnections.
+
+8.Contact and Via Formation (Masks 9 and 10): Etching processes create contact holes through the ILD, facilitating connections between metal interconnects and the underlying transistor nodes.
+
+9.Metal Layer 1 (Mask 11): The formation of metal lines and interconnects allows for connections between different parts of the circuit.
+
+10.Intermetal Dielectric (IMD) Deposition (Mask 12): Another insulating layer is deposited to provide separation between metal layers and isolation.
+
+11.Metal Layer 2 (Mask 13): Additional layers of metal interconnects may be added as required.
+
+13.Passivation Layer (Mask 14): A protective layer is deposited to shield the underlying layers and offer electrical insulation.
+
+14.Pad Opening (Mask 15): Openings are created in the passivation layer to enable wire bonding or solder bump connections.
+
+15.Testing and Packaging (Mask 16): Chips undergo rigorous testing for functionality and performance, followed by packaging to prepare them for their final use.
+
+This comprehensive process forms the foundation of semiconductor device manufacturing, allowing for the creation of integrated circuits with intricate electronic functionalities.
+
+*CMOS Inverter layout in Magic*
+
+When we select nmos and pmos box in Magic and run what command in tckon window we obtain below image:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0bf8ca693816a80297bc88fc4881895936705762/day17/layout_tckon(n%2Cp).png">
+
+The connection of Y to both the drain terminals of the PMOS and NMOS transistors is depicted as illustrated in the figure.
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0bf8ca693816a80297bc88fc4881895936705762/day17/layout_Y_con.png">
+
+The connections of the PMOS source and NMOS source are established as follows:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0bf8ca693816a80297bc88fc4881895936705762/day17/layout_NMOS_source.png">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0bf8ca693816a80297bc88fc4881895936705762/day17/layout_PMOS_source.png">
+
+When we delete some layers we get drc errors same is illustrated in below image:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0bf8ca693816a80297bc88fc4881895936705762/day17/layout_Drc.png">
+
+Below image is obtained after removing Drc Errors:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0bf8ca693816a80297bc88fc4881895936705762/day17/layout_inv.png">
+
+
+
+
+<img width="600" alt="place_layout2" src="">
