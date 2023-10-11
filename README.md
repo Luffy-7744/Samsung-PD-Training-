@@ -6327,4 +6327,43 @@ magic -T ~/Desktop/work/tools/openlane_working_dir/pdks/sky130A/libs.tech/magic/
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/layout.png">
 </details>
 
+**Timing analysis with ideal clocks using openSTA**
+
+<details>
+<summary>Theory : Setup timing analysis, introduction to flip-flop setup time and clock jitter </summary>
+
+*Setup timing analysis and introduction to flip-flop setup time*
+- At the zero time stamp, there is one clock edge that reaches the launch flop.
+- At T time stamp, the second rising edge reaches the capture flop. Any analysis that needs to be done is between 0 and T. For the combinational circuit to work, the combinational delay needs to be less than the period, T.
+- Looking at more practical scenarios and how the flop works, there will be a delay within the internal flop circuitry, between mux 1 and mux 2.
+- These internal delays will restrict the combinational delay requirements.
+- This internal delay is known as the setup time, and this setup time needs to be subtracted away from the complete clock period T.
+- Now the capture flop has enough time for it to compute the data within the flop and ensure the data is ready at Q by the time the second rise edge of clock reach.
+
+*Introduction to clock jitter and uncertainty*
+Jitter :Deviation of a clock edge from its ideal location
+
+- Typically caused by clock generator circuitry, noise, power supply variations, interference from nearby circuitry etc. Jitter is a contributing factor to the design margin specified for timing closure
+
+- The next practical scenario to take into consideration is jitter.
+
+- The clock is expected to reach the clock pin at exactly 0s or at Ts, but in real scenarios, the clock signal may not be able to reach at the exact moment, as the clock source generation may have its own built-in variation.
+
+-  This is known as jitter, the temporary variation of the clock period.
+
+- The combinational delay will become more stringent as a result. Thus we change our combinational delay to factor in the uncertainty factor from the jitter.
+</details>
+
+
+<details>
+<summary>Lab steps to configure OpenSTA for post-synth timing analysis</summary>
+
+ ```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane
+gvim pre_sta.conf                                          (For pre-layout timing analysis)
+```
+<img width="600" alt="place_layout2" src="">
+
+
+
 <img width="600" alt="place_layout2" src="">
