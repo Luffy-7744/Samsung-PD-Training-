@@ -6110,8 +6110,8 @@ Here we can obsevre that no drc error is occuring. Hence we succesfully fixed po
 </details>
 
 ## DAY-17 Pre-layout timing analysis and importance of good clock tree
-
-**Timing modelling using delay tables**
+<details>
+<summary> Timing modelling using delay tables</summary>
 
 <details>
  <summary>Lab 1: Lab steps to convert grid info to track info </summary>
@@ -6326,8 +6326,10 @@ magic -T ~/Desktop/work/tools/openlane_working_dir/pdks/sky130A/libs.tech/magic/
 ```
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/layout.png">
 </details>
+</details>
 
-**Timing analysis with ideal clocks using openSTA**
+<details>
+<summary>Timing analysis with ideal clocks using openSTA </summary>
 
 <details>
 <summary>Theory : Setup timing analysis, introduction to flip-flop setup time and clock jitter </summary>
@@ -6365,5 +6367,10 @@ gvim pre_sta.conf                                          (For pre-layout timin
 <img width="600" alt="place_layout2" src="">
 
 
+
+
+
+
+</details>
 
 <img width="600" alt="place_layout2" src="">
