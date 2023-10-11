@@ -6079,8 +6079,32 @@ When we delete some layers we get drc errors same is illustrated in below image:
 
 Below image is obtained after removing Drc Errors:
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0bf8ca693816a80297bc88fc4881895936705762/day17/layout_inv.png">
+</details>
+
+<details>
+ <summary>Labs on DRC </summary>
+First we need to clone the open_pdks.git from RTimothyEdwards.
+Initially, it is necessary to duplicate the 'open_pdks.git' repository from RTimothyEdwards. Now all the magic files is with us. We will look for mtal3.mag. So metal3.mag file now with us.
+
+cif see VIA2 command is runned in tckon window to obtain metal 3 contacts.
+
+When we see the layout of metal3.mag in Magic it is the same as shown below.
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f33836f754e4b52dc0a9d064fb76344655f8316b/day17/layout_metal3.png">
+
+Now width and height of the box is shown in below image which determine distance between the metal contact and metal layer boundary.
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f33836f754e4b52dc0a9d064fb76344655f8316b/day17/layout_metal3_tckon.png">
+
+
+Now poly.mag is loaded in Magic Following image shows the tckon window.
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f33836f754e4b52dc0a9d064fb76344655f8316b/day17/layout_poly_tckon.png">
 
 
 
+Below image of tckon window shows the width box in poly.
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f33836f754e4b52dc0a9d064fb76344655f8316b/day17/layout_poly_tckon_box.png">
 
-<img width="600" alt="place_layout2" src="">
+Now sky130A.tech file is edited by adding allpolynonres in poly.9. After editting we load the tech file and check drc using drc check in tckon window. This is shown in below image.
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f33836f754e4b52dc0a9d064fb76344655f8316b/day17/tech_edit1_layout.png">
+Here we can obsevre that no drc error is occuring. Hence we succesfully fixed poly.9 error.
+</details>
