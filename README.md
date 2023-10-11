@@ -5963,3 +5963,8 @@ From above figure we can see that picorv32a.placement.def file is generated.
 - Below figure shows the layout view after zooming in to display the standard cells.<br>
 <img width="600" alt="place_layout2" src="https://github.com/Sidv005/Samsung-PD-Training/blob/8841b8b03e9e0e49635d432c8ffa36e086c33d00/SamsungPD_training/day2_openlane/place_layout2.png"><br>
 </details>
+
+## DAY-17 Design and Characterise 
+
+<details>
+ <summary>Chip Floorplanning Considerations </summary>
