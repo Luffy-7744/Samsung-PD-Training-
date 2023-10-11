@@ -1,4 +1,4 @@
-# Samsung-PD-Training-
+![214765256-2979c5c0-b2a9-41ab-b311-9e3cfb33a076](https://github.com/Luffy-7744/Samsung-PD-Training-/assets/142480553/6217bdc1-1129-43f6-8e9a-47582dc8b18b)# Samsung-PD-Training-
 ## Day-0-Installation
 <details>
  <summary> Summary </summary>
@@ -6108,3 +6108,222 @@ Now sky130A.tech file is edited by adding allpolynonres in poly.9. After edittin
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/f33836f754e4b52dc0a9d064fb76344655f8316b/day17/tech_edit1_layout.png">
 Here we can obsevre that no drc error is occuring. Hence we succesfully fixed poly.9 error.
 </details>
+
+## DAY-17 Pre-layout timing analysis and importance of good clock tree
+
+**Timing modelling using delay tables**
+
+<details>
+ <summary>Lab 1: Lab steps to convert grid info to track info </summary>
+Library Exchange Format (LEF)
+
+A specification in which representing the physical layout of an integrated circuit in an ASCII format
+
+It includes design rules and abstract information about the standard cells
+
+LEF only has basic information required at that level to serve the purpose of the concerned CAD tool
+
+Containing information on input, output, power and group port, does not consists logic path information
+
+Objective: extract LEF file from .mag file and then plug the file into the picorv32a flow (previous is standard cell library)
+
+Main guidelines:
+
+The input and output ports must lie on the intersection of the vertical and horizontal tracks
+The width of standard cell should be on the track pitch, and the height should be on the track vertical pitch.
+```
+~/Desktop/work/tools/openlane_working_dir/pdks/sky130A/libs.tech/openlane/sky130_fd_sc_hd
+
+vim tracks.info
+
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/vsdstdcelldesign
+
+magic -T sky130A.tech sky130_inv.mag
+```
+- Track information (using during routing stage) routes can go over the track/layer (metal traces)
+
+- Set the grid based on the tracks.info (grid) converted the track into grid
+- Ports are on the intersection of the horizontal and vertical tracks. It ensures that the routes can reach the ports from x and y direction.
+- Verified that both input and output ports have fulfilled the guideline where input and output ports lies at the intersection of horizontal and vertical tracks
+Note: press "g" to enable grid (zoom in to see the grid)
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a52910ad69aadb74856846c3c22e01d42bdf0450/PD%23day18/grid_old.png">
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a52910ad69aadb74856846c3c22e01d42bdf0450/PD%23day18/grid_new.png">
+</details>
+
+<details>
+ <summary>Lab 2: Lab steps to convert magic layout to std cell LEF </summary>
+
+ We need to only define layers, not ports in layout
+- Ports definitions are required when we want to extract LEF file
+- Ports will be defined as pins of a macro
+How to define ports?
+
+Select port --> edit --> Text --> fill those required information
+Note: For A; and Y in locali while for VPWR and VGND in metal1
+
+*Extract the LEF file*
+```
+In tkcon
+
+save sky130A_vsdinv.mag
+```
+Checking saved file:
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/vsdstdcelldesign
+ls
+magic -T sky130A.tech sky130_vsdinv.mag
+lef write
+vim sky130_vsdinv.lef
+```
+Prakha_inv:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/inv_prakhar.png">
+
+Lef file
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a52910ad69aadb74856846c3c22e01d42bdf0450/PD%23day18/after_lef_write.png">
+</details>
+
+<details>
+ <summary>Lab 3: Introduction to timing libs and steps to include new cell in synthesis</summary>
+
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/vsdstdcelldesign
+cp sky130A_vsdinv.lef ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/src
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/vsdstdcelldesign/libs
+cp sky130_fd_sc_hd__* ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/src
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/
+vim config.tcl
+```
+
+Modifying config.tcl file
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a52910ad69aadb74856846c3c22e01d42bdf0450/PD%23day18/lines_added_in_config.png">
+
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane
+make mount
+./flow.tcl -interactive
+package require openlane 0.9
+prep -design picorv32a -tag <run_name> -overwrite      (Check run date at ls ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs)
+set lefs [glob $::env(DESIGN_DIR)/src/*.lef]
+add_lefs -src $lefs
+run_synthesis
+```
+Successfully invoke openlane and doing synthesis
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a52910ad69aadb74856846c3c22e01d42bdf0450/PD%23day18/synth_1.png">
+</details>
+
+ <details>
+ <summary>Theory : Introduction to delay tables and its usage </summary>
+
+*Introduction to delay tables*
+- With the use of gates for clock nets, such as shown in the below figure, which is the method known as clock gating, we can ensure no dynamic switching and short circuit power consumed by the clock tree, during the time the clock gets gated.
+
+- We need to look into the timing characteristics of the buffer, in the case where we want to swap out the buffer for a gate.
+- For each level of buffering, we should have an identical buffer being used, and each node should be driving the same node.
+- Keep in mind that the load at the output will be varying, and since the load of one buffer is varying, the input transition of the following buffer will also vary.
+- This means that we will have a variety of delays.
+- The delay table is characterized based on varying the input transition and output load of a cell, against the delay of that cell.
+- Each cell will have its own delay table for different sizes and threshold tables.
+
+
+*Delay table usage*
+
+- Each type of cell will be having its own individual delay table, as the internal pmos and nmos width/length ratio gets varied, the resistance changes, then RC constant gets varied as well, meaning the delay of each cell gets varied.
+- The values of delay which are not available in the table are extrapolated based on the given data.
+- Similarly, the ways on how we have a delay table, we will also have a characterization table for input transition.
+- The latency at the endpoints will be the sum of the delays of each individual cell in that path.
+- The total skew value between two endpoints will be non-zero if the output load driven for a cell is varied, meaning different delay numbers are seen between endpoints, this is why it is preferred to have the nodes at each level driving the same load.
+- Another case in which we can retain the skew to be zero in the presence of varied load, is by using a different buffer size at the same level that can achieve the same level of delay as the other buffer in same level based on its delay table.
+- These are factors which should be looked into in the early stages of the clock tree design stage.
+- Now we must look into power aware CTS, where we have to consider endpoints which are only active under certain conditions.
+- In this case, we do not need to propagate the clock into those cells during the period of inactivity.
+![214765256-2979c5c0-b2a9-41ab-b311-9e3cfb33a076](https://github.com/Luffy-7744/Samsung-PD-Training-/assets/142480553/9d2cd519-8241-4a38-a006-1c841689a2d6)
+</details>
+
+ <details>
+ <summary>Lab 4: Lab steps to configure synthesis settings to fix slack and include prakhar_inv</summary>
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/configuration
+vim README.md
+```
+- SYNTH_STRATEGY: control the area and timing
+- SYNTH_BUFFERING: control if we want to buffer high fanout net
+- SYNTH_SIZING: control in cell sizing instead of buffering
+- SYNTH_DRIVING_CELL: ensure more drive strength cell to drive input
+
+In openlane terminal:
+```
+echo $::env(SYNTH_STRATEGY)
+set ::env(SYNTH_STRATEGY) "DELAY 0"
+echo $::env(SYNTH_STRATEGY)
+echo $::env(SYNTH_BUFFERING)
+echo $::env(SYNTH_SIZING)
+set ::env(SYNTH_SIZING) 1
+echo $::env(SYNTH_SIZING)
+echo $::env(SYNTH_DRIVING_CELL)
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/set_env_synth.png">
+
+With SYNTH_STRATEGY of Delay 0, the tool will focus more on optimizing/minimizing the delay, index can be 0 to 3 where 3 is the most optimized for timing (sacrificing more area).
+SYNTH_BUFFERING of 1 ensures cell buffer will be used on high fanout cells to reduce delay due to high capacitance load.
+SYNTH_SIZING of 1 will enable cell sizing where cell will be upsize or downsized as needed to meet timing.
+SYNTH_DRIVING_CELL is the cell used to drive the input ports and is vital for cells with a lot of fan-outs since it needs higher drive strength (larger driving cell needed).
+
+Synthesis Before Removing old file:
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/a52910ad69aadb74856846c3c22e01d42bdf0450/PD%23day18/synth_1.png">
+
+Removing old result:
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs/results/synthesis
+rm -rf picorv32a.synthesis.v
+```
+
+In openlane terminal:
+```
+run_synthesis
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/synth_2_0tns.png">
+
+Then we try to run floor plan then it throws and error:
+- The solution for this error is found.
+
+- basic_macro_placement command is failing since EXTRA_LEFS variable inside config.tcl is assumed as a macro which is not.
+
+- The temporary solution is to comment call on basic_macro_placement inside the OpenLane/scripts/tcl_commands/floorplan.tcl (this is okay since we are not adding any macro to the design).
+
+- After that run_placement, another error will occur relating to remove_buffers, the solution is to comment the call to remove_buffers_from_nets in OpenLane/scripts/tcl_commands/placement.tcl.
+
+- After successfully running placement, runs/[date]/results/placement/picorv32.def will be created.
+
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/scripts/openroad
+vim or_basic_mp.tcl
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/scripts/tcl_commands
+vim floorplan.tcl
+```
+Modification in gvim
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/modifican_in_vim.PNG">
+
+In openlane:
+```
+run_floorplan
+run_placement
+```
+Floorplan
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/floorplan.png">
+
+Placement
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/placement.png">
+
+In terminal:
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs/results/placement
+magic -T ~/Desktop/work/tools/openlane_working_dir/pdks/sky130A/libs.tech/magic/sky130A.tech lef read ../../tmp/merged.lef def read picorv32a.placement.def
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/layout.png">
+</details>
+
+<img width="600" alt="place_layout2" src="">
