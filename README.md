@@ -6242,8 +6242,9 @@ Successfully invoke openlane and doing synthesis
 ![214765256-2979c5c0-b2a9-41ab-b311-9e3cfb33a076](https://github.com/Luffy-7744/Samsung-PD-Training-/assets/142480553/9d2cd519-8241-4a38-a006-1c841689a2d6)
 </details>
 
- <details>
- <summary>Lab 4: Lab steps to configure synthesis settings to fix slack and include prakhar_inv</summary>
+<details>
+<summary>Lab 4: Lab steps to configure synthesis settings to fix slack and include prakhar_inv</summary>
+	 
 ```
 cd ~/Desktop/work/tools/openlane_working_dir/openlane/configuration
 vim README.md
