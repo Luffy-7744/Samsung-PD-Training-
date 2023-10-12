@@ -6325,7 +6325,12 @@ cd ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs/res
 magic -T ~/Desktop/work/tools/openlane_working_dir/pdks/sky130A/libs.tech/magic/sky130A.tech lef read ../../tmp/merged.lef def read picorv32a.placement.def
 ```
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/3d630763a3110b04170c14b251f8753790a4c902/PD%23day18/layout.png">
+
+My cell in layout:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/5c258a93179a42ec7b71b81ae55b3ac4b4b6d6a3/PD%23day18/prakhar_inv_layout.png">
+
 </details>
+
 </details>
 
 <details>
