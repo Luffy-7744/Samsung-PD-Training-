@@ -6365,10 +6365,65 @@ Jitter :Deviation of a clock edge from its ideal location
 <details>
 <summary>Lab steps to configure OpenSTA for post-synth timing analysis</summary>
 
- ```
+```
 cd ~/Desktop/work/tools/openlane_working_dir/openlane
 gvim pre_sta.conf                                          (For pre-layout timing analysis)
 ```
+pre_sta.conf file:
+
+```ruby
+set_cmd_units -time ns -capacitance pF -current mA -voltage V -resistance kOhm -distance um
+read_liberty -min /home/vsduser/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/src/sky130_fd_sc_hd__slow.lib
+
+read_liberty -max /home/vsduser/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/src/sky130_fd_sc_hd__fast.lib
+
+read_verilog /home/vsduser/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs/06-10_11-41/results/synthesis/picorv32a.synthesis.v
+
+link_design picorv32a
+
+read_sdc /home/vsduser/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/src/my_base1.sdc
+report_checks -path_delay min_max -fields {slew trans net cap input_pin}
+report_tns
+report_wns
+```
+my_base1.sdc file:
+```
+
+set ::env(CLOCK_PORT) clk 
+set ::env(CLOCK_PERIOD) 12
+set ::env(SYNTH_DRIVING_CELL) sky130_vsdinv 
+set ::env(SYNTH_DRIVING_CELL_PIN) Y 
+set ::env(SYNTH_CAP_LOAD) 17.65 
+create_clock [get_ports $::env(CLOCK_PORT)] -name $::env(CLOCK_PORT) -period $::env(CLOCK_PERIOD)
+set ::env(IO_PCT) 0.2
+set input_delay_value [expr $::env(CLOCK_PERIOD) * $::env(IO_PCT)]
+set output_delay_value [expr $::env(CLOCK_PERIOD) * $::env(IO_PCT)]
+puts "\[INFO\]: Setting output delay to: $output_delay_value" 
+puts "\[INFO\]: Setting input delay to: $input_delay_value"
+ 
+## set max fanout S::env(SYNTH MAX FANOUT) (current design)
+set clk_indx [lsearch [all_inputs] [get_port $::env(CLOCK_PORT)]]
+
+#set rst indx [isearch (all inputs) Iget port resetn]]
+set all_inputs_wo_clk [lreplace [all_inputs] $clk_indx $clk_indx]
+
+#set all inputs wo clk rst (treplace sall inputs wo clk srst indx Srst indx] 
+set all_inputs_wo_clk_rst $all_inputs_wo_clk
+
+# correct resetn
+set_input_delay $input_delay_value -clock [get_clocks $::env(CLOCK_PORT)] $all_inputs_wo_clk_rst
+
+# set_input_delay 0.0 -clock [get clocks S::env(CLOCK PORT)] (resetn)
+set_output_delay $output_delay_value -clock [get_clocks $::env(CLOCK_PORT)] [all_outputs]
+
+# TODO set this as parameter
+set_driving_cell -lib_cell $::env(SYNTH_DRIVING_CELL) -pin $::env(SYNTH_DRIVING_CELL_PIN) [all_inputs]
+set cap_load [expr $::env(SYNTH_CAP_LOAD) / 1000.0] 
+puts "\[INFO\]: Setting load to: $cap_load" 
+set_load $cap_load [all_outputs]
+```
+
+
 <img width="600" alt="place_layout2" src="">
 
 
