@@ -6109,7 +6109,7 @@ Now sky130A.tech file is edited by adding allpolynonres in poly.9. After edittin
 Here we can obsevre that no drc error is occuring. Hence we succesfully fixed poly.9 error.
 </details>
 
-## DAY-17 Pre-layout timing analysis and importance of good clock tree
+## DAY-18 Pre-layout timing analysis and importance of good clock tree
 <details>
 <summary> Timing modelling using delay tables</summary>
 
@@ -6622,6 +6622,301 @@ wns -3.32
 ```
 Tns and wns has improved for setup by increasing drive strength.
 
+</details>
+</details>
+
+<details>
+<summary>Clock tree synthesis TritonCTS and signal integrity</summary>
+
+<details>	
+<summary>Theory : Clock tree routing and buffering using H-Tree algorithm, Crosstalk and clock net shielding </summary>
+
+*Clock tree routing and buffering using H-Tree algorithm*
+
+    - Clock tree synthesis is done to propagate the clock signals to all the clock pins in the design.
+    - However, a good clock tree needs to be designed to take into account the skew between the clock pins due to long routing.
+    - Through the use of H-tree, which is a smarter implementation for a clock tree design, that is designed based on the distances between the clock pins in the design between the clock port.
+    - This is to give a skew value as close to 0 as possible by having the clock signals reach all the cells at the same time.
+    
+    - The next step is to perform clock tree buffering.
+    - The wires for the clock routes each will have resistances and huge number of capacitances, and with the long routing, there will be signal integrity issues.
+    - Thus, to maintain the signal integrity, we need buffering on these nets.
+
+*Crosstalk and clock net shielding*
+
+    - Another topic to understand before moving to using real clocks is clock net shielding.
+    - Clock nets are the critical nets in the design, we build the clock tree to ensure there is a minimum skew.
+    - However, if there is any cross talk that happens and affect the clock signals, that will affect the design very badly.
+    - By shielding, we are protecting the clock nets from the outside world, avoiding glitches and delta delays from occurring.
+    - If a glitch occurs on the clock net, incorrect data in the memory will cause inaccurate functionality for the design.
+    - The shield can be connected to ground or to Vdd, as long as there is no switching activity occurring.
+    - Critical data nets are also necessary to be shielded.
+</details>
+
+<details>
+<summary>Lab 1: Lab steps to run CTS using TritonCTS</summary>
+
+In sta terminal:
+```
+write_verilog ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs/results/synthesis/picorv32a.synthesis.v
+```
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/designs/picorv32a/runs/13-01_14-09/results/synthesis
+ls -lrt picorv32a.synthesis.v
+date
+```
+In openlane:
+```
+run_floorplan
+run_placement
+run_cts
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/431acb84d68c5f010d076308398d699b3b1c34cd/PD%23day18/cts_done.png">
+
+picorv32a.synthesis_cts.v is generated.
+</details>
+
+<details>
+<summary>Lab 2: Lab steps to verify CTS runs</summary>
+
+```
+cd ~/Desktop/work/tools/openlane_working_dir/openlane/scripts/tcl_commands
+vim cts.tcl
+```
+
+In openlane:
+```
+echo $::env(LIB_TYPICAL)
+echo $::env(CURRENT_DEF)
+echo $::env(CTS_MAX_CAP)
+echo $::env(CTS_CLK_BUFFER_LIST)
+echo $::env(CTS_ROOT_BUFFER)
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/478b1c6bc3d3aaa7308622b757d7b899c0fc0e81/PD%23day18/echo_cts.png">
+
+</details>
+</details>
+
+<details>
+<summary>Timing analysis with real clocks using openSTA</summary>
+
+<details>
+<summary>Theory: Setup timing and Hold timing analysis using real clocks </summary>
+	
+**Setup timing analysis using real clocks**
+
+    - After buffer has been added in, more clock network delay has been introduced and it will combining all the delays.
+    - With real clocks, we will need to have buffers inserted into the clock path to ensure the clock signal integrity.
+    - Because of the buffer introduction, the clock edge will reach the clock pin with consideration to the delays of the buffers inserted.
+    - The clock network delay will also need to take into consideration the delays from the buffers inserted.
+    - The window will become shifted as a result of the delays from the buffers inserted.
+    - The skew for this design will now be the difference between the deltas.
+    - If the data arrival time is higher than the data required time, then we will have negative slack on the path, meaning we have violations.
+
+    - For hold timing analysis, where the capture edge is on the o clock rise edge, the combinational delay should be greater than the hold time of the flop.
+    - Hold time refers to the second mux delay, which is the time required for the data to be sent after the clock edge within the flop.
+    - So the data needs to be arrived after the hold time, so the new data can be captured into the flop, after existing data is launched out.
+
+**Hold timing analysis using real clocks**
+
+    - Introducing more real factors into our design for hold analysis will yield the below equation for hold timing.
+    - Jitter for the launch clock and capture flop will not need to be taken into consideration as the design is on the 0 clock edge, and the arrival difference for the capture and launch flop will be the same.
+    - So, the uncertainty should be kept low for the hold analysis.
+    - The slack formula will be --> data arrival time – data required time
+    - If data required time is higher, we will have negative slack, meaning the timing path for hold will be violated.
+    - For the timing path setup for real clocks, we need to take into considerations the deltas that were mentioned earlier.
+    - For delta1, will be launch clock network delay, while delta2, will be capture clock network delay.
+</details>
+
+
+<details>
+<summary>Lab 1: Lab steps to analyze timing with real clocks using OpenSTA</summary>
+
+In openlane:
+```
+openroad                                                                                                       (Invoking openroad)
+read_lef /openLANE_flow/designs/picorv32a/runs/13-01_14-09/tmp/merged.lef
+read_def /openLANE_flow/designs/picorv32a/runs/13-01_14-09/results/cts/picorv32a.cts.def
+write_db pico_cts.db
+read_db pico_cts.db
+read_verilog /openLANE_flow/designs/picorv32a/runs/13-01_14-09/results/synthesis/picorv32a.synthesis_cts.v
+read_liberty -max $::env(OPENLANE_ROOT)/designs/picorv32a/src/sky130_fd_sc_hd__slow.lib
+read_liberty -min $::env(OPENLANE_ROOT)/designs/picorv32a/src/sky130_fd_sc_hd__fast.lib
+set_propagated_clock [all_clocks]
+read_sdc designs/picorv32a/src/my_base.sdc
+report_checks -path_delay min_max -format full_clock_expanded -digits 4
+```
+This step is not practical, therefore it violated.
+
+```
+
+% report_checks -path_delay min_max -format full_clock_expanded -digits 4
+Startpoint: _40725_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _40725_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: min
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock clk (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ _40725_/CLK (sky130_fd_sc_hd__dfxtp_1)
+   0.1823    0.1823 ^ _40725_/Q (sky130_fd_sc_hd__dfxtp_1)
+   0.0472    0.2295 ^ _23930_/X (sky130_fd_sc_hd__clkbuf_1)
+   0.0000    0.2295 ^ _40725_/D (sky130_fd_sc_hd__dfxtp_1)
+             0.2295   data arrival time
+
+   0.0000    0.0000   clock clk (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000   clock reconvergence pessimism
+             0.0000 ^ _40725_/CLK (sky130_fd_sc_hd__dfxtp_1)
+  -0.0176   -0.0176   library hold time
+            -0.0176   data required time
+-------------------------------------------------------------
+            -0.0176   data required time
+            -0.2295   data arrival time
+-------------------------------------------------------------
+             0.2471   slack (MET)
+
+
+Startpoint: _41952_ (rising edge-triggered flip-flop clocked by clk)
+Endpoint: _41879_ (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock clk (rise edge)
+   0.0000    0.0000   clock network delay (ideal)
+   0.0000    0.0000 ^ _41952_/CLK (sky130_fd_sc_hd__dfxtp_4)
+   0.9923    0.9923 ^ _41952_/Q (sky130_fd_sc_hd__dfxtp_4)
+   0.8498    1.8421 v _39853_/X (sky130_fd_sc_hd__mux2_1)
+   0.6464    2.4885 v _39852_/X (sky130_fd_sc_hd__mux2_1)
+   0.3149    2.8034 v _25161_/X (sky130_fd_sc_hd__and2_1)
+   0.6072    3.4106 v _39143_/X (sky130_fd_sc_hd__mux2_2)
+   0.2837    3.6942 v _25583_/Y (sky130_fd_sc_hd__xnor2_1)
+   0.4643    4.1586 v _25588_/Y (sky130_fd_sc_hd__nand3b_2)
+   0.2835    4.4421 v _25595_/Y (sky130_fd_sc_hd__o2bb2ai_1)
+   0.2387    4.6809 v _25603_/Y (sky130_fd_sc_hd__o2bb2ai_1)
+   0.1845    4.8653 ^ _25604_/Y (sky130_fd_sc_hd__o21ai_1)
+   0.2208    5.0861 v _25611_/Y (sky130_fd_sc_hd__o21ai_1)
+   0.1325    5.2187 ^ _25612_/Y (sky130_fd_sc_hd__o21ai_2)
+   0.3209    5.5395 ^ _25619_/X (sky130_fd_sc_hd__a21o_1)
+   0.1551    5.6946 v _25626_/Y (sky130_fd_sc_hd__a21oi_2)
+   0.3124    6.0071 ^ _25634_/Y (sky130_fd_sc_hd__o21bai_2)
+   0.1891    6.1962 v _25641_/Y (sky130_fd_sc_hd__a21oi_4)
+   0.2576    6.4538 ^ _25648_/Y (sky130_fd_sc_hd__o21bai_2)
+   0.1952    6.6490 v _25654_/Y (sky130_fd_sc_hd__a21oi_2)
+   0.3159    6.9649 ^ _25660_/Y (sky130_fd_sc_hd__o21bai_2)
+   0.1891    7.1539 v _25666_/Y (sky130_fd_sc_hd__a21oi_4)
+   0.2576    7.4115 ^ _25672_/Y (sky130_fd_sc_hd__o21bai_2)
+   0.1952    7.6067 v _25678_/Y (sky130_fd_sc_hd__a21oi_2)
+   0.3158    7.9225 ^ _25684_/Y (sky130_fd_sc_hd__o21bai_2)
+   0.2038    8.1264 v _25690_/Y (sky130_fd_sc_hd__a21oi_4)
+   0.2544    8.3808 ^ _25697_/Y (sky130_fd_sc_hd__o21bai_4)
+   0.1776    8.5583 v _25704_/Y (sky130_fd_sc_hd__a21oi_4)
+   0.2661    8.8244 ^ _25711_/Y (sky130_fd_sc_hd__o21bai_4)
+   0.2044    9.0288 v _25721_/Y (sky130_fd_sc_hd__nand3_4)
+   0.3568    9.3856 ^ _25737_/Y (sky130_fd_sc_hd__o211ai_4)
+   0.2251    9.6107 v _25747_/Y (sky130_fd_sc_hd__nand3_4)
+   0.3081    9.9188 ^ _25763_/Y (sky130_fd_sc_hd__o211ai_4)
+   0.1550   10.0737 v _25768_/Y (sky130_fd_sc_hd__nand2_1)
+   0.1149   10.1887 ^ _25771_/Y (sky130_fd_sc_hd__nand2_1)
+   0.1165   10.3051 v _25772_/X (sky130_fd_sc_hd__xor2_1)
+   0.6296   10.9347 v _39868_/X (sky130_fd_sc_hd__mux2_1)
+   1.0986   12.0333 v _40322_/X (sky130_fd_sc_hd__mux4_1)
+   0.6333   12.6665 v _39869_/X (sky130_fd_sc_hd__mux2_1)
+   0.4839   13.1505 v _20796_/X (sky130_fd_sc_hd__or2b_1)
+   0.1920   13.3424 v _20797_/X (sky130_fd_sc_hd__o211a_1)
+   0.0000   13.3424 v _41879_/D (sky130_fd_sc_hd__dfxtp_1)
+            13.3424   data arrival time
+
+  12.0000   12.0000   clock clk (rise edge)
+   0.0000   12.0000   clock network delay (ideal)
+   0.0000   12.0000   clock reconvergence pessimism
+            12.0000 ^ _41879_/CLK (sky130_fd_sc_hd__dfxtp_1)
+  -0.2845   11.7155   library setup time
+            11.7155   data required time
+-------------------------------------------------------------
+            11.7155   data required time
+           -13.3424   data arrival time
+-------------------------------------------------------------
+            -1.6270   slack (VIOLATED)
+```
+
+</details>
+
+
+<details>
+<summary>Lab 2: Lab steps to execute OpenSTA with right timing libraries and CTS assignment</summary>
+
+Continuing from previous lab:
+```
+exit        (Exit openroad)
+openroad
+read_db pico_cts.db
+read_verilog /openLANE_flow/designs/picorv32a/runs/13-01_14-09/results/synthesis/picorv32a.synthesis_cts.v
+read_liberty $::env(LIB_SYNTH_COMPLETE)
+link_design picorv32a
+read_sdc designs/picorv32a/src/my_base.sdc
+set_propagated_clock [all_clocks]
+report_checks -path_delay min_max -fields {slew trans net cap input pin} -format full_clock_expanded
+echo $::env(CTS_CLK_BUFFER_LIST)                              (To see the list of buffers)
+```
+
+- Both timing are already met after post CTS
+- The tool picked small cell first to meet the skew and area
+  - skew values are within 10% of the max clock period
+
+```
+
+
+</details>
+
+<details>
+<summary>Lab 3: Lab steps to observe impact of bigger CTS buffers on setup and hold timing</summary>
+
+In openlane:
+```
+exit 
+echo $::env(CTS_CLK_BUFFER_LIST)
+set ::env(CTS_CLK_BUFFER_LIST) [lreplace $::env(CTS_CLK_BUFFER_LIST) 0 0]
+echo $::env(CURRENT_DEF)
+set ::env(CURRENT_DEF) /openLANE_flow/designs/picorv32a/runs/13-01_14-09/results/placement/picorv32a.placement.def
+run_cts
+```
+<img width="600" alt="place_layout2" src="">
+
+```
+openroad
+read_lef /openLANE_flow/designs/picorv32a/runs/13-01_14-09/tmp/merged.lef
+read_def /openLANE_flow/designs/picorv32a/runs/13-01_14-09/results/cts/picorv32a.cts.def
+write_db pico_cts1.db
+read_db pico_cts1.db
+read_verilog /openLANE_flow/designs/picorv32a/runs/13-01_14-09/results/synthesis/picorv32a.synthesis_cts.v
+read_liberty $::env(LIB_SYNTH_COMPLETE)
+link_design picorv32a
+read_sdc designs/picorv32a/src/my_base.sdc
+set_propagated_clock [all_clocks]
+report_checks -path_delay min_max -fields {slew trans net cap input pin} -format full_clock_expanded
+```
+
+
+MAX:
+
+<img width="600" alt="place_layout2" src="">
+
+MIN:
+
+<img width="600" alt="place_layout2" src="">
+
+```
+report_clock_skew -hold
+report_clock_skew -setup
+set ::env(CTS_CLK_BUFFER_LIST) [linsert $::env(CTS_CLK_BUFFER_LIST) 0 sky130_fd_sc_hd__clkbuf_1]      (Adding back clkbuf1)
+```
+<img width="600" alt="place_layout2" src="">
+</details>
 </details>
 
 
