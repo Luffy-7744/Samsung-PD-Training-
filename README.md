@@ -7505,8 +7505,9 @@ set ::env(CTS_CLK_BUFFER_LIST) [linsert $::env(CTS_CLK_BUFFER_LIST) 0 sky130_fd_
 </details>
 
 ## Day-19-Topic: Final steps for RTL2GDS
+
 <details>
-<summary>LAB<summary>
+<summary> LAB </summary>
 	
 IN openlane:
 	
@@ -7521,5 +7522,4 @@ echo $::env(ROUTING_STRATEGY)
 run_routing
 ```
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/6d03dff2457176598202594cc690baf27ce5a7bb/PD%23Day19/routing.png">
-</details>
 </details>
