@@ -7523,3 +7523,72 @@ run_routing
 ```
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/6d03dff2457176598202594cc690baf27ce5a7bb/PD%23Day19/routing.png">
 </details>
+
+## Day-20-Topic: Floorplanning and power planning labs
+
+<details>
+<summary> LABS </summary>
+
+gitclone:
+```
+git clone https://github.com/manili/VSDBabySoC.git
+git clone https://github.com/Devipriya1921/VSDBabySoC_ICC2.git
+git clone https://github.com/bharath19-gs/synopsys_ICC2flow_130nm.git
+git clone https://github.com/kunalg123/icc2_workshop_collaterals.git
+git clone https://github.com/google/skywater-pdk-libs-sky130_fd_sc_hd.git
+git clone https://github.com/kunalg123/sky130RTLDesignAndSynthesisWorkshop.git
+```
+
+open vsdbabysoc.tcl and make changes:
+```ruby
+create_clock [get_pins {pll/CLK}] -name clk -period 10
+set_max_area 8000;
+set_max_fanout 5 vsdbabysoc;
+set_max_transition 10 vsdbabysoc
+#set_min_delay -max 10 -clock[get_clk myclk] [get_ports OUT]
+set_max_delay 10 -from dac/OUT -to [get_ports OUT]
+
+
+#set_input_delay[expr 0.34][all_inputs]
+
+
+
+set_clock_latency -source 2 [get_clocks clk];
+set_clock_latency 1 [get_clocks clk];
+set_clock_uncertainty -setup 0.5 [get_clocks clk];
+set_clock_uncertainty -hold 0.5 [get_clocks clk];
+
+set_input_delay -max 4 -clock [get_clocks clk] [get_ports VCO_IN];
+set_input_delay -max 4 -clock [get_clocks clk] [get_ports ENb_CP];
+set_input_delay -min 1 -clock [get_clocks clk] [get_ports VCO_IN];
+set_input_delay -min 1 -clock [get_clocks clk] [get_ports ENb_CP];
+
+set_input_transition -max 0.4 [get_ports ENb_CP];
+set_input_transition -max 0.4 [get_ports VCO_IN];
+set_input_transition -min 0.1 [get_ports ENb_CP];
+set_input_transition -min 0.1 [get_ports VCO_IN];
+
+
+
+
+
+set_load -max 0.5 [get_ports OUT];
+set_load -min 0.5 [get_ports OUT];
+
+check_design
+
+compile_ultra
+
+file mkdir /home/prakhar.g2/Samsung-PD-Training-/day20/reports
+write -hierarchy -format verilog -output /home/prakhar.g2/Samsung-PD-Training-/day20/reports/vsdbabysoc_gtlvl.v
+write_sdc -nosplit -version 2.0  /home/prakhar.g2/Samsung-PD-Training-/day20/reports/vsdbabysoc.sdc
+report_area -hierarchy > /home/prakhar.g2/Samsung-PD-Training-/day20/reports/vsdbabysoc.area
+report_timing > /home/prakhar.g2/Samsung-PD-Training-/day20/reports/vsdbabysoc.timing
+report_power -hierarchy > /home/prakhar.g2/Samsung-PD-Training-/day20/reports/vsdbabysoc.power
+
+gui_start
+```
+Making Changes in avsdpll.lib and delete unwanted section.
+
+Then source vsdbabysoc.tcl file.
+
