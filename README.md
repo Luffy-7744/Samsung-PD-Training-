@@ -7707,6 +7707,7 @@ vsdbabysoc_1                              0.556    2.850    8.077    3.406 100.0
 
 
 Report Timing:
+
 ```
  
 ****************************************
@@ -7853,9 +7854,9 @@ set_input_transition -min 0.1  [get_ports ENb_CP]
 
 rvmyth core:
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/vsdbabysoc_3.png">
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/vsdbabysoc_4.png">
 
 **Performing physical design**
 We make the required changes in following files : top.tcl , icc2_common_setup.tcl, icc2_dp_setup.tcl, init_design.read_parasitic_tech_example.tcl, init_design.mcmm_example.auto_expanded.tcl, pns_example.tcl.
@@ -7865,11 +7866,11 @@ Invoking icc2_shell
 ```
 source top.tcl
 ```
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/pnr_run.png">
 
-<img width="600" alt="place_layout2" src="">
-<img width="600" alt="place_layout2" src="">
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/Screenshot%20from%202023-10-17%2011-22-51.png">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/pnr_zoom.png">
+
 
 In icc2_shell:
 ```
@@ -7880,25 +7881,25 @@ report_constraints -all_violators -nosplit -verbose -significant_digits 4
 ```
 
 Report_timing:
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/report_timing.png">
 
 Estimate_timing:
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/estiomate_timingt.png">
 estimate_timing report could not be generated since there is no estimate timing rules detected on nets
 
 violators.rpt
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/no_of_violations.png">
 
 **Observing for 40% of utilization**
 Make changes in top.tcl at core utilization of 0.4 ( earlier it was just 7%) then source the top.tcl in icc2.
 
 Output layout:
 The core of DAC now seems to be bigger in size as compared to previous run where core utilization was 7%
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/layout_40uti.png">
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/layout_40uti_zoom.png">
 
 Slack:
 
@@ -7906,12 +7907,19 @@ The slack seems to be decreased from the previous run
 
 Report_timing:
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/report_timing_40uti.png">
 
 Violation.rpt
 
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/12e424de5462e0a9f4f345c138e0b14a6dd641e4/PD%23Day20/no_of_VIOLATION_40uti.png">
+
+</details>
+
+## Day-21-Topic: Placement and CTS labs
+
+<details>
+<summary> LABS </summary>
 
 
 
