@@ -7541,6 +7541,24 @@ git clone https://github.com/kunalg123/sky130RTLDesignAndSynthesisWorkshop.git
 
 open vsdbabysoc.tcl and make changes:
 ```ruby
+set target_library [list /home/prakhar.g2/Samsung-PD-Training-/day20/libs/sky130_fd_sc_hd__tt_025C_1v80.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsdpll.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsddac.db]
+set link_library [list /home/prakhar.g2/Samsung-PD-Training-/day20/libs/sky130_fd_sc_hd__tt_025C_1v80.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsdpll.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsddac.db] 
+set symbol_library ""
+
+read_file -format verilog {/home/prakhar.g2/Samsung-PD-Training-/day20/VSDBabySoC_ICC2/vsdbabysoc.v}
+read_verilog /home/prakhar.g2/Samsung-PD-Training-/day20/VSDBabySoC_ICC2/rvmyth.v
+read_verilog /home/prakhar.g2/Samsung-PD-Training-/day20/VSDBabySoC_ICC2/clk_gate.v
+
+ read_lib /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsdpll.lib
+ read_lib /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsddac.lib
+read_lib /home/prakhar.g2/Samsung-PD-Training-/day20/libs/sky130_fd_sc_hd__tt_025C_1v80.lib
+set current_design {vsdbabysoc_1}
+
+analyze -library WORK -format verilog {/home/prakhar.g2/Samsung-PD-Training-/day20/VSDBabySoC_ICC2/vsdbabysoc.v}
+elaborate vsdbabysoc -architecture verilog -library WORK
+analyze {}
+
+set_units -time ns
 create_clock [get_pins {pll/CLK}] -name clk -period 10
 set_max_area 8000;
 set_max_fanout 5 vsdbabysoc;
@@ -7587,8 +7605,313 @@ report_timing > /home/prakhar.g2/Samsung-PD-Training-/day20/reports/vsdbabysoc.t
 report_power -hierarchy > /home/prakhar.g2/Samsung-PD-Training-/day20/reports/vsdbabysoc.power
 
 gui_start
+
 ```
 Making Changes in avsdpll.lib and delete unwanted section.
 
 Then source vsdbabysoc.tcl file.
+
+**Reports**
+Report area:
+```
+****************************************
+Report : area
+Design : vsdbabysoc_1
+Version: T-2022.03-SP5-1
+Date   : Tue Oct 17 11:59:04 2023
+****************************************
+
+Information: Updating design information... (UID-85)
+Library(s) Used:
+
+    sky130_fd_sc_hd__tt_025C_1v80 (File: /home/prakhar.g2/Samsung-PD-Training-/day20/libs/sky130_fd_sc_hd__tt_025C_1v80.db)
+    avsddac (File: /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsddac.db)
+    avsdpll (File: /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsdpll.db)
+
+Number of ports:                           19
+Number of nets:                          2775
+Number of cells:                         2745
+Number of combinational cells:           2066
+Number of sequential cells:               676
+Number of macros/black boxes:               2
+Number of buf/inv:                        575
+Number of references:                       4
+
+Combinational area:              11415.948637
+Buf/Inv area:                     2158.319932
+Noncombinational area:           13532.978775
+Macro/Black Box area:                0.000000
+Net Interconnect area:      undefined  (No wire load specified)
+
+Total cell area:                 24948.927412
+Total area:                 undefined
+
+Hierarchical area distribution
+------------------------------
+
+                                  Global cell area            Local cell area
+                                  -------------------  ------------------------------ 
+Hierarchical cell                 Absolute    Percent  Combi-      Noncombi-   Black-
+                                  Total       Total    national    national    boxes   Design
+--------------------------------  ----------  -------  ----------  ----------  ------  ---------
+vsdbabysoc_1                      24948.9274    100.0      3.7536      0.0000  0.0000  vsdbabysoc_1
+core1                             24945.1738    100.0  11412.1950  13532.9788  0.0000  rvmyth
+--------------------------------  ----------  -------  ----------  ----------  ------  ---------
+Total                                                  11415.9486  13532.9788  0.0000
+
+1
+```
+Report Power:
+```
+ 
+****************************************
+Report : power
+        -hier
+        -analysis_effort low
+Design : vsdbabysoc_1
+Version: T-2022.03-SP5-1
+Date   : Tue Oct 17 11:59:04 2023
+****************************************
+
+
+Library(s) Used:
+
+    sky130_fd_sc_hd__tt_025C_1v80 (File: /home/prakhar.g2/Samsung-PD-Training-/day20/libs/sky130_fd_sc_hd__tt_025C_1v80.db)
+    avsddac (File: /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsddac.db)
+    avsdpll (File: /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsdpll.db)
+
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+
+Global Operating Voltage = 1.8  
+Power-specific unit information :
+    Voltage Units = 1V
+    Capacitance Units = 1.000000pf
+    Time Units = 1ns
+    Dynamic Power Units = 1mW    (derived from V,C,T units)
+    Leakage Power Units = 1nW
+
+
+--------------------------------------------------------------------------------
+                                       Switch   Int      Leak     Total
+Hierarchy                              Power    Power    Power    Power    %
+--------------------------------------------------------------------------------
+vsdbabysoc_1                              0.556    2.850    8.077    3.406 100.0
+  dac (avsddac)                        8.10e-03    0.000    0.000 8.10e-03   0.2
+  pll (avsdpll)                           0.411    0.000    0.000    0.411  12.1
+  core1 (rvmyth)                          0.137    2.850    8.074    2.987  87.7
+1
+```
+
+
+Report Timing:
+```
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : vsdbabysoc_1
+Version: T-2022.03-SP5-1
+Date   : Tue Oct 17 11:59:04 2023
+****************************************
+
+Operating Conditions: tt_025C_1v80   Library: sky130_fd_sc_hd__tt_025C_1v80
+Wire Load Model Mode: top
+
+  Startpoint: core1/CPU_is_addi_a3_reg
+              (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: core1/CPU_Xreg_value_a4_reg[27][30]
+            (rising edge-triggered flip-flop clocked by clk)
+  Path Group: clk
+  Path Type: max
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  clock clk (rise edge)                                   0.00       0.00
+  clock network delay (ideal)                             0.00       0.00
+  core1/CPU_is_addi_a3_reg/CLK (sky130_fd_sc_hd__dfxtp_1)
+                                                          0.00       0.00 r
+  core1/CPU_is_addi_a3_reg/Q (sky130_fd_sc_hd__dfxtp_1)
+                                                          0.81       0.81 r
+  core1/U464/Y (sky130_fd_sc_hd__nor2_1)                  0.13       0.94 f
+  core1/U467/Y (sky130_fd_sc_hd__nand2_1)                 0.13       1.07 r
+  core1/U320/Y (sky130_fd_sc_hd__nand2_2)                 0.25       1.32 f
+  core1/U469/X (sky130_fd_sc_hd__a22o_1)                  0.29       1.61 f
+  core1/U554/X (sky130_fd_sc_hd__xor2_1)                  0.16       1.77 f
+  core1/U132/X (sky130_fd_sc_hd__or2_0)                   0.22       1.99 f
+  core1/U555/Y (sky130_fd_sc_hd__a21oi_1)                 0.18       2.17 r
+  core1/U557/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       2.28 f
+  core1/U560/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       2.47 r
+  core1/U562/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       2.58 f
+  core1/U566/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       2.78 r
+  core1/U568/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       2.88 f
+  core1/U572/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       3.08 r
+  core1/U574/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       3.19 f
+  core1/U578/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       3.38 r
+  core1/U580/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       3.49 f
+  core1/U584/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       3.68 r
+  core1/U586/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       3.79 f
+  core1/U590/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       3.98 r
+  core1/U592/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       4.09 f
+  core1/U596/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       4.28 r
+  core1/U598/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       4.39 f
+  core1/U602/Y (sky130_fd_sc_hd__a21oi_1)                 0.19       4.58 r
+  core1/U604/Y (sky130_fd_sc_hd__o21ai_1)                 0.11       4.69 f
+  core1/U99/X (sky130_fd_sc_hd__a21o_1)                   0.17       4.86 f
+  core1/U336/COUT (sky130_fd_sc_hd__fa_1)                 0.37       5.23 f
+  core1/U4/COUT (sky130_fd_sc_hd__fa_1)                   0.40       5.63 f
+  core1/U94/Y (sky130_fd_sc_hd__clkinv_1)                 0.06       5.69 r
+  core1/U609/Y (sky130_fd_sc_hd__o21ai_1)                 0.06       5.75 f
+  core1/U847/COUT (sky130_fd_sc_hd__fa_2)                 0.34       6.09 f
+  core1/U3/COUT (sky130_fd_sc_hd__fa_1)                   0.37       6.46 f
+  core1/U340/COUT (sky130_fd_sc_hd__fa_1)                 0.38       6.85 f
+  core1/U89/COUT (sky130_fd_sc_hd__fa_2)                  0.35       7.20 f
+  core1/U87/X (sky130_fd_sc_hd__a21o_1)                   0.17       7.37 f
+  core1/U32/COUT (sky130_fd_sc_hd__fa_1)                  0.37       7.74 f
+  core1/U85/COUT (sky130_fd_sc_hd__fa_1)                  0.38       8.12 f
+  core1/U82/COUT (sky130_fd_sc_hd__fa_1)                  0.38       8.50 f
+  core1/U339/SUM (sky130_fd_sc_hd__fa_1)                  0.45       8.95 f
+  core1/U207/Y (sky130_fd_sc_hd__nand2_1)                 0.29       9.24 r
+  core1/U676/Y (sky130_fd_sc_hd__o22ai_1)                 0.10       9.34 f
+  core1/CPU_Xreg_value_a4_reg[27][30]/D (sky130_fd_sc_hd__dfxtp_1)
+                                                          0.00       9.34 f
+  data arrival time                                                  9.34
+
+  clock clk (rise edge)                                  10.00      10.00
+  clock network delay (ideal)                             0.00      10.00
+  clock uncertainty                                      -0.50       9.50
+  core1/CPU_Xreg_value_a4_reg[27][30]/CLK (sky130_fd_sc_hd__dfxtp_1)
+                                                          0.00       9.50 r
+  library setup time                                     -0.16       9.34
+  data required time                                                 9.34
+  --------------------------------------------------------------------------
+  data required time                                                 9.34
+  data arrival time                                                 -9.34
+  --------------------------------------------------------------------------
+  slack (MET)                                                        0.00
+
+
+  Startpoint: dac/OUT (internal path startpoint)
+  Endpoint: OUT (output port)
+  Path Group: default
+  Path Type: max
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  input external delay                     0.00       0.00 r
+  dac/OUT (avsddac)                        0.00       0.00 r
+  OUT (out)                                0.00       0.00 r
+  data arrival time                                   0.00
+
+  max_delay                               10.00      10.00
+  output external delay                    0.00      10.00
+  data required time                                 10.00
+  -----------------------------------------------------------
+  data required time                                 10.00
+  data arrival time                                   0.00
+  -----------------------------------------------------------
+  slack (MET)                                        10.00
+
+
+1
+```
+
+
+Report Constraints:
+```
+# Created by write_sdc on Tue Oct 17 11:59:04 2023
+
+###################################################################
+set sdc_version 2.0
+
+set_units -time ns
+set_max_area 8000
+set_load -pin_load 0.5 [get_ports OUT]
+set_load -min -pin_load 0.5 [get_ports OUT]
+create_clock [get_pins pll/CLK]  -name clk  -period 10  -waveform {0 5}
+set_clock_uncertainty 0.5  [get_clocks clk]
+set_max_delay 10  -from [get_pins dac/OUT]  -to [get_ports OUT]
+set_input_delay -clock clk  -max 4  [get_ports VCO_IN]
+set_input_delay -clock clk  -min 1  [get_ports VCO_IN]
+set_input_delay -clock clk  -max 4  [get_ports ENb_CP]
+set_input_delay -clock clk  -min 1  [get_ports ENb_CP]
+set_input_transition -max 0.4  [get_ports VCO_IN]
+set_input_transition -min 0.1  [get_ports VCO_IN]
+set_input_transition -max 0.4  [get_ports ENb_CP]
+set_input_transition -min 0.1  [get_ports ENb_CP]
+```
+
+**Output Schematic** :
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d492fa538638c62f08e973c92817549033b2346f/PD%23Day20/vsdbabysoc_1.png">
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d492fa538638c62f08e973c92817549033b2346f/PD%23Day20/vsdbabysoc_2.png">
+
+rvmyth core:
+
+<img width="600" alt="place_layout2" src="">
+
+<img width="600" alt="place_layout2" src="">
+
+**Performing physical design**
+We make the required changes in following files : top.tcl , icc2_common_setup.tcl, icc2_dp_setup.tcl, init_design.read_parasitic_tech_example.tcl, init_design.mcmm_example.auto_expanded.tcl, pns_example.tcl.
+
+*Output Layout*:
+Invoking icc2_shell
+```
+source top.tcl
+```
+<img width="600" alt="place_layout2" src="">
+
+<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="">
+
+In icc2_shell:
+```
+set_propagated_clock [all_clocks]             (Converting clock object from ideal clock to propagated clock)
+report_timing
+estimate_timing
+report_constraints -all_violators -nosplit -verbose -significant_digits 4
+```
+
+Report_timing:
+<img width="600" alt="place_layout2" src="">
+
+Estimate_timing:
+
+<img width="600" alt="place_layout2" src="">
+estimate_timing report could not be generated since there is no estimate timing rules detected on nets
+
+violators.rpt
+
+<img width="600" alt="place_layout2" src="">
+
+**Observing for 40% of utilization**
+Make changes in top.tcl at core utilization of 0.4 ( earlier it was just 7%) then source the top.tcl in icc2.
+
+Output layout:
+The core of DAC now seems to be bigger in size as compared to previous run where core utilization was 7%
+<img width="600" alt="place_layout2" src="">
+
+<img width="600" alt="place_layout2" src="">
+
+Slack:
+
+The slack seems to be decreased from the previous run
+
+Report_timing:
+
+<img width="600" alt="place_layout2" src="">
+
+Violation.rpt
+
+
+<img width="600" alt="place_layout2" src="">
+
+
 
