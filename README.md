@@ -7555,7 +7555,7 @@ TritonRoute method
     The objective of the Mixed Integer Liner Programming (MILP) is to connect one access point to another optimally.
         Choose one of the access points where the via should be dropped
         Determining how the first access point will be connected to the next access point.
-
+</details>
 
 <details>
 <summary> LAB </summary>
@@ -8979,7 +8979,7 @@ Date   : Wed Oct 18 14:57:35 2023
 <summary> Theory </summary>
 
 
-
+</details>
 
 
 
