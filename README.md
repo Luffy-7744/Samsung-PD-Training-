@@ -7507,6 +7507,57 @@ set ::env(CTS_CLK_BUFFER_LIST) [linsert $::env(CTS_CLK_BUFFER_LIST) 0 sky130_fd_
 ## Day-19-Topic: Final steps for RTL2GDS
 
 <details>
+<summary> Theory </summary>
+	
+**TritonRoute feature 1 - Honors pre-processed route guides**
+OpenLane routing stage consists of two stages:
+
+    - Global Routing: Form routing guides that can route all the nets. The tool used is FastRoute.
+    - Detailed Routing: Uses the global routing's guide to connect the pins with the least amount of wire and bends. The tool used is TritonRoute.
+
+Triton Route
+
+    - In fast routing, a rough routing draft is created.
+
+    - Fast routing is the engine which is used for global routing.
+
+    - During global routing, the region is divided into grid cells, which acts as a route guide for the TritonRoute to be used for the detail routing, where an algorithm is used to find the best connectivity between the points.
+
+    - It honours the preprocessed route guides (obtained after fast routes), wherein the tool attempts as much as possible to route within route guides.
+
+    - The tool assumes route guides for each net satisfies inter-guide connectivity.
+
+    - Triton route works on proposed MILP (Mixed integer liner programming) based panel routing scheme with intra-layer parallel and inter-layer sequential routing framework, to finds the best way to perform the routing.
+
+    - Intra-layer refers to the routing within a layer, while inter-layer routing refers to routing between layers, through the uses of vias.
+    
+    
+**TritonRoute method to handle connectivity**
+
+    Inputs file needed for TritonRoute are the LEF file, DEF file, and the Preprocessed route guides.
+
+    Outputs from the TritonRoute would be a detailed routing solution with optimized wire-length and via count.
+
+    Constraints needed in TritonRoute are the route guide honouring, connectivity constraints and design rules.
+
+TritonRoute method
+
+    TritonRoute handles connectivity through 2 ways
+        Access Point (AP)
+        Access Point Cluster (APC)
+
+    Access point: on-grid point on the metal layer of the route guide, and is used to connect to lower-layer segments, upper-layer segments, pins or IO ports.
+
+    Access Point Cluster: a union of all Access Points derived from the same lower-layer segment, upper-layer guide, a pin or an IO port.
+
+    Access point refers to the point where the via can be placed to allow connectivity between layers.
+
+    The objective of the Mixed Integer Liner Programming (MILP) is to connect one access point to another optimally.
+        Choose one of the access points where the via should be dropped
+        Determining how the first access point will be connected to the next access point.
+
+
+<details>
 <summary> LAB </summary>
 	
 IN openlane:
@@ -7919,7 +7970,1018 @@ Violation.rpt
 ## Day-21-Topic: Placement and CTS labs
 
 <details>
-<summary> LABS </summary>
+<summary> Theory </summary>
+
+**Placement**
+
+    Pre-placement sanity check: floating pins in netlist, unconstrained pins, timing, pin direction mismatch, and etc.
+     
+
+What is placement?
+
+    - Standard cell
+    - Placement stages including:
+         Global placement
+         Legalization
+         Detailed placement
+
+Placement objectives
+
+    - Congestion
+    - Performance
+    - Timing
+    - Routability
+    - Runtime
+    
+**Clock Tree Synthesis (CTS)**
+
+Inputs of CTS
+
+    - Placement DB
+    - CTS Spec file
+
+- CTS Steps
+
+    - Clustering
+    - DRV Fixing
+    - Insertion Delay Reduction
+    - Power reduction
+    - Balancing
+    - Post-conditioning
+
+- CTS Quality Checks
+
+    - Skew
+    - Pulse width
+    - Duty cycle
+    - Latency
+    - Clock tree power
+    - Signal integrity and Crosstalk
+    - Timing analysis and fixing
+
+Source: notes were taken from lecture slides
+</details>
+
+
+<details>
+<summary> LABs </summary>
+	
+**Placement, CTS and Routing**
+
+Observing for 40% of utilization :
+
+Modifying constraints:
+```
+gvim /home/prakhar.g2/Samsung-PD-Training-/day20/VSDBabySoC_ICC2
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/modifying_constraints.png">
+
+Rerun the script in dc_shell and generate reports.
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/Modified_constraint_2.png">
+
+Using core utilization = 40% in top.tcl
+
+Script in top.tcl
+
+
+    - create_placement is used to create placement for the design. floorplan option is selected to make the design planning styled as placement.
+    - Pin Placement is done by sourcing pns.tcl to sync with the current technology file regarding power grid creation.
+    
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/create_placement.png">
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/create_placemnet_2.png">
+
+**Reports that were generated from the run**
+```
+gvim /home/prakhar.g2/Samsung-PD-Training-/day20/VSDBabySoC_ICC2/standaloneFlow/rpts_icc2/place_pins/check_design.pre_pin_placement
+```
+
+There are 3 warnings in total for pre-placement while checking the design.
+
+
+```
+ Report : check_design 
+ Options: { dp_pre_pin_placement }
+ Design : vsdbabysoc_1
+ Version: T-2022.03
+ Date   : Wed Sep 14 02:05:30 2022
+****************************************
+
+Running atomic-check 'dp_pre_pin_placement'
+
+  *** EMS Message summary ***
+  ----------------------------------------------------------------------------------------------------
+  Total 0 EMS messages : 0 errors, 0 warnings, 0 info.
+  ----------------------------------------------------------------------------------------------------
+
+  *** Non-EMS message summary ***
+  ----------------------------------------------------------------------------------------------------
+  Rule         Type   Count      Message
+  ----------------------------------------------------------------------------------------------------
+  DPPA-268            3          Didn't find any enabled planning block for %s.
+  DPPA-475            1          Detected dimension mismatch between the boundary and bbox, for b...
+  ----------------------------------------------------------------------------------------------------
+  Total 4 non-EMS messages : 0 errors, 4 warnings, 0 info.
+  ----------------------------------------------------------------------------------------------------
+Information: Non-EMS messages are saved into file 'check_design2022Sep14020530.log'.
+1
+```
+
+report_port_placement.rpt
+
+```
+Report : report_pin_placement
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Tue Oct 17 12:02:20 2023
+****************************************
+block vsdbabysoc_1 pin OUT layer met3 side 3 offset 712.64
+block vsdbabysoc_1 pin reset layer met1 side 1 offset 773.84
+block vsdbabysoc_1 pin VCO_IN layer met2 side 4 offset 1204.28
+block vsdbabysoc_1 pin ENb_CP layer met2 side 4 offset 1236.02
+block vsdbabysoc_1 pin ENb_VCO layer met2 side 4 offset 1235.1
+block vsdbabysoc_1 pin REF layer met2 side 4 offset 1228.66
+block vsdbabysoc_1 pin VREFH layer met1 side 1 offset 607.24
+```
+
+icc2_output.txt
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/icc2_output.png">
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/icc2_output_2.png">
+
+vsdbabysoc.post_estimated_timing.rpt
+
+Post estimated timing report for the design shows the slack has met with the value of 0.69.
+```
+****************************************
+Report : timing
+        -path_type full
+        -delay_type max
+        -max_paths 1
+        -report_by design
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Tue Oct 17 12:02:21 2023
+****************************************
+
+  Startpoint: core1/CPU_is_add_a3_reg (rising edge-triggered flip-flop clocked by clk)
+  Endpoint: core1/CPU_Xreg_value_a4_reg[18][31] (rising edge-triggered flip-flop clocked by clk)
+  Mode: func1
+  Corner: estimated_corner
+  Scenario: func1::estimated_corner
+  Path Group: clk
+  Path Type: max
+
+  Point                                            Incr      Path       Delta Incr     Analysis
+  ----------------------------------------------------------------------------------------------------
+  clock clk (rise edge)                            0.00      0.00
+  clock network delay (ideal)                      0.00      0.00
+
+  core1/CPU_is_add_a3_reg/CLK (sky130_fd_sc_hd__dfxtp_1)
+                                                   0.00      0.00 r      0.00
+  core1/CPU_is_add_a3_reg/Q (sky130_fd_sc_hd__dfxtp_1)
+                                                   0.45      0.45 r ~    0.14        Size: None
+  core1/U464/Y (sky130_fd_sc_hd__nor2_1)           0.06 e    0.51 f ~    0.00        Size: sky130_fd_sc_hd__nor2_8
+  core1/U467/Y (sky130_fd_sc_hd__nand2_1)          0.11 e    0.62 r ~   -0.05        Size: sky130_fd_sc_hd__nand2_8
+  core1/U320/Y (sky130_fd_sc_hd__nand2_2)          0.16 e    0.78 f ~   -0.18        Size: sky130_fd_sc_hd__nand2_8
+  core1/U469/X (sky130_fd_sc_hd__a22o_1)           0.24 e    1.02 f ~   -0.11        Size: sky130_fd_sc_hd__a22o_4
+  core1/U554/X (sky130_fd_sc_hd__xor2_1)           0.18      1.20 f ~    0.08        Size: None
+  core1/U132/X (sky130_fd_sc_hd__or2_0)            0.26      1.46 f ~    0.02        Size: None
+  core1/U555/Y (sky130_fd_sc_hd__a21oi_1)          0.19 e    1.65 r ~   -0.04        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U557/Y (sky130_fd_sc_hd__o21ai_1)          0.07 e    1.72 f ~   -0.06        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U560/Y (sky130_fd_sc_hd__a21oi_1)          0.18 e    1.90 r ~   -0.05        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U562/Y (sky130_fd_sc_hd__o21ai_1)          0.07 e    1.98 f ~   -0.06        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U566/Y (sky130_fd_sc_hd__a21oi_1)          0.18 e    2.16 r ~   -0.05        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U568/Y (sky130_fd_sc_hd__o21ai_1)          0.11 e    2.27 f ~   -0.13        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U572/Y (sky130_fd_sc_hd__a21oi_1)          0.18 e    2.45 r ~   -0.10        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U574/Y (sky130_fd_sc_hd__o21ai_1)          0.08 e    2.53 f ~   -0.06        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U578/Y (sky130_fd_sc_hd__a21oi_1)          0.18 e    2.71 r ~   -0.05        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U580/Y (sky130_fd_sc_hd__o21ai_1)          0.08 e    2.78 f ~   -0.07        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U584/Y (sky130_fd_sc_hd__a21oi_1)          0.19 e    2.97 r ~   -0.06        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U586/Y (sky130_fd_sc_hd__o21ai_1)          0.07 e    3.04 f ~   -0.06        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U590/Y (sky130_fd_sc_hd__a21oi_1)          0.19 e    3.23 r ~   -0.05        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U592/Y (sky130_fd_sc_hd__o21ai_1)          0.08 e    3.31 f ~   -0.08        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U596/Y (sky130_fd_sc_hd__a21oi_1)          0.18 e    3.49 r ~   -0.06        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U598/Y (sky130_fd_sc_hd__o21ai_1)          0.07 e    3.56 f ~   -0.06        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U602/Y (sky130_fd_sc_hd__a21oi_1)          0.18 e    3.74 r ~   -0.05        Size: sky130_fd_sc_hd__a21oi_4
+  core1/U604/Y (sky130_fd_sc_hd__o21ai_1)          0.06 e    3.80 f ~   -0.07        Size: sky130_fd_sc_hd__o21ai_4
+  core1/U99/X (sky130_fd_sc_hd__a21o_1)            0.18 e    3.99 f ~   -0.00        Size: None
+  core1/U336/COUT (sky130_fd_sc_hd__fa_1)          0.40      4.39 f ~    0.00        Size: None
+  core1/U4/COUT (sky130_fd_sc_hd__fa_1)            0.44      4.82 f ~    0.01        Size: None
+  core1/U94/Y (sky130_fd_sc_hd__clkinv_1)          0.07 e    4.89 r ~   -0.00        Size: sky130_fd_sc_hd__inv_2
+  core1/U609/Y (sky130_fd_sc_hd__o21ai_1)          0.06 e    4.95 f ~   -0.01        Size: sky130_fd_sc_hd__o21ai_2
+  core1/U847/COUT (sky130_fd_sc_hd__fa_2)          0.27 e    5.22 f ~   -0.07        Size: sky130_fd_sc_hd__fah_1
+  core1/U3/COUT (sky130_fd_sc_hd__fa_1)            0.39      5.61 f ~    0.00        Size: None
+  core1/U340/COUT (sky130_fd_sc_hd__fa_1)          0.39      6.00 f ~   -0.00        Size: None
+  core1/U89/COUT (sky130_fd_sc_hd__fa_2)           0.36      6.36 f ~   -0.00        Size: None
+  core1/U87/X (sky130_fd_sc_hd__a21o_1)            0.18      6.54 f ~   -0.00        Size: None
+  core1/U32/COUT (sky130_fd_sc_hd__fa_1)           0.37      6.92 f ~    0.00        Size: None
+  core1/U85/COUT (sky130_fd_sc_hd__fa_1)           0.39      7.31 f ~   -0.00        Size: None
+  core1/U82/COUT (sky130_fd_sc_hd__fa_1)           0.39      7.70 f ~   -0.00        Size: None
+  core1/U339/COUT (sky130_fd_sc_hd__fa_1)          0.38      8.08 f ~    0.00        Size: None
+  core1/U613/X (sky130_fd_sc_hd__xor2_1)           0.42      8.50 r ~    0.17        Size: None
+  core1/U304/Y (sky130_fd_sc_hd__nand2_2)          0.13 e    8.63 f ~   -0.14        Size: sky130_fd_sc_hd__nand2_8
+  core1/U650/Y (sky130_fd_sc_hd__o22ai_1)          0.10 e    8.74 r ~   -0.13        Size: sky130_fd_sc_hd__o22ai_2
+  core1/CPU_Xreg_value_a4_reg[18][31]/D (sky130_fd_sc_hd__dfxtp_1)
+                                                   0.00 e    8.74 r      0.00        Buff: Short net
+  data arrival time                                          8.74       -1.42        Delta arrival
+
+  clock clk (rise edge)                           10.00     10.00
+  clock network delay (ideal)                      0.00     10.00
+  core1/CPU_Xreg_value_a4_reg[18][31]/CLK (sky130_fd_sc_hd__dfxtp_1)
+                                                   0.00     10.00 r      0.00
+  clock uncertainty                               -0.50      9.50
+  library setup time                              -0.07      9.43
+  data required time                                         9.43
+  ----------------------------------------------------------------------------------------------------
+  data required time                                         9.43
+  data arrival time                                         -8.74
+  ----------------------------------------------------------------------------------------------------
+  slack (MET)                                                0.69
+
+```
+
+vsdbabysoc.post_estimated_timing.qor
+
+- Post estimated timing qor shows there is no violating path reported with 34 nets with violations, 13 max trans violations, and 33 max cap violations.
+```
+****************************************
+Report : qor
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Tue Oct 17 12:02:21 2023
+****************************************
+
+
+Scenario           'func1::estimated_corner'
+Timing Path Group  'default'
+----------------------------------------
+Levels of Logic:                      1
+Critical Path Length:              0.05
+Critical Path Slack:               9.95
+Critical Path Clk Period:            --
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+----------------------------------------
+
+Scenario           'func1::estimated_corner'
+Timing Path Group  'clk'
+----------------------------------------
+Levels of Logic:                     41
+Critical Path Length:              8.74
+Critical Path Slack:               0.69
+Critical Path Clk Period:         10.00
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+----------------------------------------
+
+
+Cell Count
+----------------------------------------
+Hierarchical Cell Count:              1
+Hierarchical Port Count:             14
+Leaf Cell Count:                   2744
+Buf/Inv Cell Count:                 575
+Buf Cell Count:                       2
+Inv Cell Count:                     573
+CT Buf/Inv Cell Count:                0
+Combinational Cell Count:          2068
+   Single-bit Isolation Cell Count:                        0
+   Multi-bit Isolation Cell Count:                         0
+   Isolation Cell Banking Ratio:                           0.00%
+   Single-bit Level Shifter Cell Count:                    0
+   Multi-bit Level Shifter Cell Count:                     0
+   Level Shifter Cell Banking Ratio:                       0.00%
+   Single-bit ELS Cell Count:                              0
+   Multi-bit ELS Cell Count:                               0
+   ELS Cell Banking Ratio:                                 0.00%
+Sequential Cell Count:              676
+   Integrated Clock-Gating Cell Count:                     0
+   Sequential Macro Cell Count:                            0
+   Single-bit Sequential Cell Count:                       676
+   Multi-bit Sequential Cell Count:                        0
+   Sequential Cell Banking Ratio:                          0.00%
+   BitsPerflop:                                            1.00
+Macro Count:                          2
+----------------------------------------
+
+
+Area
+----------------------------------------
+Combinational Area:            11415.95
+Noncombinational Area:         13532.98
+Buf/Inv Area:                   2158.32
+Total Buffer Area:                 7.51
+Total Inverter Area:            2150.81
+Macro/Black Box Area:         671652.37
+Net Area:                             0
+Net XLength:                   36957.30
+Net YLength:                   40469.98
+----------------------------------------
+Cell Area (netlist):                         696601.30
+Cell Area (netlist and physical only):       696601.30
+Net Length:                    77427.28
+
+
+Design Rules
+----------------------------------------
+Total Number of Nets:              2993
+Nets with Violations:                34
+Max Trans Violations:                13
+Max Cap Violations:                  33
+----------------------------------------
+
+1
+```
+
+vsdbabysoc.post_estimated_timing.qor.sum
+  - Summary of Post estimated timing qor
+
+```
+****************************************
+Report : qor
+        -summary
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Tue Oct 17 12:02:21 2023
+****************************************
+
+Timing
+---------------------------------------------------------------------------
+Context                                 WNS            TNS            NVE
+---------------------------------------------------------------------------
+func1::estimated_corner
+                   (Setup)             0.69           0.00              0
+func1              (Setup)            -1.74        -105.25            115
+Design             (Setup)            -1.74        -105.25            115
+
+func1              (Hold)             -0.19         -18.98            460
+Design             (Hold)             -0.19         -18.98            460
+---------------------------------------------------------------------------
+
+Miscellaneous
+---------------------------------------------------------------------------
+Cell Area (netlist):                         696601.30
+Cell Area (netlist and physical only):       696601.30
+Nets with DRC Violations:       34
+1
+```
+**CTS schematic design**
+
+Note: before CTS, the clock would be ideal, while after CTS, the clock will be propagated
+CTS Schematic block level :
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/cts_0.png">
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/cts_1.png">
+
+CTS Schematic layout view:
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/8ab874fdf5d216d7abb4a83d39cfd19bf5eecfab/PD%23day21/cts_3.png">
+</details>
+
+
+
+## Day-22-Topic: CTS Analysis labs
+
+
+<details>
+	
+<summary> Theory </summary>
+
+**What is CTS?**
+
+    - Clock Tree Synthesis
+    - A technique for distributing the clock equally among all sequential parts of VLSI design
+    - It will balancing the delays to all clock input pins when the clock is distributed equally
+    - The goal of CTS is to minimize skew and insertion delay
+Various algo’s used for CTS:
+
+  H-tree algorithm
+
+    - Find out all the flops present
+    - Find out the center of all the flops
+    - Trace clock port ot the center point
+    - Divide the core into two parts, trace both the parts and reach to each center
+    - From the center, again, divide the area into two and again trace till center at both the end
+    - Repeat this algo till the time we reach the flop clock pin.
+
+Various CTS checks
+    - Skew check
+    - Pulse width check
+    - Duty cycle check
+    - Latency check
+    - Power check
+    - Crosstalk Quality check
+    - Delta Delay Quality check
+    - Glitch Quality check
+
+Some useful commands
+
+    This command checks and reports issues that can lead to bad QoR:
+        Clock tree structure
+        Constraints
+        Clock tree exceptions
+```
+check_clock_tree
+```
+    This command checks the design whether the placement done input is perfect or not
+
+    If it is legal, it is well and good
+    
+```
+check_legality
+```
+Else, use below command:
+
+```
+legalize_placement
+```
+- IC Compiler uses the CTS design rule constraints for all optimization phases, as well as for CTS.
+- We can use ICC2 with debug mode by using below command
+  
+```
+-set cts_use_debug_mode true
+```
+The main command we need to do is as below command:
+
+```
+compile_clock_tree
+```
+
+**CTS results analysis**
+
+We can use the report for the tree that has been built using below command:
+
+```
+report_clock_tree
+-summary 
+-settings
+```
+Other reports to see
+
+    - Reports Max global skew
+    - Late/Early insertion delay
+    - Number of levels in clock tree
+    - Number of clock tree references (Buffers)
+    - Clock DRC violations
+
+Also, another report related to clock timing report for paths that are related
+
+    - Reports actual
+    - Relevant skew
+    - Latency
+    - Interclock latency
+    
+```
+report_clock_timing  –type skew
+```
+
+
+
+After observing the reports, if we see the clock tree could be better, perform CTS and incremental physical optimization as command below
+
+This process results in a timing optimized design with fully implemented clock trees
+
+The command below does the following:
+        Performs clock tree power optimization
+        Synthesizes(Re-Synthesizes) the clock trees
+        Optimizes the clock trees
+        Adjusts the I/O timing
+        Performs RC extraction of the clock nets and computes accurate clock arrival times
+        Performs placement and timing optimization
+	
+```
+clock_opt
+```
+
+
+Sometimes, there will be some unrouted clock trees
+
+To remove them, perform the command below:
+
+```
+remove_clock_tree
+```
+**After CTS, we do synthesis**
+Before we synthesize the clock trees, use below command to verify that the clock trees are properly defined:
+
+```
+check_clock_tree 
+icc2_shell> check_clock_tree -clocks my_clk
+```
+
+</details>
+
+<details>
+<summary> Labs </summary>
+	
+In icc2 terminal:
+
+```
+check_clock_tree                        (Checking the issues that can lead to bad QoR)
+check_legality                          (Checking the legality of the current placement and report out the violation statistics)
+report_clock_timing -type summary   
+report_clock_timing -type skew
+report_clock_timing -type latency
+report_clock_timing -type transition
+```
+
+1. **Check_clock_tree**
+
+```
+   Information: CTS will work on the following scenarios. (CTS-101)
+   func1	(Mode: func1; Corner: func1)
+Information: CTS will work on all clocks in active scenarios, including 1 master clocks and 0 generated clocks. (CTS-107)
+Output units used in this log:
+   Time        : 1.00ns
+   Resistance  : 1.00kOhm
+   Capacitance : 1.00pF
+   Power       : 1.00nW
+   Length      : 1.00um
+Information: Clock derating is disabled
+
+CTS related app options set by user:
+   No CTS related app option is set.
+
+****************************************
+Report : check_clock_tree
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 18 14:35:47 2023
+****************************************
+
+=================================================
+Summary
+=================================================
+
+Tag           Count     Solution  Description
+--------------------------------------------------------------------------------
+
+---------------------------------------------
+       Clock Definitions & Propagation
+---------------------------------------------
+CTS-002       0         None      There are active CTS scenarios with no clock definition.
+CTS-004       0         None      There are generated clocks that cannot be reached by their master clock.
+CTS-005       0         None      Generated clocks defined on bidirectional pins
+CTS-019       0         None      Clocks propagate to output ports
+CTS-905       0         None      There are clocks with no sinks
+CTS-906       0         None      There are sinks with no clock
+CTS-907       0         None      There are disabled timing arcs in the clock network
+
+---------------------------------------------
+               Reference Cells
+---------------------------------------------
+CTS-007       0         None      Failed to specify any clock buffers or inverters for CTS
+CTS-008       0         None      Clock reference cells have dont_touch or dont_use
+CTS-903       0         None      Cells instantiated in the clock network are not in the clock reference list
+CTS-904       1         None      Some clock reference cells have no LEQ cell specified for resizing
+
+---------------------------------------------
+               Skew Balancing
+---------------------------------------------
+CTS-006       0         None      Balancing conflicts exist between different clocks
+CTS-009       0         None      Cell instances in the clock tree have multiple conditional delay arcs between the same pins
+CTS-908       0         None      Large phase delay in abstracted sub-blocks
+CTS-910       0         None      Balance point constraints are defined downstream of another balance point or ignore point constraint
+CTS-911       0         None      Clock pins downstream of a balance point or ignore point have been added to a skew group
+CTS-913       0         None      Explicit ignore points have been added to a skew group, and will not be balanced
+CTS-917       0         None      Implicit ignore points have been added to a skew group, and will be balanced
+CTS-967       0         None      %s is sink for generated clock %s but pass through for master clock.
+
+---------------------------------------------
+                Multi-Voltage
+---------------------------------------------
+CTS-901       0         None      Clock nets have MV violations
+CTS-902       0         None      No AON (always-on) buffers or inverters available for CTS
+CTS-918       0         None      Voltage area blocked for buffering.
+
+---------------------------------------------
+    Capacitance & Transition Constraints
+---------------------------------------------
+CTS-909       0         None      set_load constraints detected in the clock tree
+CTS-912       0         Non************************
+
+running check_legality
+
+Warning: Routing direction of metal layer li1 is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+Warning: Routing direction of metal layer fieldpoly is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+PDC app_options settings =========
+	place.legalize.enable_prerouted_net_check: 1
+	place.legalize.num_tracks_for_access_check: 1
+	place.legalize.use_eol_spacing_for_access_check: 0
+	place.legalize.allow_touch_track_for_access_check: 1
+	place.legalize.reduce_conservatism_in_eol_check: 0
+	place.legalize.preroute_shape_merge_distance: 0.0
+	place.legalize.enable_non_preferred_direction_span_check: 0
+
+Layer met1: cached 207 shapes out of 9120 total shapes.
+Layer met2: cached 0 shapes out of 9013 total shapes.
+Cached 19649 vias out of 56707 total vias.
+
+check_legality for block design vsdbabysoc_1 ... 
+Information: Initializing classic cellmap without advanced rules enabled and without PDC enabled
+Information: The following app options are used in cellmap
+        place.legalize.enable_color_aware_placement : false
+        place.legalize.use_nll_query_cm : false
+        place.legalize.enable_advanced_legalizer : false
+        place.legalize.enable_prerouted_net_check : true
+        place.legalize.enable_advanced_prerouted_net_check : false
+        place.legalize.always_continue : true
+        place.legalize.limit_legality_checks : false
+        place.common.pnet_aware_density : 1.0000
+        place.common.pnet_aware_min_width : 0.0000
+        place.common.pnet_aware_layers : {}
+        place.common.use_placement_model : false
+        place.common.enable_advanced_placement_model : true
+        cts.placement.cell_spacing_rule_style : maximum
+Total 0.0900 seconds to build cellmap data
+Information: Creating classic rule checker.
+Warning: Routing direction of metal layer li1 is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+Warning: Routing direction of metal layer fieldpoly is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+=====> Processed 43 ref cells (4 fillers) from library
+Design has no advanced rules
+Checking legality
+Checking cell legality:
+0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%
+Sorting rows.
+Checking spacing rule legality.
+0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%
+Checking packing rule legality.
+
+
+****************************************
+  Report : Legality
+****************************************
+
+VIOLATIONS BY CATEGORY:
+   MOVABLE  APP-FIXED USER-FIXED  DESCRIPTION
+         0          0          0  Two objects overlap.
+         0          0          0  A cell violates a pnet.
+         0          0          0  A cell is illegal at a site.
+         0          0          0  A cell is not aligned with a site.
+         0          0          0  A cell has an illegal orientation.
+         0          0          0  A cell spacing rule is violated.
+         0          0          0  A layer rule is violated.
+         0          0          0  A cell is in the wrong region.
+         0          0          0  Two cells violate cts margins.
+         0          0          0  Two cells violate coloring.
+
+         0          0          0  TOTAL
+
+TOTAL 0 Violations.
+
+VIOLATIONS BY SUBCATEGORY:
+     MOVABLE  APP-FIXED USER-FIXED  DESCRIPTION
+
+         0          0          0    Two objects overlap.
+           0          0          0    Two cells overlap.
+           0          0          0    Two cells have overlapping keepout margins.
+           0          0          0    A cell overlaps a blockage.
+           0          0          0    A cell keepout margin overlaps a blockage.
+
+         0          0          0    A cell violates a pnet.
+
+         0          0          0    A cell is illegal at a site.
+           0          0          0    A cell violates pin-track alignment rules.
+           0          0          0    A cell is illegal at a site.
+           0          0          0    A cell violates legal index rule.
+           0          0          0    A cell has the wrong variant for its location.
+
+         0          0          0    A cell is not aligned with a site.
+           0          0          0    A cell is not aligned with the base site.
+           0          0          0    A cell is not aligned with an overlaid site.
+
+         0          0          0    A cell has an illegal orientation.
+
+         0          0          0    A cell spacing rule is violated.
+           0          0          0    A spacing rule is violated in a row.
+           0          0          0    A spacing rule is violated between adjacent rows.
+           0          0          0    A cell violates vertical abutment rule.
+           0          0          0    A cell violates metal spacing rule.
+
+         0          0          0    A layer rule is violated.
+           0          0          0    A layer VTH rule is violated.
+           0          0          0    A layer OD rule is violated.
+           0          0          0    A layer OD max-width rule is violated.
+           0          0          0    A layer ALL_OD corner rule is violated.
+           0          0          0    A layer max-vertical-length rule is violated.
+           0          0          0    A layer TPO rule is violated.
+           0          0          0    Filler cell insertion cannot satisfy layer rules.
+
+         0          0          0    A cell is in the wrong region.
+           0          0          0    A cell is outside its hard bound.
+           0          0          0    A cell is in the wrong voltage area.
+           0          0          0    A cell violates an exclusive movebound.
+
+         0          0          0    Two cells violate cts margins.
+
+         0          0          0    Two cells violate coloring.
+
+
+check_legality for block design vsdbabysoc_1 succeeded!
+
+
+check_legality succeeded.
+
+**************************
+
+1
+e      set_load constraints on output clock ports exceed the max capacitance limit
+CTS-914       0         None      set_input_transition on clock ports exceeds the max transition limit
+CTS-915       0         None      Excessively small max capacitance constraints in the clock network
+CTS-916       0         None      Excessively small max transition constraints in the clock network
+
+---------------------------------------------
+                Other issues
+---------------------------------------------
+CTS-012       0         None      Nets in the clock network have a dont_touch constraint
+CTS-013       0         None      Cells in the clock network have a dont_touch constraint
+CTS-015       0         None      set_max_delay or set_min_delay constraints are defined in the clock network
+CTS-900       0         None      Clock routing rules are outside of allowable layers
+=================================================
+                     Details
+=================================================
+
+---------------------------------------------------------------------------------------
+Warning: Some clock reference cells have no LEQ cell specified for resizing (CTS-904)
+---------------------------------------------------------------------------------------
+Check         Lib cell                                                 Example Instance
+---------------------------------------------------------------------------------------
+CTS-904       EXPLORE_macros|avsdpll/avsdpll                           pll
+1
+```
+2. **check_legality:**  
+
+```
+************************
+
+running check_legality
+
+Warning: Routing direction of metal layer li1 is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+Warning: Routing direction of metal layer fieldpoly is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+PDC app_options settings =========
+	place.legalize.enable_prerouted_net_check: 1
+	place.legalize.num_tracks_for_access_check: 1
+	place.legalize.use_eol_spacing_for_access_check: 0
+	place.legalize.allow_touch_track_for_access_check: 1
+	place.legalize.reduce_conservatism_in_eol_check: 0
+	place.legalize.preroute_shape_merge_distance: 0.0
+	place.legalize.enable_non_preferred_direction_span_check: 0
+
+Layer met1: cached 207 shapes out of 9120 total shapes.
+Layer met2: cached 0 shapes out of 9013 total shapes.
+Cached 19649 vias out of 56707 total vias.
+
+check_legality for block design vsdbabysoc_1 ... 
+Information: Initializing classic cellmap without advanced rules enabled and without PDC enabled
+Information: The following app options are used in cellmap
+        place.legalize.enable_color_aware_placement : false
+        place.legalize.use_nll_query_cm : false
+        place.legalize.enable_advanced_legalizer : false
+        place.legalize.enable_prerouted_net_check : true
+        place.legalize.enable_advanced_prerouted_net_check : false
+        place.legalize.always_continue : true
+        place.legalize.limit_legality_checks : false
+        place.common.pnet_aware_density : 1.0000
+        place.common.pnet_aware_min_width : 0.0000
+        place.common.pnet_aware_layers : {}
+        place.common.use_placement_model : false
+        place.common.enable_advanced_placement_model : true
+        cts.placement.cell_spacing_rule_style : maximum
+Total 0.0900 seconds to build cellmap data
+Information: Creating classic rule checker.
+Warning: Routing direction of metal layer li1 is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+Warning: Routing direction of metal layer fieldpoly is neither "horizontal" nor "vertical".  PDC checks will not be performed on this layer. (PDC-003)
+=====> Processed 43 ref cells (4 fillers) from library
+Design has no advanced rules
+Checking legality
+Checking cell legality:
+0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%
+Sorting rows.
+Checking spacing rule legality.
+0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%
+Checking packing rule legality.
+
+
+****************************************
+  Report : Legality
+****************************************
+
+VIOLATIONS BY CATEGORY:
+   MOVABLE  APP-FIXED USER-FIXED  DESCRIPTION
+         0          0          0  Two objects overlap.
+         0          0          0  A cell violates a pnet.
+         0          0          0  A cell is illegal at a site.
+         0          0          0  A cell is not aligned with a site.
+         0          0          0  A cell has an illegal orientation.
+         0          0          0  A cell spacing rule is violated.
+         0          0          0  A layer rule is violated.
+         0          0          0  A cell is in the wrong region.
+         0          0          0  Two cells violate cts margins.
+         0          0          0  Two cells violate coloring.
+
+         0          0          0  TOTAL
+
+TOTAL 0 Violations.
+
+VIOLATIONS BY SUBCATEGORY:
+     MOVABLE  APP-FIXED USER-FIXED  DESCRIPTION
+
+         0          0          0    Two objects overlap.
+           0          0          0    Two cells overlap.
+           0          0          0    Two cells have overlapping keepout margins.
+           0          0          0    A cell overlaps a blockage.
+           0          0          0    A cell keepout margin overlaps a blockage.
+
+         0          0          0    A cell violates a pnet.
+
+         0          0          0    A cell is illegal at a site.
+           0          0          0    A cell violates pin-track alignment rules.
+           0          0          0    A cell is illegal at a site.
+           0          0          0    A cell violates legal index rule.
+           0          0          0    A cell has the wrong variant for its location.
+
+         0          0          0    A cell is not aligned with a site.
+           0          0          0    A cell is not aligned with the base site.
+           0          0          0    A cell is not aligned with an overlaid site.
+
+         0          0          0    A cell has an illegal orientation.
+
+         0          0          0    A cell spacing rule is violated.
+           0          0          0    A spacing rule is violated in a row.
+           0          0          0    A spacing rule is violated between adjacent rows.
+           0          0          0    A cell violates vertical abutment rule.
+           0          0          0    A cell violates metal spacing rule.
+
+         0          0          0    A layer rule is violated.
+           0          0          0    A layer VTH rule is violated.
+           0          0          0    A layer OD rule is violated.
+           0          0          0    A layer OD max-width rule is violated.
+           0          0          0    A layer ALL_OD corner rule is violated.
+           0          0          0    A layer max-vertical-length rule is violated.
+           0          0          0    A layer TPO rule is violated.
+           0          0          0    Filler cell insertion cannot satisfy layer rules.
+
+         0          0          0    A cell is in the wrong region.
+           0          0          0    A cell is outside its hard bound.
+           0          0          0    A cell is in the wrong voltage area.
+           0          0          0    A cell violates an exclusive movebound.
+
+         0          0          0    Two cells violate cts margins.
+
+         0          0          0    Two cells violate coloring.
+
+
+check_legality for block design vsdbabysoc_1 succeeded!
+
+
+check_legality succeeded.
+
+**************************
+
+1
+```
+3. **report_clock_timing -type summary**   
+
+```
+****************************************
+Report : clock timing
+        -type summary
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 18 14:51:26 2023
+****************************************
+
+  Mode: func1
+  Clock: clk
+                                                                                 Corner
+---------------------------------------------------------------------------------------------------
+  Maximum setup launch latency:
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+  Minimum setup capture latency:
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+  Minimum hold launch latency:
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+  Maximum hold capture latency:
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+  Maximum active transition:
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+  Minimum active transition:
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+  Maximum setup skew:
+      core1/CPU_inc_pc_a2_reg[1]/CLK                                      r-+       func1
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+  Maximum hold skew:
+      core1/CPU_inc_pc_a2_reg[1]/CLK                                      r-+       func1
+      core1/CPU_br_tgt_pc_a3_reg[5]/CLK                        0.00       r-+       func1
+
+
+1
+```
+
+4. **report_clock_timing -type skew**
+
+```
+****************************************
+Report : clock timing
+        -type skew
+        -nworst 1
+        -setup
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 18 14:52:56 2023
+****************************************
+
+  Mode: func1
+  Clock: clk
+
+  Clock Pin                                          Latency      Skew             Corner
+---------------------------------------------------------------------------------------------------
+  core1/CPU_src1_value_a3_reg[0]/CLK                    0.00              r-+       func1
+  core1/CPU_Xreg_value_a4_reg[2][14]/CLK                0.00      0.00    r-+       func1
+
+---------------------------------------------------------------------------------------------------
+1
+```
+
+
+
+5. **report_clock_timing -type latency**
+
+```
+****************************************
+Report : clock timing
+        -type latency
+        -launch
+        -nworst 1
+        -setup
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 18 14:54:25 2023
+****************************************
+
+  Mode: func1
+  Clock: clk
+
+                                                 --- Latency ---
+  Clock Pin                             Trans   Source   Offset  Network    Total            Corner
+---------------------------------------------------------------------------------------------------
+  core1/CPU_Xreg_value_a4_reg[2][14]/CLK
+                                         0.00     0.00       --     0.00     0.00 r-+         func1
+---------------------------------------------------------------------------------------------------
+1
+
+```
+
+6. **report_clock_timing -type transition**
+
+```
+****************************************
+Report : clock timing
+        -type transition
+        -launch
+        -nworst 1
+        -setup
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 18 14:57:35 2023
+****************************************
+
+  Mode: func1
+  Clock: clk
+
+                                            --- Latency ---
+  Clock Pin                            Source  Network    Total    Trans           Corner
+---------------------------------------------------------------------------------------------------
+  core1/CPU_Xreg_value_a4_reg[2][14]/CLK
+                                         0.00     0.00     0.00     0.00  r-+       func1
+---------------------------------------------------------------------------------------------------
+1
+```
+
+</details>
+
+
+
+## Day-23-Topic: CTS Analysis labs
+
+
+<details>
+	
+<summary> Theory </summary>
+
+
+
+
+
 
 
 
