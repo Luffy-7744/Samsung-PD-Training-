@@ -8971,17 +8971,78 @@ Date   : Wed Oct 18 14:57:35 2023
 
 
 
-## Day-23-Topic: CTS Analysis labs
+## Day-23-Topic: Clock Gating 
 
 
 <details>
 	
 <summary> Theory </summary>
 
+ - Advanced H-Tree for million flop clock end-points randomly placed
+
+    - When CTS is performed, power consumption also needs to be taken care of, especially when designing a large number of clocks where the design might induce a larger power, as well as a larger power usage
+
+    - A digital circuit with a lot of clocks would be so huge with many buffers etc when designing its clock tree
+
+    - In order to fix that, the whole chip is sectioned into smaller versions where each section will have its own clock tree, and managed to get a complete routed tree
+
+    - Therefore, Clock Gating (CG) technique is introduced
+
+**Introduction to Clock Gating technique**
+
+- What is Clock Gating (CG)?
+
+It is used to reduce the clock power consumption by cutting off the idle clock cycles
+
+- Where/when clock gating is applied?
+
+It is being inserted in synthesis stage and being optimized in the implementation stage (Physical Design stage)
+
+- Types of clock gating
+
+    AND gate
+    OR gate
+    Universal AND gate
+
 
 </details>
 
 
+<details>
+	
+<summary> Labs </summary>
 
+Script in routing stage:
+P/G routing
+```
+gvim pns_example.tcl
+```
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/40d0884776db679e4a64980cc532357101ac58b8/PD%23day21/pns_example.png">
+
+
+*Clock and signal routing*
+
+- place_opt is used to place and optimize the current design
+
+- clock_opt is used to synthesize and route the clocks, and then further optimize the design based on the propagated clock latencies
+
+- route_auto is used to run global routing, trace assignment, and detailed routing at once/automatically
+```
+gvim top.tcl
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/40d0884776db679e4a64980cc532357101ac58b8/PD%23day21/top_tcl.png">
+
+</details>
+
+
+## Day-23-Topic: Topic: Timing violations and ECO 
+
+
+<details>
+	
+<summary> Theory </summary>
+
+<img width="600" alt="place_layout2" src="">
 
 
