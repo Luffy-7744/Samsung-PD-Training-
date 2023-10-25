@@ -9033,16 +9033,553 @@ gvim top.tcl
 ```
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/40d0884776db679e4a64980cc532357101ac58b8/PD%23day21/top_tcl.png">
 
+Report_global_timing:
+```
+****************************************
+Report : global timing
+        -format { narrow }
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Mon Oct 23 15:36:11 2023
+****************************************
+
+Setup violations
+--------------------------------------------------------------
+          Total   reg->reg    in->reg   reg->out    in->out
+--------------------------------------------------------------
+WNS       -1.94      -1.94       0.00       0.00       0.00
+TNS     -125.80    -125.80       0.00       0.00       0.00
+NUM         115        115          0          0          0
+--------------------------------------------------------------
+
+Hold violations
+--------------------------------------------------------------
+          Total   reg->reg    in->reg   reg->out    in->out
+--------------------------------------------------------------
+WNS       -0.19      -0.19       0.00       0.00       0.00
+TNS      -17.03     -17.03       0.00       0.00       0.00
+NUM         417        417          0          0          0
+--------------------------------------------------------------
+
+1
+
+```
+After increasing voltage from 1.1 to 1.8, we make changes in top.tcl:
+```
+set_lib_cell_purpose -include cts {sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_*}
+synthesize_clock_trees
+set_propagated_clock [all_clocks]
+```
+i.e. we add buffers in design.
+report_global_timing:
+```
+****************************************
+Report : global timing
+        -format { narrow }
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Mon Oct 23 15:52:08 2023
+****************************************
+
+Setup violations
+--------------------------------------------------------------
+          Total   reg->reg    in->reg   reg->out    in->out
+--------------------------------------------------------------
+WNS       -0.06      -0.06       0.00       0.00       0.00
+TNS       -0.43      -0.43       0.00       0.00       0.00
+NUM          15         15          0          0          0
+--------------------------------------------------------------
+
+No hold violations found.
+
+
+1
+```
+After doing cell_sizing in data path we got the no violations.
+report_global_timing:
+```
+****************************************
+Report : global timing
+        -format { narrow }
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Mon Oct 23 16:00:51 2023
+****************************************
+
+No setup violations found.
+
+
+No hold violations found.
+
+
+1
+```
 </details>
 
 
-## Day-23-Topic: Topic: Timing violations and ECO 
+## Day-24-Topic: Timing violations and ECO 
 
 
 <details>
 	
 <summary> Theory </summary>
 
+**Introduction to Engineering Change Order (ECO)**
+
+- Basically, ECO is the way on how we incorporate last minute changes in our design
+
+- Typically, ECO has been done on the gate level netlist, but designer needs to edit the gate-level netlist and perform the same changes in RTL
+
+- Then, all the verifications must be passed before it is being passed onto the layout and ensure that the ECO is passing a formal and functional verification before we start editing the layout
+
+- In this stage, all the violations are fixed and all the sign-off checks that were not done during the PD flow are sealed.
+  
+
+*Steps to perform ECO*
+
+    - Investigate the problem using the recent database
+    - ECO generation to address the problem
+    - ECO implementation with the recent database
+    - After implementing and fixing the problem, save it in the database for future
+
+
+</details>
+
+<details>
+	
+<summary> LABs </summary>
+
+Checking for Violations in VSDBabySoc:
+1. Report_timing
+   
 <img width="600" alt="place_layout2" src="">
+
+2. Report_global_timing
+   
+<img width="600" alt="place_layout2" src="">
+
+3. Report_power
+
+<img width="600" alt="place_layout2" src="">
+
+
+4. Report_qor
+```
+icc2_shell> report_qor
+****************************************
+Report : qor
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 25 12:52:16 2023
+****************************************
+
+
+Scenario           'func1'
+Timing Path Group  'default'
+----------------------------------------
+Levels of Logic:                      1
+Critical Path Length:              0.02
+Critical Path Slack:               9.98
+Critical Path Clk Period:            --
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+----------------------------------------
+
+Scenario           'func1'
+Timing Path Group  'clk'
+----------------------------------------
+Levels of Logic:                     42
+Critical Path Length:              9.53
+Critical Path Slack:              -0.06
+Critical Path Clk Period:         10.00
+Total Negative Slack:             -0.43
+No. of Violating Paths:              15
+Worst Hold Violation:              0.00
+Total Hold Violation:              0.00
+No. of Hold Violations:               0
+----------------------------------------
+
+
+Cell Count
+----------------------------------------
+Hierarchical Cell Count:              1
+Hierarchical Port Count:             14
+Leaf Cell Count:                   2822
+Buf/Inv Cell Count:                 650
+Buf Cell Count:                     105
+Inv Cell Count:                     545
+CT Buf/Inv Cell Count:                0
+Combinational Cell Count:          2146
+   Single-bit Isolation Cell Count:                        0
+   Multi-bit Isolation Cell Count:                         0
+   Isolation Cell Banking Ratio:                           0.00%
+   Single-bit Level Shifter Cell Count:                    0
+   Multi-bit Level Shifter Cell Count:                     0
+   Level Shifter Cell Banking Ratio:                       0.00%
+   Single-bit ELS Cell Count:                              0
+   Multi-bit ELS Cell Count:                               0
+   ELS Cell Banking Ratio:                                 0.00%
+Sequential Cell Count:              676
+   Integrated Clock-Gating Cell Count:                     0
+   Sequential Macro Cell Count:                            0
+   Single-bit Sequential Cell Count:                       676
+   Multi-bit Sequential Cell Count:                        0
+   Sequential Cell Banking Ratio:                          0.00%
+   BitsPerflop:                                            1.00
+Macro Count:                          2
+----------------------------------------
+
+
+Area
+----------------------------------------
+Combinational Area:            12740.97
+Noncombinational Area:         15951.55
+Buf/Inv Area:                   3417.03
+Total Buffer Area:               857.07
+Total Inverter Area:            2559.96
+Macro/Black Box Area:         671652.37
+Net Area:                             0
+Net XLength:                   45586.48
+Net YLength:                   48257.44
+----------------------------------------
+Cell Area (netlist):                         700344.89
+Cell Area (netlist and physical only):      1735477.67
+Net Length:                    93843.92
+
+
+Design Rules
+----------------------------------------
+Total Number of Nets:              2843
+Nets with Violations:                 1
+Max Trans Violations:                 1
+Max Cap Violations:                   1
+----------------------------------------
+
+1
+```
+
+5. Gui
+
+<img width="600" alt="place_layout2" src="">
+
+Worst Path :
+
+<img width="600" alt="place_layout2" src="">
+
+Fixing Violation : To fix violation we do dfferent eco's.
+```
+size_cell core1/ZBUF_2032_inst_368 sky130_fd_sc_hd__buf_16
+size_cell core1/ZBUF_2156_inst_364 sky130_fd_sc_hd__clkbuf_16
+size_cell core1/U304 sky130_fd_sc_hd__nand2_4
+```
+The nets which offer high capacitance, its driving cell is upsized.
+
+After Fixing Violations :
+1. Report_timing
+   
+<img width="600" alt="place_layout2" src="">
+
+2. Report_global_timing
+   
+<img width="600" alt="place_layout2" src="">
+
+3. Report_power
+
+<img width="600" alt="place_layout2" src="">
+
+
+4. Report_qor
+```
+icc2_shell> report_qor
+****************************************
+Report : qor
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 25 16:04:27 2023
+****************************************
+
+
+Scenario           'func1'
+Timing Path Group  'default'
+----------------------------------------
+Levels of Logic:                      1
+Critical Path Length:              0.02
+Critical Path Slack:               9.98
+Critical Path Clk Period:            --
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+----------------------------------------
+
+Scenario           'func1'
+Timing Path Group  'clk'
+----------------------------------------
+Levels of Logic:                     43
+Critical Path Length:              9.30
+Critical Path Slack:               0.17
+Critical Path Clk Period:         10.00
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+Worst Hold Violation:              0.00
+Total Hold Violation:              0.00
+No. of Hold Violations:               0
+----------------------------------------
+
+
+Cell Count
+----------------------------------------
+Hierarchical Cell Count:              1
+Hierarchical Port Count:             14
+Leaf Cell Count:                   2822
+Buf/Inv Cell Count:                 650
+Buf Cell Count:                     105
+Inv Cell Count:                     545
+CT Buf/Inv Cell Count:                0
+Combinational Cell Count:          2146
+   Single-bit Isolation Cell Count:                        0
+   Multi-bit Isolation Cell Count:                         0
+   Isolation Cell Banking Ratio:                           0.00%
+   Single-bit Level Shifter Cell Count:                    0
+   Multi-bit Level Shifter Cell Count:                     0
+   Level Shifter Cell Banking Ratio:                       0.00%
+   Single-bit ELS Cell Count:                              0
+   Multi-bit ELS Cell Count:                               0
+   ELS Cell Banking Ratio:                                 0.00%
+Sequential Cell Count:              676
+   Integrated Clock-Gating Cell Count:                     0
+   Sequential Macro Cell Count:                            0
+   Single-bit Sequential Cell Count:                       676
+   Multi-bit Sequential Cell Count:                        0
+   Sequential Cell Banking Ratio:                          0.00%
+   BitsPerflop:                                            1.00
+Macro Count:                          2
+----------------------------------------
+
+
+Area
+----------------------------------------
+Combinational Area:            12811.04
+Noncombinational Area:         15951.55
+Buf/Inv Area:                   3472.08
+Total Buffer Area:               912.12
+Total Inverter Area:            2559.96
+Macro/Black Box Area:         671652.37
+Net Area:                             0
+Net XLength:                   45586.48
+Net YLength:                   48257.44
+----------------------------------------
+Cell Area (netlist):                         700414.96
+Cell Area (netlist and physical only):      1735547.74
+Net Length:                    93843.92
+
+
+Design Rules
+----------------------------------------
+Total Number of Nets:              2843
+Nets with Violations:                 1
+Max Trans Violations:                 1
+Max Cap Violations:                   1
+----------------------------------------
+
+1
+```
+Fixing max Trans:
+
+report_constraint
+```
+icc2_shell> report_constraints -max_transition -all_violators 
+****************************************
+Report : constraint
+        -all_violators
+        -max_transition
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 25 16:07:06 2023
+****************************************
+
+
+
+   Mode: func1 Corner: func1
+   Scenario: func1
+   max_transition                                                              
+                             Required        Actual                            
+   Net                      Transition     Transition        Slack  Violation  
+  ---------------------------------------------------------------------------
+   core1/n1493                  1.50           1.51          -0.02  (VIOLATED) 
+     PIN : core1/U628/Y         1.50           1.51          -0.02  (VIOLATED) 
+     PIN : core1/U630/B1        1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1479/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1595/A1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1596/A1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1608/A1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1609/A1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U680/B1        1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1440/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1401/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1427/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U761/B1        1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1530/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1518/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1492/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U734/B1        1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U707/B1        1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1303/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1414/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1388/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1360/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1333/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1977/B2       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1555/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1466/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1505/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1453/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1323/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1975/B2       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1979/B2       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1542/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U629/A         1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1375/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1344/B1       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1981/B2       1.50           1.51          -0.01  (VIOLATED) 
+     PIN : core1/U1313/B1       1.50           1.51          -0.01  (VIOLATED) 
+
+  ---------------------------------------------------------------------------
+   Number of max_transition violation(s): 1
+
+   Total number of violation(s): 1
+1
+```
+To fix it we size cell:
+```
+size_cell core1/U628 sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__nand2_4
+```
+report_constraint:
+```
+icc2_shell> report_constraints -max_transition -all_violators
+****************************************
+Report : constraint
+        -all_violators
+        -max_transition
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 25 16:09:37 2023
+****************************************
+
+
+
+   Mode: func1 Corner: func1
+   Scenario: func1
+  ---------------------------------------------------------------------------
+   Number of max_transition violation(s): 0
+
+   Total number of violation(s): 0
+1
+```
+
+Report Qor:
+
+```
+icc2_shell> report_qor
+****************************************
+Report : qor
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Wed Oct 25 16:16:13 2023
+****************************************
+
+
+Scenario           'func1'
+Timing Path Group  'default'
+----------------------------------------
+Levels of Logic:                      1
+Critical Path Length:              0.02
+Critical Path Slack:               9.98
+Critical Path Clk Period:            --
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+----------------------------------------
+
+Scenario           'func1'
+Timing Path Group  'clk'
+----------------------------------------
+Levels of Logic:                     43
+Critical Path Length:              9.30
+Critical Path Slack:               0.17
+Critical Path Clk Period:         10.00
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+Worst Hold Violation:              0.00
+Total Hold Violation:              0.00
+No. of Hold Violations:               0
+----------------------------------------
+
+
+Cell Count
+----------------------------------------
+Hierarchical Cell Count:              1
+Hierarchical Port Count:             14
+Leaf Cell Count:                   2822
+Buf/Inv Cell Count:                 650
+Buf Cell Count:                     105
+Inv Cell Count:                     545
+CT Buf/Inv Cell Count:                0
+Combinational Cell Count:          2146
+   Single-bit Isolation Cell Count:                        0
+   Multi-bit Isolation Cell Count:                         0
+   Isolation Cell Banking Ratio:                           0.00%
+   Single-bit Level Shifter Cell Count:                    0
+   Multi-bit Level Shifter Cell Count:                     0
+   Level Shifter Cell Banking Ratio:                       0.00%
+   Single-bit ELS Cell Count:                              0
+   Multi-bit ELS Cell Count:                               0
+   ELS Cell Banking Ratio:                                 0.00%
+Sequential Cell Count:              676
+   Integrated Clock-Gating Cell Count:                     0
+   Sequential Macro Cell Count:                            0
+   Single-bit Sequential Cell Count:                       676
+   Multi-bit Sequential Cell Count:                        0
+   Sequential Cell Banking Ratio:                          0.00%
+   BitsPerflop:                                            1.00
+Macro Count:                          2
+----------------------------------------
+
+
+Area
+----------------------------------------
+Combinational Area:            12818.54
+Noncombinational Area:         15951.55
+Buf/Inv Area:                   3472.08
+Total Buffer Area:               912.12
+Total Inverter Area:            2559.96
+Macro/Black Box Area:         671652.37
+Net Area:                             0
+Net XLength:                   45586.48
+Net YLength:                   48257.44
+----------------------------------------
+Cell Area (netlist):                         700422.47
+Cell Area (netlist and physical only):      1735555.24
+Net Length:                    93843.92
+
+
+Design Rules
+----------------------------------------
+Total Number of Nets:              2843
+Nets with Violations:                 0
+Max Trans Violations:                 0
+Max Cap Violations:                   0
+----------------------------------------
+
+1
+```
+Now all violation are fixed.
+
+
+GUI:
+
+<img width="600" alt="place_layout2" src="">
+
+Timing Path:
+
+<img width="600" alt="place_layout2" src="">
+
 
 
