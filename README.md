@@ -8487,6 +8487,14 @@ report_clock_timing -type latency
 report_clock_timing -type transition
 ```
 
+Now, we can see that there is 1 warning which states that there are some clock cells that does not have LEQ cells for resizing. LEQ cells are level Equivalence cells which are used to create logic gates or elements that have equivalent feature of different complexity. As a result the sizes of the cells can be easily resized by using a cell of differnt complexity.
+
+CTS-015 : It is a warning which comes up when we set_max_delay or set_min_delay constraints are defined in the clock network.
+
+CTS-918 : It is a warning which comes up when Volatage area are blocked for buffering through app option. It can be removed by resetting the value of app option "opt.com- mon.blocked_vas" to empty string.
+
+In our case we got only one warning that was of CTS 904.
+
 1. **Check_clock_tree**
 
 ```
@@ -8966,6 +8974,7 @@ Date   : Wed Oct 18 14:57:35 2023
 ---------------------------------------------------------------------------------------------------
 1
 ```
+The Explanitation of report_clock_timing is in next repo.
 
 </details>
 
