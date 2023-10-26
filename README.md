@@ -9012,7 +9012,140 @@ It is being inserted in synthesis stage and being optimized in the implementatio
 	
 <summary> Labs </summary>
 
+Clock and signal routing:
+- place_opt: The place_opt command in ICC2 (Integrated Circuit Compiler 2) is used to perform placement optimization for digital integrated circuit design. It is a part of the Cadence Design Systems suite of EDA (Electronic Design Automation) tools and is typically used for ASIC (Application-Specific Integrated Circuit) and FPGA (Field-Programmable Gate Array) design. The primary purpose of the place_opt command is to improve the physical layout of the design, which can impact factors such as performance, power, and area utilization.
+
+- clock_opt: The clock_opt command in Cadence's ICC2 (Integrated Circuit Compiler 2) is used for clock tree synthesis and optimization in digital integrated circuit design. Clock tree synthesis is a critical step in the design process to ensure that the clock signal is efficiently distributed to various parts of the chip, while meeting timing, power, and skew constraints.
+
+- route_auto The route_auto command in Cadence's ICC2 (Integrated Circuit Compiler 2) is used for automatic routing in digital integrated circuit design. This command allows the tool to automatically generate the routing for the connections between different components in your design, based on the netlist and constraints.
+
+- set_lib_cell_purpose: The set_lib_cell_purpose command in Cadence's ICC2 (Integrated Circuit Compiler 2) is used to specify the usage purpose of standard cells from technology libraries in your digital integrated circuit design. This command is helpful for providing guidance to the tool regarding the intended purpose of each standard cell, such as whether a cell is meant for combinational logic, flip-flops, latches, or other purposes.
+  
+Clock buffer cells and the ICG cells of the design are shown below: 
+```
+
+Buffer/Inverter reference list for clock tree synthesis:
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_12
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_6
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__buf_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__bufbuf_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__bufbuf_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkbuf_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkbuf_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkbuf_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkbuf_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkbuf_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s15_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s15_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s18_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s18_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s25_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s25_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s50_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkdlybuf4s50_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlygate4sd1_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlygate4sd2_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlygate4sd3_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlymetal6s2s_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlymetal6s4s_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlymetal6s6s_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__probe_p_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__probec_p_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkbufkapwr_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkbufkapwr_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkbufkapwr_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkbufkapwr_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkbufkapwr_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__bufinv_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__bufinv_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkinv_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkinv_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkinv_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkinv_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkinv_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkinvlp_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__clkinvlp_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__inv_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__inv_12
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__inv_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__inv_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__inv_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__inv_6
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__inv_8
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkinvkapwr_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkinvkapwr_16
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkinvkapwr_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkinvkapwr_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__lpflow_clkinvkapwr_8
+
+ICG reference list:
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlclkp_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlclkp_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__dlclkp_4
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdlclkp_1
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdlclkp_2
+   sky130_fd_sc_hd__tt_025C_1v80/sky130_fd_sc_hd__sdlclkp_4
+```
+Now we will see the clock sink cells in the gui: 
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/edec917b48754b577b95ae7ff72160c02fc692fb/day17/clock_sink_cell.png">
+
+Now we will see the Buffer cells in the gui: 
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/edec917b48754b577b95ae7ff72160c02fc692fb/day17/buffer_gui.png">
+
+
+Report_clock_timing:
+```
+icc2_shell> report_clock_timing -type summary 
+****************************************
+Report : clock timing
+        -type summary
+Design : vsdbabysoc_1
+Version: T-2022.03-SP3-VAL
+Date   : Thu Oct 26 12:08:32 2023
+****************************************
+
+  Mode: func1
+  Clock: clk
+                                                                                 Corner
+---------------------------------------------------------------------------------------------------
+  Maximum setup launch latency:
+      core1/CPU_imm_a2_reg[28]/CLK                             0.40       rp-+      func1
+
+  Minimum setup capture latency:
+      core1/CPU_Xreg_value_a4_reg[1][7]/CLK                    0.00       rp-+      func1
+
+  Minimum hold launch latency:
+      core1/CPU_Xreg_value_a4_reg[1][7]/CLK                    0.00       rp-+      func1
+
+  Maximum hold capture latency:
+      core1/CPU_imm_a2_reg[28]/CLK                             0.40       rp-+      func1
+
+  Maximum active transition:
+      core1/CPU_Xreg_value_a4_reg[16][24]/CLK                  0.40       rp-+      func1
+
+  Minimum active transition:
+      core1/CPU_Xreg_value_a4_reg[1][7]/CLK                    0.00       rp-+      func1
+
+  Maximum setup skew:
+      core1/CPU_Xreg_value_a4_reg[26][5]/CLK                              rp-+      func1
+      core1/CPU_src1_value_a3_reg[5]/CLK                       0.26       rp-+      func1
+
+  Maximum hold skew:
+      core1/CPU_imm_a3_reg[7]/CLK                                         rp-+      func1
+      core1/CPU_Xreg_value_a4_reg[1][28]/CLK                   0.39       rp-+      func1
+
+
+1
+```
+ Maximum setup launch latency is 0.4, that is setup at launch flop can be delayed by 0.4 but while capture it should be delayed vice versa for hold. maximum  active transition represent the maximum transition possible in clock pin which is 0.4. rp-+ representing rising positive edge for for the clock pin.
+ 
 Script in routing stage:
+
 P/G routing
 ```
 gvim pns_example.tcl
@@ -9152,15 +9285,19 @@ No hold violations found.
 Checking for Violations in VSDBabySoc:
 1. Report_timing
    
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/report_timing_before_fix.png">
+
+Here we can see nand gate output net have high fanout and capacitance so we can icrease its drive strength.
 
 2. Report_global_timing
    
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/report_global_timing_before_fix.png">
+
+As we can see here only setup is violated , it can fixed by decreasing delay of data path.
 
 3. Report_power
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/report_power_before_fix.png">
 
 
 4. Report_qor
@@ -9260,11 +9397,11 @@ Max Cap Violations:                   1
 
 5. Gui
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/gui_before_fix.png">
 
 Worst Path :
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/worst_case_path_before_fix.png">
 
 Fixing Violation : To fix violation we do dfferent eco's.
 ```
@@ -9277,15 +9414,15 @@ The nets which offer high capacitance, its driving cell is upsized.
 After Fixing Violations :
 1. Report_timing
    
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/report_timing_after_fix.png">
 
 2. Report_global_timing
    
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/report_global_after_fix.png">
 
 3. Report_power
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/report_power_after_fix.png">
 
 
 4. Report_qor
@@ -9574,12 +9711,13 @@ Now all violation are fixed.
 
 
 GUI:
+Critical Path:
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/7445eae3001659d42c3a48bd5eafc80e4e2c9581/day24/worst_path_after_fix_new.png">
 
 Timing Path:
 
-<img width="600" alt="place_layout2" src="">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/timing_path_after_fix.png">
 
 
 
