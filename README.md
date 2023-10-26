@@ -9670,7 +9670,9 @@ Combinational Cell Count:          2146
    Multi-bit ELS Cell Count:                               0
    ELS Cell Banking Ratio:                                 0.00%
 Sequential Cell Count:              676
-   Integrated Clock-Gating Cell Count:                     0
+   Integrated Clock-Gating Cell Count:               
+   Total number of violation(s): 1
+1      0
    Sequential Macro Cell Count:                            0
    Single-bit Sequential Cell Count:                       676
    Multi-bit Sequential Cell Count:                        0
@@ -9719,5 +9721,79 @@ Timing Path:
 
 <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/11ec81ae16229e0d6aaa610e80cafbbef60565ee/day24/timing_path_after_fix.png">
 
+Summary: 
+
+Report_Qor:
+Timing Perspective:
+Overall Timing was improved after fixing setup and hold violations.
+```
+Before fixing:                                                                 
+ Scenario           'func1'
+Timing Path Group  'clk'
+----------------------------------------
+Levels of Logic:                     42
+Critical Path Length:              9.53
+Critical Path Slack:              -0.06
+Critical Path Clk Period:         10.00
+Total Negative Slack:             -0.43
+No. of Violating Paths:              15
+Worst Hold Violation:              0.00
+Total Hold Violation:              0.00
+No. of Hold Violations:               0
+----------------------------------------
+
+After Fixing:
+
+Scenario           'func1'
+Timing Path Group  'default'
+----------------------------------------
+Levels of Logic:                      1
+Critical Path Length:              0.02
+Critical Path Slack:               9.98
+Critical Path Clk Period:            --
+Total Negative Slack:              0.00
+No. of Violating Paths:               0
+----------------------------------------
+```
+
+Area Perspective:
+Area has been increased as cell are upsized.
+As we can total combinational area and buffer area is increased.
+```
+Before Fix:
+Area
+----------------------------------------
+Combinational Area:            12740.97
+Noncombinational Area:         15951.55
+Buf/Inv Area:                   3417.03
+Total Buffer Area:               857.07
+Total Inverter Area:            2559.96
+Macro/Black Box Area:         671652.37
+Net Area:                             0
+Net XLength:                   45586.48
+Net YLength:                   48257.44
+----------------------------------------
+Cell Area (netlist):                         700344.89
+Cell Area (netlist and physical only):      1735477.67
+Net Length:                    93843.92
 
 
+After Fix:
+Area
+----------------------------------------
+Combinational Area:            12818.54
+Noncombinational Area:         15951.55
+Buf/Inv Area:                   3472.08
+Total Buffer Area:               912.12
+Total Inverter Area:            2559.96
+Macro/Black Box Area:         671652.37
+Net Area:                             0
+Net XLength:                   45586.48
+Net YLength:                   48257.44
+----------------------------------------
+Cell Area (netlist):                         700422.47
+Cell Area (netlist and physical only):      1735555.24
+Net Length:                    93843.92
+```
+
+Power : Theoretically, total power usage will increase since the area has increased due to upsizing cell. However, the power usage for both pre and post CTS are the same since the total area increased is not that much.
