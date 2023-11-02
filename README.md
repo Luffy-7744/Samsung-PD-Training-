@@ -9809,7 +9809,8 @@ Power : Theoretically, total power usage will increase since the area has increa
 
 </details>
 
-## Day-26-Topic: Introduction to Crosstalk -Glitch and delta delay
+## Day-26-Topic: Introduction to Mix signal design in vsdbabysoc
+
 
 
 <details>
