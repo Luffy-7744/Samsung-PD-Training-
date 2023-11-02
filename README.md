@@ -9806,3 +9806,289 @@ Net Length:                    93843.92
 ```
 
 Power : Theoretically, total power usage will increase since the area has increased due to upsizing cell. However, the power usage for both pre and post CTS are the same since the total area increased is not that much.
+
+</details>
+
+## Day-27-Topic: Introduction to Crosstalk -Glitch and delta delay
+
+
+<details>
+	
+<summary> Theory </summary>
+
+**Understanding mixed signal design**
+
+--> What is mixed signal design?
+
+    - What is electronic signals?
+
+Electronic signal is a message/information encoded by changing the voltage of an electric current and it is used to communicate within several devices
+
+    - Types of electronic signals
+
+Analog and digital signals
+
+    - What kind of signal that is most available in the nature?
+
+Analog signals since every process produced analog signals instead of digital signals. Digital signals are usually being converted from the analog signals.
+
+    - Which signal does microcontrollers/microprocessors understand/speak?
+
+Digital signals where those electronic devices only understand the signals digitally by using 1's and 0's
+
+    - Since microprocessors/microcontrollers speak in digital form, but we need to get or take in analog signals, what to do?
+
+Convert the digital signals to analog signals or vice versa using ADC/DAC
+
+    Mixed-signal chips are those that at least partially deal with input signals whose precise values matter
+        i. This broad class includes RF, Analog, Analog-to-Digital and Digital-to-Analog conversion
+        ii. More recently, a large number of Mixed-Signal chips where at least part of the chip design needs to measure signals with high precision
+        iii. These chips have very different Design and Process Technology demands than normal Digital circuits
+
+**Exploring the example of VSDBabySoC**
+
+    RVMYTH processor --> digital block
+    PLL --> analog block
+    DAC --> analog block (for digital to analog conversion)
+    
+*Introduction to various files*
+
+   -  LEF (Library Exchange Format) file: physical properties such as width, height etc regarding the standard cells
+        tf (technology file) or tlef (technology lef) --> contains same information
+        Cell tf
+
+   -  LIBerty file --> contains timing information of the cells
+
+   -  gdsII and OASIS file --> GDSII is a file format similar to JPEG, DOCX, XLSX etc to enable a layout design to be transferred from one place to another (IP owner handoff to PD team, PD team to foundry for fabrication), to be viewed/used for verifications like Physical verification checks by EDA tools.
+
+Discovering IP cores
+
+ *What are IP cores?*
+
+    - An IP core consists of a block of logic or data that is used in a semiconductor chip.
+
+    - It is usually the intellectual property of a particular person or company. IP cores are used when making a fieldprogrammable gate array (FPGA) or application-specific integrated circuit (ASIC).
+
+    - IP cores are created throughout the design process and can be turned into components for reuse.
+
+    - There are different categories for IP cores including hard IP cores and soft IP cores.
+
+    - The soft IP core , can be customized during the physical design phase and mapped to any process technology.
+
+    - A hard IP core is one that has the logic implementation and the physical implementation. In other words, the physicallayout of a hard macro-IP is finished and fixed in a particular process technology.
+
+
+</details>
+
+
+## Day-27-Topic: Introduction to Crosstalk -Glitch and delta delay
+
+
+<details>
+	
+<summary> Theory </summary>
+
+**Introduction to crosstalk**
+
+- What happens when we go through a chip design cycle?
+
+    - When we go through a design, there are three things that we try to achieve on a chip.
+        Power: focusing on the lowest power consumption.
+        Performance: focusing on the performance, process and speed of the device.
+        Area: preferable a smaller device.
+
+      
+- High routing density and large number of standard cells
+
+    - 0.25 um and 0.1 um are the channel/gate length.
+
+    - Looking through 0.25 um and above process, there are quite some spaces and routes between each other.
+
+    - Quick way to reduce the size of the MOSFET is to reduce the channel length. When we reduce the channel length, the overall size of the MOSFET shrinks the overall size of the combinational logic, resulting the cell inside shrinks too. That way, we achieved a smaller size of the MOSFET.
+
+    - If smaller size has been achieved, resulting the cells inside shrank, the complete circuit accomodates in a smaller area. Therefore, we can have multiple instances of the circuits or similar kind of circuits which are getting made to get back into the area.
+
+    - For example, the circuit is used for sending and receiving messages. The circuit could have just instantiated in nine times. Some section can be sending and receiving messages, another section can be sending and receiving calls, some can be processing, some can reading other applications and so on.
+
+    - As we can see, before reducing the MOSFET size, we only have one or two applications running in the same area, but after reducing the size, now we have nine applications running in the same area of the chip.
+
+    - However, there is issue in interference when we reduce the size. Basically, referring to 0.1 um and below process in the figure below, there is some amount of interference in their functioning that is happening between the two nets/wires that is being placed very close to each other when we reduce the size. This is the major reason in crosstalk.
+
+    - Initially, there are 20 number of standard cells. After reducing the size, the number of standard cell has increased 9 times where the standard cell has to be connected to each other and as a result of that, the number of routes has increased and the routing has becomes very close to each other.
+
+    - Hence, we will started to see some failures in the design, where there was some functionality failure is happening which we can called it as crosstalk.
+
+**Crosstalk Noise Reasons and Definition**
+
+- Increase in number of metal layers resulting in increase in lateral capacitance
+
+   -  Basically, there are 2 kinds of capacitance.
+        Interlayer capacitance: capacitors that is placed between 2 consecutive different layers.
+        Lateral capacitance: capacitors that is placed between 2 wires at the same level and metal layer.
+
+    - The second reason of increasing the crosstalk noise is increase in the lateral capacitance because it is increasing the metal layer.
+
+**Crosstalk Noise Reasons and Definition**
+
+- Lower supply voltage leading to lesser noise margin
+
+    - In a basic inverter functioning, if we provide low-level input into an inverter, we will get high-level output and vice versa.
+
+    - onverting the concept into a graphical method, when Vin = low, Vout = high. whereas, when Vin = high, Vout = low.
+
+    - The behaviour of an inverter happens when the half of the voltage (Vdd/2), we will see the behavior of switch is happening.
+
+    - When the input is zero, the output is VDD. Then, we move the input from zero and keep increasing the input towards VDD. As gradually we increase the input voltage, the output voltage will start to decrease. And finally, the output voltage will be completely zero.
+
+**Noise margin summary**
+
+    - Anything that lies between VOL and VIL will be considered as logic 0.
+
+    - Any voltage that lies between VIL and VIH will be considered as undefined region.
+
+    - Undefined region -> the logic can either moved from logic 1 to logic 0 or from the interception point of (b) to logic 0. Undefined region is a danger case.
+
+    - Whenever the voltage lies between VIH and VOH, it will always being treated as 1V or logic 1.
+
+    - Therefore, we have to ensure that the voltage didn't enter in undefined region since it cannot be identified whether the voltage might be in logic 1 or not.
+
+    - That is the problem when we are having a large physical distance from the main power supply to the circuit.
+
+    - Noise margin defines the input voltage range and the output voltage. Basically it varies the input voltage. --> Noise margin: Any voltage in between the range of VOH and VIH will be detected as logic 1. It should be put under the inputs/outputs of the circuit.
+
+    - Any voltage level in NML range will be detected as logic 0.
+
+    - Noise could be easily eliminated or can be ignored at this margin.
+    - Lower Supply Voltage leading to lesser noise margin.
+    - When the supply voltage is reduced, the noise margin will also be reduced.
+
+**Introduction to Signal Integrity and Glitch**
+
+    - Signal Integrity and Crosstalk are the Quality checks of the clock routes.
+
+    - Signal integrity: the ability of an electrical signal to carry information reliably and resist the effects of high-frequency electromagnetic interference from nearby signals.
+
+    - Crosstalk: the undesirable electrical interaction between two or more physically adjacent nets due to capacitive cross-coupling. It is a type of noise signal that corrupts the actual signal while transmission through the communication medium.
+
+*Aggressor and Victim Nets*
+
+    - A net that receives undesirable cross-coupling effects from a nearby net is called a victim net.
+
+    - A net that causes these effects in a victim net is called an aggressor net.
+
+- Crosstalk-Glitch
+
+    When one net is switching, and another net is constant then switching signal may cause spikes on other net because of which coupling capacitance (Cc) occurs between two nets, this is called as crosstalk noise.
+
+    Types of Glitches --> Rise, Fall, Overshoot, Undershoot
+
+  **Performing analysis and report commands**
+
+1. Enable PrimeTime SI --> set_app_varsi_enable_analysistrue
+2. Back-annotate the design with cross-coupling capacitance information in a SPEF or GPD file --> read_parasitics-keep_capacitive_couplingfile_name.spf
+
+3. Using check_timing:
+   
+```
+no_driving_cell
+ideal_clocks
+partial_input_delay
+unexpandable_clocks
+```
+4. Timing reports
+```
+report_timing
+-crosstalk_delta
+report_si_bottleneck
+report_delay_calculation –crosstalk
+report_si_double_switching
+report_noise
+report_timing -transition_time-crosstalk_delta \ -input_pins-significant_digits 4   (Viewing the Crosstalk Analysis Report)
+```
+5. Bottleneck Reports
+```
+report_si_bottleneck
+report_bottleneck
+delta_delay
+delta_delay_ratio
+total_victim_delay_bump
+delay_bump_per_aggressor
+  
+report_si_bottleneck-cost_typedelta_delay\-slack_lesser_than 2.0    (To get a list of all the victim nets with a delay violation or within 2.0 time units of a violation, listed in order of delta delay)
+
+report_delay_calculation –crosstalk
+size_cell
+set_coupling_separation
+-include_clock_nets
+minimum_active_aggressor
+
+report_si_bottleneck-cost_type delta_delay \ -minimum_active_aggressors 3   (bottleneck command reports nets where three or more active aggressors are affecting the net)
+```
+
+6. Crosstalk Net Delay Calculation:
+```
+report_delay_calculation-crosstalk \ -from [get_pinsg1/Z] -to [get_pins g2/A]
+```
+7. Reporting Crosstalk Settings
+```
+report_si_delay_analysis
+report_si_noise_analysis
+report_si_aggressor_exclusion
+```
+</details>
+
+<details>
+	
+<summary> LABs </summary>
+
+In icc2_shell:
+```
+source top.tcl
+update_timing
+write_parasitics -format spef -output vsdbabysoc_spef
+
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e0bdcfef4400102228518588886262e1caa3ec22/PD%23day27/write_para.png">
+
+```
+gzip -d vsdbabysoc.pt.v.gz
+```
+In pt_shell:
+```
+set target_library "/home/prakhar.g2/Samsung-PD-Training-/day20/libs/sky130_fd_sc_hd__tt_025C_1v80.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsdpll.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsddac.db"
+set link_library [list /home/prakhar.g2/Samsung-PD-Training-/day20/libs/sky130_fd_sc_hd__tt_025C_1v80.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsdpll.db /home/prakhar.g2/Samsung-PD-Training-/day20/libs/avsddac.db] 
+read_verilog vsdbabysoc.pt.v
+link_design
+current_design
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e0bdcfef4400102228518588886262e1caa3ec22/PD%23day27/current_design.png">
+
+```
+read_sdc func1_old.sdc
+set_app_var si_enable_analysis true
+read_parasitics -keep_capacitive_coupling vsdbabysoc_spef.temp1_25.spef
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e0bdcfef4400102228518588886262e1caa3ec22/PD%23day27/read_para.png">
+
+```
+check_timing
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e0bdcfef4400102228518588886262e1caa3ec22/PD%23day27/report_bottleneck.png">
+
+```
+report_si_bottleneck              (Report of the nets that have the largest crosstalk effects)
+report_bottleneck                 (Report of multiple min/max delay violation)
+report_si_delay_analysis
+report_si_aggressor_exclusion
+report_si_noise_analysis
+```
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e0bdcfef4400102228518588886262e1caa3ec22/PD%23day27/aggerasor.png">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/e0bdcfef4400102228518588886262e1caa3ec22/PD%23day27/anoted_para.png">
+
+
+
+</details>
+
+
+
+
