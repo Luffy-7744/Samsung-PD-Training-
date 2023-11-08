@@ -10152,7 +10152,7 @@ report_si_noise_analysis
  
 </details>
 
-details>
+<details>
   <summary>Lab: Tool installations and basic DRC/LVS design flow tools</summary>
   
 ### Opensource EDA Tools: Check Tool Installations
