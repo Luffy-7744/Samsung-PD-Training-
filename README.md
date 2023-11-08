@@ -10416,5 +10416,6 @@ vim inverter_tb.spice
 cp ../xschem/.spiceinit .
 ngspice inverter_tb.spice
 ```
+
 </details>
 
