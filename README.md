@@ -10361,9 +10361,6 @@ magic -d XR
 
 We can there are 5 drc violation, we try fix it
 
-clean drc:
-
-<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0026dd5e055cbe9dee25cae1bb48eda4e0461003/day28/drc_0_complete.png">
 
 * Save the file and select the autowrite option. 
 	
@@ -10375,12 +10372,13 @@ extract all         (Performing the actual extraction)
 ext2spice lvs       (Simulating and setting up the netlist to hierarchical spice output in ngspice format with no parasitic components)
 ext2spice           (Generating the spice netlist)
 ```
-  
-![image](https://user-images.githubusercontent.com/118953917/220818458-c1c66460-eeb1-4730-8c2b-a3ac764171a0.png)
+clean drc:
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0026dd5e055cbe9dee25cae1bb48eda4e0461003/day28/drc_0_complete.png">
+
+
   
 ```
-rm *.ext                                          (Clear any unwanted files -> .ext files are just intermediate results from the extraction)
-/usr/share/pdk/bin/cleanup_unref.py -remove .     (Clean up extra .mag files -> files containing paramaterised cells that were created and saved but not used in the design)
 netgen -batch lvs "../mag/inverter.spice inverter" "../xschem/inverter.spice inverter"    (Run LVS by entering the netgen subdirectory)
 ```
   
