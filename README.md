@@ -10320,7 +10320,7 @@ plot V(in) V(out)
   
 * The waveform confirms that the schematic behaves as an inverter as shown below.
   
-![image](https://user-images.githubusercontent.com/118953917/220541463-5897304d-d91e-4325-99ae-97bd59da2003.png)
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0026dd5e055cbe9dee25cae1bb48eda4e0461003/day28/schem_tb.png">
 
 * After verified the schematic, create a layout for it. To do this, go back to the inverter schematic. 
   
@@ -10356,8 +10356,14 @@ magic -d XR
 * For nfet, set the "Bottom guard ring via coverage" to 100, while the source and drain via coverages are set to +40 and -40, respectively, like the pfet.
   
 * Start to paint the wires using metal1 layers by connecting the source of the pfet to Vdd and source of the nfet to Vss. Next, connect the drains of both mosfets to the output. Finally, connect the input to all the poly contacts of the gate. 
-  
-![image](https://user-images.githubusercontent.com/118953917/220634394-2cc70484-4070-42d7-af1d-c534af076da4.png)
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0026dd5e055cbe9dee25cae1bb48eda4e0461003/day28/drc_0.png">
+
+We can there are 5 drc violation, we try fix it
+
+clean drc:
+
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0026dd5e055cbe9dee25cae1bb48eda4e0461003/day28/drc_0_complete.png">
 
 * Save the file and select the autowrite option. 
 	
@@ -10416,6 +10422,6 @@ vim inverter_tb.spice
 cp ../xschem/.spiceinit .
 ngspice inverter_tb.spice
 ```
-
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/0026dd5e055cbe9dee25cae1bb48eda4e0461003/day28/schem_tb.png">
 </details>
 
