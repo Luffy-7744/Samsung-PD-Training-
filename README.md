@@ -1,4 +1,4 @@
-![image](https://github.com/Luffy-7744/Samsung-PD-Training-/assets/142480553/8f36a917-d6d7-4702-a654-47fe682279c0)# Samsung-PD-Training-
+# Samsung-PD-Training-
 ## Day-0-Installation
 <details>
  <summary> Summary </summary>
