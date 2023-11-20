@@ -10803,9 +10803,9 @@ while { $i < $end_of_inputs } {
 
 Output:
 
- <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d34e1008b52e492f488c0d84ce5976ea0eda8c47/Day30/13.PNG">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d34e1008b52e492f488c0d84ce5976ea0eda8c47/Day30/13.PNG">
 
-  <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d34e1008b52e492f488c0d84ce5976ea0eda8c47/Day30/14.PNG">
+<img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d34e1008b52e492f488c0d84ce5976ea0eda8c47/Day30/14.PNG">
 
 Day 4 Cmpleting script and yosys synthesis introduction
 
@@ -10934,6 +10934,7 @@ if { $error_flag } {
 }
 ```
 Output:
+
  <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d34e1008b52e492f488c0d84ce5976ea0eda8c47/Day30/15.PNG">
  <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d34e1008b52e492f488c0d84ce5976ea0eda8c47/Day30/16.PNG">
  <img width="600" alt="place_layout2" src="https://github.com/Luffy-7744/Samsung-PD-Training-/blob/d34e1008b52e492f488c0d84ce5976ea0eda8c47/Day30/17.PNG">
