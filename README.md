@@ -10519,6 +10519,7 @@ In above code total of 5 general scenarios are created from the user's point of 
  <summary> Why low power design? </summary>
 	
 Differentiating "power" and "energy" and it's impact on performance:
+
 Power:
 Definition: Power is the rate at which energy is transferred or converted. It is the amount of energy transferred or converted per unit of time.
 
@@ -10538,6 +10539,7 @@ Energy:
 Definition: Energy is the capacity to do work or produce heat. It exists in various forms such as electrical, mechanical, thermal, etc.
 Formula: In electrical terms, energy (E) can be calculated by multiplying power (P) by time (t): E=Pxt or E=VxIxt
 Economics of power/energy:
+```
 Performance.
 Cost.
 Packaging
@@ -10548,7 +10550,10 @@ Form factor
 Functionality.
 Context of use.
 Comfort/Safety.
+```
+
 Low power designs are essential for various electronic devices and systems for several reasons:
+```
 Battery Life: Many devices, especially portable ones like smartphones, wearables, and IoT devices, rely on batteries. Low power designs help extend the battery life, allowing devices to operate longer without needing a recharge.
 Heat Dissipation: High power consumption generates heat, which can degrade the performance and lifespan of electronic components. Low power designs reduce heat dissipation, leading to more reliable and durable devices.
 Environmental Impact: Energy efficiency is crucial for reducing the environmental impact of electronic devices. Lower power consumption means less energy usage, which translates to reduced greenhouse gas emissions.
@@ -10556,22 +10561,28 @@ Cost Reduction: With less power consumption, devices may use smaller batteries o
 Portability and Mobility: Low power designs enable smaller form factors and lighter devices, which is crucial for portable electronics. For example, in the case of wearables or medical devices, minimizing power consumption is vital for user comfort and convenience.
 Reliability: Lower power consumption often leads to improved device reliability. Components operating at lower temperatures tend to have longer lifespans and reduced failure rates.
 Regulatory Compliance: Many regions have regulations and standards regarding energy consumption for electronic devices. Low power designs help manufacturers comply with these regulations.
+```
+
 Portable vs Mobile vs Mobility
 In the realm of low-power IC design, the terms "portable," "mobile," and "mobility" are often used to describe different categories or aspects related to devices and their usage.
-
 Portable:
 Portable refer to gadgets or tools that can be easily carried or moved from one place to another.
 Low-power IC design is crucial for portable devices as they often rely on batteries.
 Minimizing power consumption ensures longer battery life, making these devices more practical and convenient for users. Examples include laptops, tablets, portable gaming consoles, etc.
+
 Mobile:
 Mobile devices are specifically designed for use while being in motion or while on the go. They provide communication, entertainment, or productivity capabilities and often rely on wireless connectivity.
 Mobile devices, such as smartphones, smartwatches, and GPS units, heavily benefit from low-power IC design. These devices require energy-efficient components to support functionalities like constant connectivity, GPS tracking, sensors, and multimedia capabilities while ensuring prolonged battery life.
+
 Mobility:
 Mobility in IC design refers to the ability to create integrated circuits that cater to the dynamic and changing requirements of portable and mobile devices.
 Design is focused on creating ICs that not only consume minimal power but also offer the necessary performance and functionality demanded by portable and mobile devices. This involves designing chips that optimize power consumption during various operating modes, including active use, standby, and sleep modes, to support the mobility and versatility required by modern devices.
+
 Power Management Techniques:
 Basic Techniques: Clock gating and Multi-Threshold.
+
 Advanced Techniques: MTCMOS power gating, Power gating with state retention, DVFS and Low VDD StandBy.
+
 
 </details>
 
@@ -10582,58 +10593,87 @@ Advanced Techniques: MTCMOS power gating, Power gating with state retention, DVF
 a. Power Budgeting:
 
 Determine acceptable power consumption limits for different system components.
+
 b. Use Case Analysis:
 
 Understand various usage scenarios to optimize power usage during different modes.
+
+
 2. Architecture-Level Strategies:
+   
 a. Power-Aware Architectures:
 
 Design with power efficiency in mind, using techniques like clock gating, power gating, and voltage/frequency scaling.
+
 b. Partitioning and Power Domains:
 
 Divide the system into power domains for selective activation/deactivation to conserve power.
+
+
 3. Circuit-Level Techniques:
+   
 a. Transistor Level Optimization:
 
 Utilize low-leakage transistors, sub-threshold operation, and other techniques to minimize leakage currents.
+
+
 b. Clock and Data Management:
 
 Implement clock gating, data encoding, and logic techniques to reduce dynamic power consumption.
+
+
 4. System-Level Strategies:
+   
 a. Dynamic Power Management:
 
 Employ techniques like DVFS (Dynamic Voltage and Frequency Scaling) and AVS (Adaptive Voltage Scaling) to adjust power based on workload.
+
 b. Low-Power Modes:
 
 Utilize sleep, idle, or power-down modes during inactivity periods.
+
 5. Verification and Validation:
+   
 a. Power-Aware Simulation and Verification:
 
 Use specialized tools and methodologies to validate power consumption estimations and optimize power-critical paths.
+
 b. Hardware/Software Co-Design:
 
 Collaborate on power optimization between hardware and software for maximum efficiency.
+
 6. Technological Innovations:
+
 a. Advanced Process Nodes:
 
 Benefit from newer process technologies that inherently offer better power efficiency.
+
 b. Emerging Design Methodologies:
 
 Explore novel design approaches like approximate computing, probabilistic computing, or energy harvesting for specific applications.
+
 7. Tools and Methodologies:
+   
 a. Power Analysis Tools:
 
 Utilize simulation tools providing accurate power estimates at different design stages.
+
+
 b. Power-Aware Synthesis Tools:
 
 Employ tools optimizing circuits and architectures for reduced power consumption.
+
+
 8. Standard Compliance and Optimization:
+   
 a. Compliance with Power Standards:
 
 Ensure designs meet regulatory standards for power consumption.
+
 b. Trade-off Analysis:
 
 Balance performance, area, and power to achieve optimal design results.
+
 
 Density and Delivery:
 Density:
@@ -10643,12 +10683,16 @@ Heat Consequences:
 
 Heat is a primary consequence of density.
 Power consumed is a function of current junction temperature.
+
+
 Delivery:
 Managing I and dI/dt:
 
 Delivery involves managing current (I) and its rate of change (dI/dt).
 Power supply must supply Imax within Vmin and Vmax.
 Power supply must withstand Imax-Imin scenario within Vmin-Vmax.
+
+
 Leakage and Lifetime (Reliability):
 
 Leakage:
@@ -10657,6 +10701,8 @@ Leakage = tax paid by transistors when powered on.
 Leakage power can be enormous.
 Leakage increases with gate size and temperature.
 Turning off is the best way to arrest leakage power.
+
+
 Reliability:
 
 Current degrades material.
@@ -10669,39 +10715,54 @@ Isolation Transistors:
 
 Power gating uses isolation transistors to disconnect power from inactive blocks, acting as switches.
 These transistors cut off power completely when the block is powered down.
+
+
 Control Logic:
 
 Control logic determines when to enable/disable power gates based on block activity.
 Ensures proper power management by gating off power during inactivity and restoring it when needed.
+
+
 Retention Elements:
 
 Retention elements (e.g., flip-flops with isolated power supplies) preserve critical data during power-off periods.
+
+
 Benefits of Power Gating:
+
 Reduction in Leakage Power:
 
 Disconnecting power reduces leakage current, minimizing static power consumption.
+
 Improved Energy Efficiency:
 
 Contributes to overall energy efficiency, conserving power during idle periods in battery-powered devices.
+
 Enhanced Battery Life:
 
 Extends battery life by minimizing power consumption during idle or standby modes.
+
 Heat Reduction:
 
 Reducing heat dissipation by shutting off power to inactive blocks results in a cooler IC temperature.
+
 Challenges and Considerations:
+
 Design Complexity:
 
 Implementing power gating adds complexity, requiring additional control logic to avoid glitches and ensure proper synchronization.
+
 Switching Overhead:
 
 Switching power gates introduces some delay and power consumption overhead associated with control logic.
+
 Design Verification:
 
 Proper verification is crucial to prevent issues like data loss or corruption during power transitions.
 Retention.
 
 Voltage Control Techniques:
+
 Power gating
 How Power Gating Works:
 
@@ -10956,19 +11017,28 @@ In low-power design, power formats play a crucial role in effectively managing a
 
 Common Power Formats: There are several widely used power formats in low-power IC design, each with its own strengths and limitations:
 Unified Power Format (UPF): UPF is the industry-standard power format, defined by the IEEE 1801 standard. It provides a comprehensive framework for describing power intent, including supply voltages, power domains, leakage models, and power-aware design constraints. UPF supports hierarchical power management, enabling designers to specify power intent at different levels of abstraction.
+
 Power Analysis Markup Language (PAM-XML): PAM-XML is an XML-based power format developed by Mentor Graphics. It is a lightweight and easy-to-use format, specifically designed for early-stage power analysis and estimation. PAM-XML is less comprehensive than UPF but offers a simpler and more intuitive syntax.
+
 Common Power Format (CPF): CPF is a power format developed by Synopsys. It is similar to UPF but provides additional features for power-aware synthesis and optimization. CPF supports power-aware clock tree synthesis, power-aware scan insertion, and other power-saving techniques.
+
 PowerIntent (PI): PowerIntent is a power format developed by Cadence Design Systems. It is a newer format, gaining popularity due to its support for power-aware design in advanced process technologies. PowerIntent provides enhanced features for power modeling of leakage currents, crosstalk effects, and power grid analysis.
+
 Choosing the Right Power Format: The choice of power format depends on several factors, including the design methodology, tools used, and level of power analysis detail required. UPF is the industry standard and is widely supported by EDA tools. It is well-suited for complex power management scenarios and detailed power analysis. PAM-XML is a good choice for early-stage power estimation and for designers who prefer a simpler format. CPF is specifically designed for power-aware synthesis and optimization. PowerIntent is a newer format gaining traction due to its advanced features for power modeling in advanced process technologies.
+
 Benefits of Using Power Formats:
+```
 Standardized Representation: Power formats provide a standardized way to represent power intent, enabling designers to communicate power requirements clearly and consistently across different design teams and EDA tools.
 Early Power Analysis: Power formats support early-stage power analysis, allowing designers to identify and address power issues early in the design cycle.
 Power-Aware Optimization: Power formats enable power-aware optimization techniques, such as power gating, voltage scaling, and clock gating.
 Design for Manufacturability (DFM): Power formats can be used to perform power grid analysis and ensure that the design meets power delivery requirements.
 Design Reuse: Power formats facilitate the reuse of power intent across different designs, reducing design time and improving consistency.
-UPF
+```
+*UPF*
 Unified Power Format (UPF) is an industry-standard specification for describing power intent in integrated circuits (ICs). It provides a structured and consistent way to convey power management information, enabling designers to effectively manage and optimize power consumption in low-power designs. UPF plays a crucial role in various phases of the design process, from early-stage power estimation to physical implementation and signoff.
+
 UPF offers a comprehensive set of features for describing power intent in ICs:
+```
 Supply Voltages: UPF defines supply voltages for different power domains, enabling efficient power distribution and minimizing power drops.
 Power Domains: UPF allows designers to group logic blocks into power domains, enabling granular control over power management.
 Leakage Models: UPF supports leakage models for different types of transistors, enabling accurate power estimation and optimization.
@@ -10981,6 +11051,8 @@ Power Optimization: UPF guides the application of power-saving techniques, such 
 Physical Design: UPF is used to generate power delivery networks and ensure that the design meets power delivery requirements.
 Design Verification: UPF-based simulations are used to verify the functionality and power behavior of the design under various operating conditions.
 Signoff: UPF information is incorporated into signoff tools to ensure that the design meets power requirements and complies with manufacturing specifications.
+```
+
 </details>
 
 
